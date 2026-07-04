@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router';
 import { useEffect } from 'react';
+import SideBar from '../components/layout/SideBar';
 
 const AppLayout = () => {
     useEffect(() => {
@@ -12,8 +13,11 @@ const AppLayout = () => {
     }, []);
 
     return (
-        <div className="flex justify-center items-center min-h-screen font-sans antialiased">
-            <div className="flex flex-col gap-8 justify-center items-center">
+        <div className="grid grid-cols-4 min-h-screen antialiased gap-8">
+            <div className="col-span-1">
+                <SideBar />
+            </div>
+            <div className="col-span-3 pt-8">
                 <Outlet />
             </div>
         </div>

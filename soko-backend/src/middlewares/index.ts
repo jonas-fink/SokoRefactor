@@ -7,3 +7,4 @@ export {
     refreshRateLimiter,
     globalRateLimiter,
 } from './rateLimiter.ts';
+export { default as protect } from './protect.ts';

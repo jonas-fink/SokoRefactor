@@ -1,7 +1,141 @@
-import React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Link, useNavigate } from 'react-router';
+import { signupSchema, type RegisterFormData } from '../schemas/authSchemas';
+import { useAuth } from '../context/AuthContext';
 
-const Signup = () => {
-    return <div></div>;
+const SignupPage = () => {
+    const { signup } = useAuth();
+    const navigate = useNavigate();
+
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isSubmitting },
+        setError,
+    } = useForm<RegisterFormData>({ resolver: zodResolver(signupSchema) });
+
+    const onSubmit = async (data: RegisterFormData) => {
+        try {
+            await signup(data);
+            navigate('/');
+        } catch {
+            setError('root', { message: 'Could not create account' });
+        }
+    };
+    return (
+        <div className="flex flex-col gap-8 w-full max-w-2xl px-4 min-h-screen mx-auto mt-16">
+            <div className="flex flex-col items-center gap-2">
+                <h1 className="font-display text-5xl text-text">
+                    Erstelle deinen Account
+                </h1>
+                <p className="font-sans text-text-muted">
+                    Tritt bei und Speichere deine Lieblinsevents oder plane
+                    Termine bei Beratungsstellen
+                </p>
+            </div>
+            <div className="bg-surface w-full p-2 rounded-md border border-border-strong hover:shadow-glow">
+                <div className="flex flex-col w-full justify-center items-center">
+                    <form
+                        onSubmit={handleSubmit(onSubmit)}
+                        className="flex flex-col gap-4 w-full p-8"
+                    >
+                        <div className="flex flex-col gap-2">
+                            <label
+                                htmlFor="name"
+                                className="text-md text-text-subtle cursor-pointer hover:text-text"
+                            >
+                                NAME
+                            </label>
+                            <input
+                                type="text"
+                                id="name"
+                                {...register('name')}
+                                placeholder="Jane Doe"
+                                className="border border-border rounded-sm p-4 focus:outline-azure-soft bg-transparent font-mono"
+                            />
+                            {errors.name && (
+                                <p className="text-danger text-xs">
+                                    {errors.name.message}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            <label
+                                htmlFor="email"
+                                className="text-md text-text-subtle cursor-pointer hover:text-text"
+                            >
+                                E-MAIL
+                            </label>
+                            <input
+                                type="email"
+                                id="email"
+                                {...register('email')}
+                                placeholder="you@example.com"
+                                className="border border-border rounded-sm p-4 focus:outline-azure-soft bg-transparent font-mono"
+                                required
+                            />
+                            {errors.email && (
+                                <p className="text-danger text-xs">
+                                    {errors.email.message}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            <label
+                                htmlFor="password"
+                                className="text-md text-text-subtle cursor-pointer hover:text-text"
+                            >
+                                PASSWORD
+                            </label>
+                            <input
+                                type="password"
+                                id="password"
+                                {...register('password')}
+                                placeholder="**********"
+                                className="border border-border rounded-sm p-4 focus:outline-azure-soft bg-transparent font-mono"
+                                required
+                            />
+                            {errors.password && (
+                                <p className="text-danger text-xs">
+                                    {errors.password.message}
+                                </p>
+                            )}
+                        </div>
+
+                        {errors.root && (
+                            <p className="text-danger text-xs text-center">
+                                {errors.root.message}
+                            </p>
+                        )}
+                        <div className="flex justify-center pt-4">
+                            {' '}
+                            <button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="btn-primary w-full"
+                            >
+                                {isSubmitting
+                                    ? 'registriert...'
+                                    : 'Registrieren'}
+                            </button>
+                        </div>
+                    </form>
+                    <p className="text-center text-sm text-text-muted">
+                        Schon Mitglied?{' '}
+                        <Link
+                            to="/login"
+                            className="text-primary font-bold hover:underline cursor-pointer text-md"
+                        >
+                            Anmelden
+                        </Link>
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
 };
 
-export default Signup;
+export default SignupPage;

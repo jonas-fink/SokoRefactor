@@ -14,10 +14,11 @@ const App = () => {
     return (
         <Suspense fallback={<LayoutSkeleton />}>
             <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
                 <Route path="/" element={<AppLayout />}>
                     <Route index element={<LandingPage />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/signup" element={<Signup />} />
+
                     <Route path="/beratung" element={<Beratung />} />
                     <Route path="/karte" element={<Map />} />
                     <Route element={<ProtectedRoute />}>

@@ -1,4 +1,4 @@
-import MapView from '../components/layout/map/MapView';
+import MapView from '../components/map/MapView.tsx';
 
 const Map = () => {
     return (

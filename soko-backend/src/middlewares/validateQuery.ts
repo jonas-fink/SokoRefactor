@@ -5,7 +5,11 @@ const validateQuery = <T extends z.ZodType>(schema: T): RequestHandler => {
     return (req, _res, next): void => {
         const result = schema.safeParse(req.query);
         if (!result.success) {
-            next(new Error(z.prettifyError(result.error), { cause: { status: 400 } }));
+            next(
+                new Error(z.prettifyError(result.error), {
+                    cause: { status: 400 },
+                }),
+            );
             return;
         }
         Object.defineProperty(req, 'query', {

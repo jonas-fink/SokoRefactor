@@ -8,6 +8,7 @@ import Library from './pages/Library';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import Settings from './pages/Settings';
 import LayoutSkeleton from './components/skeletons/LayoutSkeleton';
 
 const App = () => {
@@ -23,6 +24,7 @@ const App = () => {
                     <Route path="/karte" element={<Map />} />
                     <Route element={<ProtectedRoute />}>
                         <Route path="/library" element={<Library />} />
+                        <Route path="/settings" element={<Settings />} />
                     </Route>
                 </Route>
             </Routes>

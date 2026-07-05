@@ -59,7 +59,7 @@ const activitySchema = new Schema(
                 'Gaming',
                 'Soziales',
                 'Workshop',
-                'Familien',
+                'Familie',
             ],
             default: [],
         },

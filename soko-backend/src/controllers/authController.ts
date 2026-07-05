@@ -2,6 +2,7 @@ import type { RequestHandler } from 'express';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { User, RefreshToken } from '#models';
+import type { UserRole } from '#models';
 import type {
     RegisterInput,
     LoginInput,
@@ -11,7 +12,7 @@ import type {
 
 const REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
-const signAccess = (userId: string, role: 'user' | 'admin') =>
+const signAccess = (userId: string, role: UserRole) =>
     jwt.sign({ userId, role }, process.env.JWT_ACCESS_SECRET as string, {
         expiresIn: '15min',
     });
@@ -233,6 +234,19 @@ export const me: RequestHandler = async (req, res) => {
     if (!user) {
         res.status(404).json({ message: 'Benutzer nicht gefunden' });
         return;
+    }
+    res.json({ data: user });
+};
+
+export const becomeCreator: RequestHandler = async (req, res) => {
+    const user = await User.findById(req.userId);
+    if (!user) {
+        res.status(404).json({ message: 'Benutzer nicht gefunden' });
+        return;
+    }
+    if (user.role === 'user') {
+        user.role = 'creator';
+        await user.save();
     }
     res.json({ data: user });
 };

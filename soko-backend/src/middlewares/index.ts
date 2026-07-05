@@ -8,3 +8,7 @@ export {
     globalRateLimiter,
 } from './rateLimiter.ts';
 export { default as protect } from './protect.ts';
+export { default as isActivityOwner } from './isActivityOwner.ts';
+export { default as isOwner } from './isOwner.ts';
+export { default as fileUploadHandler } from './fileUploadHandler.ts';
+export { default as canCreate } from './canCreate.ts';

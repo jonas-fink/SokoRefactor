@@ -5,7 +5,7 @@ export const updateUserSchema = z
         name: z.string().min(1).optional(),
         email: z.email('Invalid email').optional(),
         password: z.string().min(8, 'At least 8 characters').optional(),
-        role: z.enum(['user', 'admin']).optional(),
+        role: z.enum(['user', 'admin', 'creator']).optional(),
     })
     .refine((data) => Object.keys(data).length > 0, {
         message: 'At least one field required',

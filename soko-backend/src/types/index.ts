@@ -7,7 +7,7 @@ export type UserType = {
     isActive?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
-    role: 'user' | 'admin';
+    role: 'user' | 'admin' | 'creator';
 };
 
 export type FavoriteType = {

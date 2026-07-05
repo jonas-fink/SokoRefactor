@@ -1,10 +1,17 @@
 import React from 'react';
 import { NavLink } from 'react-router';
 import mainLogo from '../../assets/logo.png';
-import { AiOutlineCompass, AiOutlineNotification } from 'react-icons/ai';
+import {
+    AiOutlineCompass,
+    AiOutlineNotification,
+    AiOutlineSetting,
+} from 'react-icons/ai';
 import { MdOutlineMap, MdOutlineBookmark } from 'react-icons/md';
+import { useAuth } from '../../context/AuthContext';
 
 const SideBar = () => {
+    const { user } = useAuth();
+
     const navClass = ({
         isActive,
     }: {
@@ -16,7 +23,7 @@ const SideBar = () => {
     }
 `;
     return (
-        <div className="flex flex-col p-8 gap-8 bg-surface min-h-screen">
+        <div className="flex flex-col p-8 gap-8 bg-surface h-full">
             <div className="flex items-center">
                 <img src={mainLogo} width={88} height={88} />
                 <h1 className="text-2xl">Soko</h1>
@@ -33,8 +40,17 @@ const SideBar = () => {
                 </NavLink>
                 <NavLink to="/library" className={navClass}>
                     <MdOutlineBookmark size={24} />
-                    Gespeichert
+                    Sammlung
                 </NavLink>
+                {user && (
+                    <div>
+                        {' '}
+                        <NavLink to="/settings" className={navClass}>
+                            <AiOutlineSetting size={24} />
+                            Einstellungen
+                        </NavLink>
+                    </div>
+                )}
             </div>
         </div>
     );

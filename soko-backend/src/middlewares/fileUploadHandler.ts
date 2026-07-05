@@ -19,7 +19,10 @@ const fileUploadHandler: RequestHandler = (req, res, next) => {
 
     form.parse(req, async (err, fields, files) => {
         if (err) {
-            return res.status(400).json({ error: err.message });
+            {
+                res.status(400).json({ error: err.message });
+                return;
+            }
         }
 
         const flatFields = Object.fromEntries(
@@ -64,9 +67,10 @@ const fileUploadHandler: RequestHandler = (req, res, next) => {
                 };
                 next();
             } catch (uploadError) {
-                return res
-                    .status(500)
-                    .json({ error: 'Cloudinary Upload failed' });
+                {
+                    res.status(500).json({ error: 'Cloudinary Upload failed' });
+                    return;
+                }
             }
         } else {
             req.body = { ...parseJsonFields(flatFields) };

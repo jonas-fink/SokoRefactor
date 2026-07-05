@@ -2,7 +2,7 @@ export interface User {
     id: string;
     name?: string;
     email: string;
-    role: 'user' | 'admin';
+    role: 'user' | 'admin' | 'creator';
 }
 
 export interface PopulatedUser {
@@ -16,7 +16,7 @@ export interface AuthUser {
     id: string;
     name?: string;
     email: string;
-    role: 'user' | 'admin';
+    role: 'user' | 'admin' | 'creator';
 }
 
 export interface ApiResponse<T> {

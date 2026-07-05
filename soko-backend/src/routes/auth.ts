@@ -5,6 +5,7 @@ import {
     refresh,
     logout,
     me,
+    becomeCreator,
     changeEmail,
     changePassword,
 } from '#controllers';
@@ -28,6 +29,7 @@ router.post('/login', authRateLimiter, validateBody(loginSchema), login);
 router.post('/refresh', refreshRateLimiter, refresh);
 router.post('/logout', logout);
 router.get('/me', protect, me);
+router.patch('/become-creator', protect, becomeCreator);
 router.patch('/email', protect, validateBody(changeEmailSchema), changeEmail);
 router.patch(
     '/password',

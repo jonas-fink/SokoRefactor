@@ -26,6 +26,7 @@ interface AuthContextValue {
     loading: boolean;
     login: (input: LoginInput) => Promise<void>;
     signup: (input: SignupInput) => Promise<void>;
+    becomeCreator: () => Promise<void>;
     logout: () => Promise<void>;
 }
 
@@ -89,6 +90,11 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         [navigate],
     );
 
+    const becomeCreator = useCallback(async () => {
+        const user = await api.patch<AuthUser>('/auth/become-creator');
+        setUser(user);
+    }, []);
+
     const logout = useCallback(async () => {
         try {
             await api.post('/auth/logout');
@@ -108,7 +114,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
+        <AuthContext.Provider value={{ user, loading, login, signup, becomeCreator, logout }}>
             {children}
         </AuthContext.Provider>
     );

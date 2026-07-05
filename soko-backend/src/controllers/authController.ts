@@ -47,7 +47,7 @@ const COOKIE_OPTS = {
 };
 
 const CLEAR_COOKIE_OPTS = {
-    httpPnly: COOKIE_OPTS.httpOnly,
+    httpOnly: COOKIE_OPTS.httpOnly,
     secure: COOKIE_OPTS.secure,
     sameSite: COOKIE_OPTS.sameSite,
     path: COOKIE_OPTS.path,
@@ -117,7 +117,7 @@ export const refresh: RequestHandler = async (req, res) => {
     }
     if (stored.revokedAt) {
         await RefreshToken.updateMany(
-            { familiy: stored.family, revokedAt: { $exists: false } },
+            { family: stored.family, revokedAt: { $exists: false } },
             { $set: { revokedAt: new Date() } },
         );
         res.status(403).json({ message: 'Token Rotation fehlgeschlagen' });

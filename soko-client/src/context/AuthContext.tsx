@@ -1,14 +1,8 @@
-import {
-    createContext,
-    useCallback,
-    useContext,
-    useEffect,
-    useRef,
-    useState,
-} from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { api, setAccessToken, tryRefresh } from '../utils/api';
 import type { AuthUser } from '../types';
+import { AuthContext } from './auth-context';
 
 interface LoginInput {
     email: string;
@@ -19,23 +13,6 @@ interface SignupInput {
     name?: string;
     email: string;
     password: string;
-}
-
-interface AuthContextValue {
-    user: AuthUser | null;
-    loading: boolean;
-    login: (input: LoginInput) => Promise<void>;
-    signup: (input: SignupInput) => Promise<void>;
-    becomeCreator: () => Promise<void>;
-    logout: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextValue | null>(null);
-
-export function useAuth(): AuthContextValue {
-    const ctx = useContext(AuthContext);
-    if (!ctx) throw new Error('useAuth has to be used within <AuthProvider>');
-    return ctx;
 }
 
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -114,7 +91,9 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, signup, becomeCreator, logout }}>
+        <AuthContext.Provider
+            value={{ user, loading, login, signup, becomeCreator, logout }}
+        >
             {children}
         </AuthContext.Provider>
     );

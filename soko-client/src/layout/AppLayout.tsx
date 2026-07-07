@@ -14,10 +14,10 @@ const AppLayout = () => {
 
     return (
         <div className="grid grid-cols-4 min-h-screen antialiased gap-8">
-            <div className="col-span-1 sticky top-0 h-screen">
+            <div className="col-span-1 sticky top-0 h-screen ">
                 <SideBar />
             </div>
-            <div className="col-span-3 pt-8">
+            <div className="col-span-3 pt-8 pr-8">
                 <Outlet />
             </div>
         </div>

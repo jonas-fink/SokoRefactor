@@ -1,10 +1,13 @@
 import { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/auth-context';
+import { AiOutlineArrowLeft } from 'react-icons/ai';
+import { useNavigate } from 'react-router';
 
 const SettingsPage = () => {
     const { user, becomeCreator } = useAuth();
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const navigate = useNavigate();
 
     const onBecomeCreator = async () => {
         setBusy(true);
@@ -22,7 +25,12 @@ const SettingsPage = () => {
 
     return (
         <div className="flex flex-col gap-8 w-full max-w-2xl px-4 min-h-screen mx-auto mt-16">
-            <div className="flex flex-col items-center gap-2">
+            <AiOutlineArrowLeft
+                size={24}
+                className="absolute top-26 left-3/12"
+                onClick={() => navigate(-1)}
+            />
+            <div className="flex flex-col items-left gap-2">
                 <h1 className="font-display text-5xl text-text">
                     Einstellungen
                 </h1>
@@ -30,13 +38,13 @@ const SettingsPage = () => {
                     Verwalte deinen Account
                 </p>
             </div>
-            <div className="bg-surface w-full p-8 rounded-md border border-border-strong flex flex-col gap-4">
-                <h2 className="font-display text-2xl text-text">
+            <div className="bg-surface w-full p-8 rounded-xl flex flex-col gap-4 items-center shadow-card">
+                <h2 className="font-display text-2xl text-primary">
                     Creator-Account
                 </h2>
                 {isCreator ? (
                     <p className="font-sans text-text-muted">
-                        Du kannst bereits Events und Aktivitäten hosten.
+                        Du kannst jetzt Events und Aktivitäten hosten.
                     </p>
                 ) : (
                     <>

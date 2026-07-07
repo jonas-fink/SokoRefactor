@@ -1,13 +1,9 @@
-import React from 'react';
 import { NavLink } from 'react-router';
 import mainLogo from '../../assets/logo.png';
-import {
-    AiOutlineCompass,
-    AiOutlineNotification,
-    AiOutlineSetting,
-} from 'react-icons/ai';
+import { AiOutlineCompass, AiOutlineNotification } from 'react-icons/ai';
 import { MdOutlineMap, MdOutlineBookmark } from 'react-icons/md';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/auth-context';
+import { RxAvatar } from 'react-icons/rx';
 
 const SideBar = () => {
     const { user } = useAuth();
@@ -45,9 +41,8 @@ const SideBar = () => {
                 {user && (
                     <div>
                         {' '}
-                        <NavLink to="/settings" className={navClass}>
-                            <AiOutlineSetting size={24} />
-                            Einstellungen
+                        <NavLink to="/profile" className={navClass}>
+                            <RxAvatar size={24} /> Profil
                         </NavLink>
                     </div>
                 )}

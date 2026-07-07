@@ -10,6 +10,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Settings from './pages/Settings';
 import LayoutSkeleton from './components/skeletons/LayoutSkeleton';
+import Profile from './pages/Profile';
 
 const App = () => {
     return (
@@ -25,6 +26,7 @@ const App = () => {
                     <Route element={<ProtectedRoute />}>
                         <Route path="/library" element={<Library />} />
                         <Route path="/settings" element={<Settings />} />
+                        <Route path="/profile" element={<Profile />} />
                     </Route>
                 </Route>
             </Routes>

@@ -5,7 +5,8 @@ import { isValidObjectId } from 'mongoose';
 
 const validateId: RequestHandler = (req, res, next) => {
     if (!isValidObjectId(req.params.activityId)) {
-        return res.status(400).json({ error: 'Invalid ID format' });
+        res.status(400).json({ error: 'Invalid ID format' });
+        return;
     }
     next();
 };

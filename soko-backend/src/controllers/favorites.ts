@@ -4,14 +4,14 @@ import { Activity, Favorite } from '#models';
 
 export const getFavorites: RequestHandler = async (req, res, next) => {
     try {
-        const userId = (req as any).user;
+        const userId = req.userId;
         const favorites = await Favorite.find({ userId })
             .populate(
                 'activityId',
                 'title image description date location price tags',
             )
             .lean();
-        res.json(favorites.map((f) => populatedFavoriteSchema.parse(f)));
+        res.json({ data: favorites.map((f) => populatedFavoriteSchema.parse(f)) });
     } catch (error: unknown) {
         next(error);
     }
@@ -19,7 +19,7 @@ export const getFavorites: RequestHandler = async (req, res, next) => {
 
 export const addFavorite: RequestHandler = async (req, res, next) => {
     try {
-        const userId = (req as any).user;
+        const userId = req.userId;
         const { activityId } = req.params;
 
         const activity = await Activity.findById(activityId).lean();
@@ -29,7 +29,7 @@ export const addFavorite: RequestHandler = async (req, res, next) => {
         }
 
         const favorite = await Favorite.create({ userId, activityId: activity._id });
-        res.status(201).json(favoriteDocumentSchema.parse(favorite.toObject()));
+        res.status(201).json({ data: favoriteDocumentSchema.parse(favorite.toObject()) });
     } catch (error: any) {
         if (error?.code === 11000) {
             res.status(409).json({ error: 'Activity already in favorites' });
@@ -41,7 +41,7 @@ export const addFavorite: RequestHandler = async (req, res, next) => {
 
 export const removeFavorite: RequestHandler = async (req, res, next) => {
     try {
-        const userId = (req as any).user;
+        const userId = req.userId;
         const { activityId } = req.params;
 
         const favorite = await Favorite.findOneAndDelete({

@@ -1,8 +1,8 @@
 import { type RequestHandler } from 'express';
 
 const isOwnerOrAdmin: RequestHandler = async (req, res, next) => {
-    const authUserId = (req as any).user;
-    const authUserRole = (req as any).role;
+    const authUserId = req.userId;
+    const authUserRole = req.role;
     const targetUserId = req.params.id;
 
     const isOwner = authUserId === targetUserId;

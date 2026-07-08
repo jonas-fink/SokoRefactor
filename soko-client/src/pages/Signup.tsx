@@ -26,15 +26,15 @@ const SignupPage = () => {
     return (
         <div className="flex flex-col gap-8 w-full max-w-2xl px-4 min-h-screen mx-auto mt-16">
             <div className="flex flex-col items-center gap-2">
-                <h1 className="font-display text-5xl text-text">
+                <h1 className="font-display text-5xl text-ink">
                     Erstelle deinen Account
                 </h1>
-                <p className="font-sans text-text-muted">
+                <p className="font-sans text-ink-mute">
                     Tritt bei und Speichere deine Lieblinsevents oder plane
                     Termine bei Beratungsstellen
                 </p>
             </div>
-            <div className="bg-surface w-full p-2 rounded-md border border-border-strong hover:shadow-glow">
+            <div className="bg-surface w-full p-2 rounded-card border border-line hover:shadow-float">
                 <div className="flex flex-col w-full justify-center items-center">
                     <form
                         onSubmit={handleSubmit(onSubmit)}
@@ -43,7 +43,7 @@ const SignupPage = () => {
                         <div className="flex flex-col gap-2">
                             <label
                                 htmlFor="name"
-                                className="text-md text-text-subtle cursor-pointer hover:text-text"
+                                className="text-md text-ink-soft cursor-pointer hover:text-ink"
                             >
                                 NAME
                             </label>
@@ -52,10 +52,10 @@ const SignupPage = () => {
                                 id="name"
                                 {...register('name')}
                                 placeholder="Jane Doe"
-                                className="border border-border rounded-sm p-4 focus:outline-azure-soft bg-transparent font-mono"
+                                className="border border-line rounded-control p-4 focus:outline-none focus:border-primary bg-transparent"
                             />
                             {errors.name && (
-                                <p className="text-danger text-xs">
+                                <p className="text-error text-xs">
                                     {errors.name.message}
                                 </p>
                             )}
@@ -64,7 +64,7 @@ const SignupPage = () => {
                         <div className="flex flex-col gap-2">
                             <label
                                 htmlFor="email"
-                                className="text-md text-text-subtle cursor-pointer hover:text-text"
+                                className="text-md text-ink-soft cursor-pointer hover:text-ink"
                             >
                                 E-MAIL
                             </label>
@@ -73,11 +73,11 @@ const SignupPage = () => {
                                 id="email"
                                 {...register('email')}
                                 placeholder="you@example.com"
-                                className="border border-border rounded-sm p-4 focus:outline-azure-soft bg-transparent font-mono"
+                                className="border border-line rounded-control p-4 focus:outline-none focus:border-primary bg-transparent"
                                 required
                             />
                             {errors.email && (
-                                <p className="text-danger text-xs">
+                                <p className="text-error text-xs">
                                     {errors.email.message}
                                 </p>
                             )}
@@ -86,7 +86,7 @@ const SignupPage = () => {
                         <div className="flex flex-col gap-2">
                             <label
                                 htmlFor="password"
-                                className="text-md text-text-subtle cursor-pointer hover:text-text"
+                                className="text-md text-ink-soft cursor-pointer hover:text-ink"
                             >
                                 PASSWORD
                             </label>
@@ -95,18 +95,18 @@ const SignupPage = () => {
                                 id="password"
                                 {...register('password')}
                                 placeholder="**********"
-                                className="border border-border rounded-sm p-4 focus:outline-azure-soft bg-transparent font-mono"
+                                className="border border-line rounded-control p-4 focus:outline-none focus:border-primary bg-transparent"
                                 required
                             />
                             {errors.password && (
-                                <p className="text-danger text-xs">
+                                <p className="text-error text-xs">
                                     {errors.password.message}
                                 </p>
                             )}
                         </div>
 
                         {errors.root && (
-                            <p className="text-danger text-xs text-center">
+                            <p className="text-error text-xs text-center">
                                 {errors.root.message}
                             </p>
                         )}
@@ -123,7 +123,7 @@ const SignupPage = () => {
                             </button>
                         </div>
                     </form>
-                    <p className="text-center text-sm text-text-muted">
+                    <p className="text-center text-sm text-ink-mute">
                         Schon Mitglied?{' '}
                         <Link
                             to="/login"

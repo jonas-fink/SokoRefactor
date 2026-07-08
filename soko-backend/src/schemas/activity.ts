@@ -43,7 +43,7 @@ export const activityOutputSchema = activitySchema.extend({
 export const populatedActivitySchema = activityOutputSchema.extend({
     userId: z.object({
         _id: objectIdSchema,
-        userName: z.string(),
+        name: z.string().optional(),
         email: z.string(),
     }),
 });

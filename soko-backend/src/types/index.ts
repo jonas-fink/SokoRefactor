@@ -1,10 +1,9 @@
 import type { Types } from 'mongoose';
 
 export type UserType = {
-    userName: string;
+    name?: string;
     email: string;
     password: string;
-    isActive?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
     role: 'user' | 'admin' | 'creator';

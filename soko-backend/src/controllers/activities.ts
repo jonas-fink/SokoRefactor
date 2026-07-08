@@ -33,7 +33,7 @@ export const getActivities: RequestHandler = async (_req, res, next) => {
         const activites = await Activity.find(query)
             .populate('userId', 'name email')
             .lean();
-        res.json(activites.map((a) => populatedActivitySchema.parse(a)));
+        res.json({ data: activites.map((a) => populatedActivitySchema.parse(a)) });
     } catch (error: unknown) {
         next(error);
     }
@@ -53,7 +53,7 @@ export const createActivity: RequestHandler<
             });
             return;
         }
-        const userId = (req as any).user;
+        const userId = req.userId;
         const activity = await Activity.create({
             ...(req.body satisfies ActivityCreateBody),
             image,
@@ -63,7 +63,7 @@ export const createActivity: RequestHandler<
             'userId',
             'name email',
         );
-        res.json(populatedActivitySchema.parse(populatedActivity.toObject()));
+        res.json({ data: populatedActivitySchema.parse(populatedActivity.toObject()) });
     } catch (error: unknown) {
         next(error);
     }
@@ -76,13 +76,13 @@ export const getActivityById: RequestHandler = async (req, res, next) => {
         } = req;
         const activity = await Activity.findById(id).populate(
             'userId',
-            'userName email',
+            'name email',
         );
         if (!activity) {
             res.status(404).json({ error: 'Activity not found' });
             return;
         }
-        res.json(populatedActivitySchema.parse(activity.toObject()));
+        res.json({ data: populatedActivitySchema.parse(activity.toObject()) });
     } catch (error: unknown) {
         next(error);
     }
@@ -116,9 +116,9 @@ export const updateActivity: RequestHandler<
 
         const populatedActivity = await activity.populate(
             'userId',
-            'userName email',
+            'name email',
         );
-        res.json(populatedActivitySchema.parse(populatedActivity.toObject()));
+        res.json({ data: populatedActivitySchema.parse(populatedActivity.toObject()) });
     } catch (error: unknown) {
         next(error);
     }
@@ -138,13 +138,13 @@ export const patchActivity: RequestHandler<
             id,
             { $set: updates },
             { new: true, runValidators: true },
-        ).populate('userId', 'userName email');
+        ).populate('userId', 'name email');
 
         if (!activity) {
             res.status(404).json({ error: 'Activity not found' });
             return;
         }
-        res.json(populatedActivitySchema.parse(activity.toObject()));
+        res.json({ data: populatedActivitySchema.parse(activity.toObject()) });
     } catch (error: unknown) {
         next(error);
     }

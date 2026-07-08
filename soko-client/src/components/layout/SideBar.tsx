@@ -14,8 +14,8 @@ const SideBar = () => {
         isActive: boolean;
     }) => `flex items-center gap-[11px] px-3 py-[11px] rounded-xl text-md  ${
         isActive
-            ? 'font-semibold bg-[#e6f0ea] text-[#1F6B4F]'
-            : 'text-[#4A554E]'
+            ? 'font-semibold bg-primary-soft text-primary'
+            : 'text-ink-soft'
     }
 `;
     return (

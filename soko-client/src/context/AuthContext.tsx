@@ -49,7 +49,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             }>('/auth/login', { email, password });
             setAccessToken(data.accessToken);
             setUser(data.user);
-            navigate(data.user.role === 'admin' ? '/admin' : '/');
+            navigate('/');
         },
         [navigate],
     );
@@ -62,7 +62,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             }>('/auth/register', { name, email, password });
             setAccessToken(data.accessToken);
             setUser(data.user);
-            navigate(data.user.role === 'admin' ? '/admin' : '/');
+            navigate('/');
         },
         [navigate],
     );

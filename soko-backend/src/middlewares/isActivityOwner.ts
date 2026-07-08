@@ -3,8 +3,8 @@ import { Activity } from '#models';
 
 const isActivityOwner: RequestHandler = async (req, res, next) => {
     try {
-        const authUserId = (req as any).user;
-        const authUserRole = (req as any).role;
+        const authUserId = req.userId;
+        const authUserRole = req.role;
         const { id } = req.params;
 
         const activity = await Activity.findById(id);

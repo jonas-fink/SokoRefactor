@@ -31,24 +31,24 @@ const SettingsPage = () => {
                 onClick={() => navigate(-1)}
             />
             <div className="flex flex-col items-left gap-2">
-                <h1 className="font-display text-5xl text-text">
+                <h1 className="font-display text-5xl text-ink">
                     Einstellungen
                 </h1>
-                <p className="font-sans text-text-muted">
+                <p className="font-sans text-ink-mute">
                     Verwalte deinen Account
                 </p>
             </div>
-            <div className="bg-surface w-full p-8 rounded-xl flex flex-col gap-4 items-center shadow-card">
+            <div className="bg-surface w-full p-8 rounded-card flex flex-col gap-4 items-center shadow-card">
                 <h2 className="font-display text-2xl text-primary">
                     Creator-Account
                 </h2>
                 {isCreator ? (
-                    <p className="font-sans text-text-muted">
+                    <p className="font-sans text-ink-mute">
                         Du kannst jetzt Events und Aktivitäten hosten.
                     </p>
                 ) : (
                     <>
-                        <p className="font-sans text-text-muted">
+                        <p className="font-sans text-ink-mute">
                             Werde Creator, um eigene Events und Aktivitäten zu
                             hosten.
                         </p>
@@ -61,7 +61,7 @@ const SettingsPage = () => {
                             {busy ? 'wird umgestellt...' : 'Creator werden'}
                         </button>
                         {error && (
-                            <p className="text-danger text-xs text-center">
+                            <p className="text-error text-xs text-center">
                                 {error}
                             </p>
                         )}

@@ -22,3 +22,15 @@ export interface AuthUser {
 export interface ApiResponse<T> {
     data: T;
 }
+
+export interface ScrapedEvent {
+    _id: string;
+    title: string;
+    description: string;
+    startDate: string | null;
+    category: string;
+    locationName: string;
+    municipality: string;
+    sourceUrl: string;
+    source: string;
+}

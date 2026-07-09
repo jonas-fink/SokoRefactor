@@ -2,18 +2,43 @@ import type { RequestHandler } from 'express';
 import { ScrapedEvent } from '#models';
 import { scrapedEventOutputSchema } from '#schemas';
 
+const PAGE_SIZE = 50;
+
 export const getEvents: RequestHandler = async (req, res, next) => {
     try {
-        const { category, from } = req.query;
-        const query: Record<string, unknown> = {};
+        const { category, from, page } = req.query;
+        const currentPage = Math.max(1, Number(page) || 1);
 
-        if (category) query.category = category;
-        if (from) query.startDate = { $gte: new Date(from as string) };
+        const match: Record<string, unknown> = {};
+        if (category) match.category = category;
+        if (from) match.startDate = { $gte: new Date(from as string) };
 
-        const events = await ScrapedEvent.find(query)
-            .sort({ startDate: 1 })
-            .lean();
-        res.json({ data: events.map((e) => scrapedEventOutputSchema.parse(e)) });
+        const [events, total] = await Promise.all([
+            ScrapedEvent.aggregate([
+                { $match: match },
+                // startDate ascending, but events without a date go last
+                {
+                    $addFields: {
+                        _noDate: {
+                            $cond: [{ $ifNull: ['$startDate', false] }, 0, 1],
+                        },
+                    },
+                },
+                { $sort: { _noDate: 1, startDate: 1 } },
+                { $skip: (currentPage - 1) * PAGE_SIZE },
+                { $limit: PAGE_SIZE },
+            ]),
+            ScrapedEvent.countDocuments(match),
+        ]);
+
+        res.json({
+            data: {
+                events: events.map((e) => scrapedEventOutputSchema.parse(e)),
+                total,
+                page: currentPage,
+                pageSize: PAGE_SIZE,
+            },
+        });
     } catch (error: unknown) {
         next(error);
     }

@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { objectIdSchema } from './shared.ts';
 
-// Validates one record parsed from the Kassel calendar before upsert.
 export const scrapedEventSchema = z.object({
     externalId: z.string().min(1),
     title: z.string().min(1),

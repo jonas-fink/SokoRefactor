@@ -19,34 +19,35 @@ const SideBar = () => {
     }
 `;
     return (
-        <div className="flex flex-col p-8 gap-8 bg-surface h-full">
-            <div className="flex items-center">
+        <div className="flex flex-row justify-around gap-2 border-t border-line bg-surface p-3 h-full md:flex-col md:justify-start md:gap-8 md:border-t-0 md:p-8">
+            <div className="hidden items-center md:flex">
                 <img src={mainLogo} width={88} height={88} />
                 <h1 className="text-2xl">Soko</h1>
             </div>
-            <div className="flex flex-col gap-2 justify-start">
+            <nav className="flex flex-row justify-around gap-2 w-full md:flex-col md:justify-start">
                 <NavLink to="/" className={navClass}>
-                    <AiOutlineCompass size={24} /> Entdecken
+                    <AiOutlineCompass size={24} />
+                    <span className="hidden md:inline">Entdecken</span>
                 </NavLink>
                 <NavLink to="/beratung" className={navClass}>
-                    <AiOutlineNotification size={24} /> Beratung & Hilfe
+                    <AiOutlineNotification size={24} />
+                    <span className="hidden md:inline">Beratung & Hilfe</span>
                 </NavLink>
                 <NavLink to="/karte" className={navClass}>
-                    <MdOutlineMap size={24} /> Karte
+                    <MdOutlineMap size={24} />
+                    <span className="hidden md:inline">Karte</span>
                 </NavLink>
                 <NavLink to="/library" className={navClass}>
                     <MdOutlineBookmark size={24} />
-                    Sammlung
+                    <span className="hidden md:inline">Sammlung</span>
                 </NavLink>
                 {user && (
-                    <div>
-                        {' '}
-                        <NavLink to="/profile" className={navClass}>
-                            <RxAvatar size={24} /> Profil
-                        </NavLink>
-                    </div>
+                    <NavLink to="/profile" className={navClass}>
+                        <RxAvatar size={24} />
+                        <span className="hidden md:inline">Profil</span>
+                    </NavLink>
                 )}
-            </div>
+            </nav>
         </div>
     );
 };

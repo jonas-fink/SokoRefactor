@@ -10,7 +10,9 @@ export const getCategories: RequestHandler = async (_req, res, next) => {
             ScrapedEvent.distinct('category'),
         ]);
         const merged = [...new Set([...tags, ...categories])]
-            .filter((c): c is string => typeof c === 'string' && c.trim() !== '')
+            .filter(
+                (c): c is string => typeof c === 'string' && c.trim() !== '',
+            )
             .sort((a, b) => a.localeCompare(b, 'de'));
         res.json({ data: merged });
     } catch (error: unknown) {

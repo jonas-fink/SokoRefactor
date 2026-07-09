@@ -50,17 +50,6 @@ const activitySchema = new Schema(
         },
         tags: {
             type: [String],
-            enum: [
-                'Sport',
-                'Essen',
-                'Kultur',
-                'Musik',
-                'Natur',
-                'Gaming',
-                'Soziales',
-                'Workshop',
-                'Familie',
-            ],
             default: [],
         },
     },

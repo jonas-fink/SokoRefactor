@@ -1,1 +1,1 @@
-
+export * from './scrapeKassel.ts';

@@ -1,18 +1,6 @@
 import { z } from 'zod';
 import { objectIdSchema } from './shared.ts';
 
-const ActivityTags = [
-    'Sport',
-    'Essen',
-    'Kultur',
-    'Musik',
-    'Natur',
-    'Gaming',
-    'Soziales',
-    'Workshop',
-    'Familie',
-] as const;
-
 const activitySchema = z.object({
     title: z.string().min(5, 'Title is required'),
     image: z.preprocess(
@@ -31,7 +19,7 @@ const activitySchema = z.object({
             .length(2, 'Coordinates must be [longitude, latitude'),
     }),
     userId: objectIdSchema,
-    tags: z.array(z.enum(ActivityTags)).default([]),
+    tags: z.array(z.string()).default([]),
 });
 
 export const activityOutputSchema = activitySchema.extend({

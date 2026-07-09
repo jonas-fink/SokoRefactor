@@ -19,6 +19,7 @@ const formatDate = (iso: string | null) =>
         : 'Termin offen';
 
 const LandingPage = () => {
+    const [query, setQuery] = useState('');
     const [data, setData] = useState<EventsPage | null>(null);
     const [categories, setCategories] = useState<string[]>([]);
     const [category, setCategory] = useState('');
@@ -43,60 +44,74 @@ const LandingPage = () => {
 
     const totalPages = data ? Math.ceil(data.total / data.pageSize) : 0;
 
+    const filteredData = data?.events.filter(
+        (d) =>
+            d.title.toLowerCase().includes(query.toLowerCase()) ||
+            d.description.toLowerCase().includes(query.toLowerCase()) ||
+            d.category.toLowerCase().includes(query.toLowerCase()),
+    );
+
     return (
-        <div className="mx-auto max-w-6xl px-4 py-8">
-            <div className="md:flex-wrap flex flex-col justify-center items-start gap-3">
-                <div>
-                    {' '}
-                    <h1 className="text-5xl">Entdecke deine Nachbarschaft</h1>
+        <div className="mx-auto w-full py-8">
+            <div className="flex flex-col lg:flex-row justify-center items-start gap-3">
+                <div className="flex flex-col gap-2 flex-1">
+                    <h1 className="text-3xl sm:text-4xl lg:text-5xl">Entdecke deine Nachbarschaft</h1>
                     <h3 className="text-ink-soft">
                         {error
                             ? 'Angebote konnten nicht geladen werden'
                             : `${data?.total ?? '…'} Angebote & Beratungsstellen rund um Kassel`}
                     </h3>
                 </div>
-
-                <div className="flex md:flex-nowrap flex-wrap gap-3">
-                    <select
-                        className="field"
-                        value={category}
-                        onChange={(e) => {
-                            setCategory(e.target.value);
-                            setPage(1);
-                        }}
-                    >
-                        <option value="">Alle Kategorien</option>
-                        {categories.map((c) => (
-                            <option key={c} value={c}>
-                                {c}
-                            </option>
-                        ))}
-                    </select>
+                <div className="flex w-full flex-wrap gap-3 flex-1">
                     <input
-                        type="date"
-                        className="field"
-                        value={from}
-                        onChange={(e) => {
-                            setFrom(e.target.value);
-                            setPage(1);
-                        }}
+                        type="search"
+                        className="field w-full"
+                        placeholder="Suche nach Schlagwort..."
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
                     />
-                    {from && (
-                        <button
-                            className="btn-secondary"
-                            onClick={() => {
-                                setFrom('');
+                    <div className="flex w-full flex-nowrap gap-3">
+                        <select
+                            className="field flex-1 min-w-0"
+                            value={category}
+                            onChange={(e) => {
+                                setCategory(e.target.value);
                                 setPage(1);
                             }}
                         >
-                            Datum zurücksetzen
-                        </button>
-                    )}
+                            <option value="">Alle Kategorien</option>
+                            {categories.map((c) => (
+                                <option key={c} value={c}>
+                                    {c}
+                                </option>
+                            ))}
+                        </select>
+                        <input
+                            type="date"
+                            className="field shrink-0"
+                            value={from}
+                            onChange={(e) => {
+                                setFrom(e.target.value);
+                                setPage(1);
+                            }}
+                        />
+                        {from && (
+                            <button
+                                className="btn-secondary text-error"
+                                onClick={() => {
+                                    setFrom('');
+                                    setPage(1);
+                                }}
+                            >
+                                X
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
 
-            <div className="mt-8 grid snap-x snap-mandatory auto-cols-[minmax(280px,1fr)] grid-flow-col grid-rows-2 gap-4 overflow-x-auto pb-4">
-                {data?.events.map((event) => (
+            <div className="mt-8 grid snap-x snap-mandatory auto-cols-[minmax(280px,1fr)] grid-flow-col grid-rows-2 gap-4 overflow-x-auto pb-4 pt-2">
+                {filteredData?.map((event) => (
                     <a
                         key={event._id}
                         href={event.sourceUrl}
@@ -124,7 +139,7 @@ const LandingPage = () => {
             {totalPages > 1 && (
                 <div className="mt-6 flex items-center justify-center gap-4">
                     <button
-                        className="btn-secondary disabled:opacity-40"
+                        className="btn-secondary disabled:opacity-40 cursor-pointer"
                         disabled={page <= 1}
                         onClick={() => setPage((p) => p - 1)}
                     >
@@ -134,7 +149,7 @@ const LandingPage = () => {
                         Seite {page} von {totalPages}
                     </span>
                     <button
-                        className="btn-secondary disabled:opacity-40"
+                        className="btn-secondary disabled:opacity-40 cursor-pointer"
                         disabled={page >= totalPages}
                         onClick={() => setPage((p) => p + 1)}
                     >

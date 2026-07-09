@@ -1,9 +1,9 @@
-import { AiOutlineSetting } from 'react-icons/ai';
+import { AiOutlineLogout, AiOutlineSetting } from 'react-icons/ai';
 import { NavLink } from 'react-router';
 import { useAuth } from '../context/auth-context';
 
 const Profile = () => {
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
 
     const initials =
         user?.name
@@ -22,11 +22,15 @@ const Profile = () => {
                 </div>
             </div>
             <div>
-                <div className="w-full">
+                <div className="flex w-full flex-col gap-3">
                     <NavLink to="/settings" className="flex field">
                         <AiOutlineSetting size={24} className="text-primary" />
                         Einstellungen
                     </NavLink>
+                    <button className="flex field" onClick={logout}>
+                        <AiOutlineLogout size={24} className="text-primary" />
+                        Logout
+                    </button>
                 </div>
             </div>
         </div>

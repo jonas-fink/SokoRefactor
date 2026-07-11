@@ -33,9 +33,9 @@ const SideBar = () => {
                     <AiOutlineNotification size={24} />
                     <span className="hidden md:inline">Beratung & Hilfe</span>
                 </NavLink>
-                <NavLink to="/karte" className={navClass}>
+                <NavLink to="/erleben" className={navClass}>
                     <MdOutlineMap size={24} />
-                    <span className="hidden md:inline">Karte</span>
+                    <span className="hidden md:inline">Events</span>
                 </NavLink>
                 <NavLink to="/library" className={navClass}>
                     <MdOutlineBookmark size={24} />

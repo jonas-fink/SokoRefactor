@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { api } from '../utils/api';
 import type { ScrapedEvent } from '../types';
+import { NavLink } from 'react-router';
+import { AiOutlineCalendar, AiOutlineNotification } from 'react-icons/ai';
+import { useAuth } from '../context/auth-context';
 
 interface EventsPage {
     events: ScrapedEvent[];
@@ -19,6 +22,7 @@ const formatDate = (iso: string | null) =>
         : 'Termin offen';
 
 const LandingPage = () => {
+    const { user } = useAuth();
     const [query, setQuery] = useState('');
     const [data, setData] = useState<EventsPage | null>(null);
     const [categories, setCategories] = useState<string[]>([]);
@@ -52,14 +56,42 @@ const LandingPage = () => {
     );
 
     return (
-        <div className="mx-auto w-full py-8">
+        <div className="mx-auto w-full py-8 flex flex-col gap-8">
+            {/* Header */}
+            <h1 className="md:text-5xl text-3xl">
+                Guten Tag {user ? user.name : 'Guest'}. Was suchst du heute?
+            </h1>
+            <div className="flex gap-3 pb-8">
+                <div className="card bg-brand flex flex-col justify-center items-center w-1/2 shadow-card">
+                    {' '}
+                    <NavLink to="/erleben" className="flex flex-col gap-2 p-4">
+                        <AiOutlineCalendar size={24} />
+                        <h2 className="font-bold text-xl">Erleben</h2>
+                        <p className="text-md">Events & Angebote</p>
+                    </NavLink>
+                </div>
+
+                <div className="card bg-warning text-primary-ink w-1/2 flex flex-col justify-center items-center shadow-card">
+                    <NavLink to="/beratung" className="flex flex-col gap-2 p-4">
+                        <AiOutlineNotification size={24} />
+                        <h2 className="text-primary-ink font-bold text-xl">
+                            Beratung & Hilfe
+                        </h2>
+                        <p className="text-md">Kostenlos & vertraulich</p>
+                    </NavLink>
+                </div>
+            </div>
+
+            {/* Discover */}
             <div className="flex flex-col lg:flex-row justify-center items-start gap-3">
                 <div className="flex flex-col gap-2 flex-1">
-                    <h1 className="text-3xl sm:text-4xl lg:text-5xl">Entdecke deine Nachbarschaft</h1>
+                    <h1 className="text-3xl sm:text-4xl lg:text-5xl">
+                        Entdecke deine Nachbarschaft
+                    </h1>
                     <h3 className="text-ink-soft">
                         {error
                             ? 'Angebote konnten nicht geladen werden'
-                            : `${data?.total ?? '…'} Angebote & Beratungsstellen rund um Kassel`}
+                            : `${data?.total ?? '…'} Angebote & Events rund aus dem Kasseler Veranstaltungskalender`}
                     </h3>
                 </div>
                 <div className="flex w-full flex-wrap gap-3 flex-1">
@@ -109,7 +141,6 @@ const LandingPage = () => {
                     </div>
                 </div>
             </div>
-
             <div className="mt-8 grid snap-x snap-mandatory auto-cols-[minmax(280px,1fr)] grid-flow-col grid-rows-2 gap-4 overflow-x-auto pb-4 pt-2">
                 {filteredData?.map((event) => (
                     <a
@@ -135,7 +166,6 @@ const LandingPage = () => {
                     </a>
                 ))}
             </div>
-
             {totalPages > 1 && (
                 <div className="mt-6 flex items-center justify-center gap-4">
                     <button

@@ -22,7 +22,7 @@ const App = () => {
                     <Route index element={<LandingPage />} />
 
                     <Route path="/beratung" element={<Beratung />} />
-                    <Route path="/karte" element={<Map />} />
+                    <Route path="/erleben" element={<Map />} />
                     <Route element={<ProtectedRoute />}>
                         <Route path="/library" element={<Library />} />
                         <Route path="/settings" element={<Settings />} />

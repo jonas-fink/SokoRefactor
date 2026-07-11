@@ -21,6 +21,7 @@
     --color-accent: #e8a33d; /* honey amber — “Beratung & Hilfe” */
     --color-accent-ink: #2a1e06; /* text/icon on accent */
     --color-accent-soft: #fbeed6; /* amber tinted backgrounds */
+    --color-brand: #378262;
 
     /* Category accents (life areas) */
     --color-cat-behoerden: #3763b0; /* Behörden & Ämter */

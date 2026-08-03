@@ -16,6 +16,7 @@ import Asyl from './pages/Asyl';
 import Family from './pages/Family';
 import Sucht from './pages/Sucht';
 import Finanzen from './pages/Finanzen';
+import Erstellen from './pages/Erstellen';
 
 const App = () => {
     return (
@@ -40,6 +41,9 @@ const App = () => {
                         <Route path="/library" element={<Library />} />
                         <Route path="/settings" element={<Settings />} />
                         <Route path="/profile" element={<Profile />} />
+                    </Route>
+                    <Route element={<ProtectedRoute requireCreator />}>
+                        <Route path="/erstellen" element={<Erstellen />} />
                     </Route>
                 </Route>
             </Routes>

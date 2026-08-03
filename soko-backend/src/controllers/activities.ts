@@ -47,7 +47,14 @@ export const createActivity: RequestHandler<
     try {
         const { title, description, date, price, location } = req.body;
         const image = req.body.image ?? 'https://placehold.net/600x600.png';
-        if (!title || !description || !date || !price || !location) {
+        // price darf 0 sein (kostenlose Angebote), deshalb kein !price
+        if (
+            !title ||
+            !description ||
+            !date ||
+            price === undefined ||
+            !location
+        ) {
             res.status(400).json({
                 error: 'title, description, date, price and location are required',
             });
@@ -98,7 +105,14 @@ export const updateActivity: RequestHandler<
             params: { id },
         } = req;
         const { title, description, date, price, location } = req.body;
-        if (!title || !description || !date || !price || !location) {
+        // price darf 0 sein (kostenlose Angebote), deshalb kein !price
+        if (
+            !title ||
+            !description ||
+            !date ||
+            price === undefined ||
+            !location
+        ) {
             res.status(400).json({
                 error: 'title, description, date and location are required',
             });

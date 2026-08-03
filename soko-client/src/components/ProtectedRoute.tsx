@@ -1,7 +1,7 @@
 import { Navigate, Outlet } from 'react-router';
-import { useAuth } from '../context/auth-context';
+import { useAuth, canCreate } from '../context/auth-context';
 
-const ProtectedRoute = () => {
+const ProtectedRoute = ({ requireCreator = false }) => {
     const { user, loading } = useAuth();
 
     if (loading) {
@@ -13,6 +13,9 @@ const ProtectedRoute = () => {
     }
     if (!user) {
         return <Navigate to="/login" replace />;
+    }
+    if (requireCreator && !canCreate(user)) {
+        return <Navigate to="/settings" replace />;
     }
     return <Outlet />;
 };

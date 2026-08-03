@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '../context/auth-context';
+import { useAuth, canCreate } from '../context/auth-context';
 import { AiOutlineArrowLeft } from 'react-icons/ai';
 import { useNavigate } from 'react-router';
 
@@ -21,7 +21,7 @@ const SettingsPage = () => {
         }
     };
 
-    const isCreator = user?.role === 'creator' || user?.role === 'admin';
+    const isCreator = canCreate(user);
 
     return (
         <div className="flex flex-col gap-8 w-full max-w-2xl px-4 min-h-screen mx-auto mt-16">

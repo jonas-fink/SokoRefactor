@@ -2,8 +2,9 @@ import { NavLink } from 'react-router';
 import mainLogo from '../../assets/logo.png';
 import { AiOutlineCompass, AiOutlineNotification } from 'react-icons/ai';
 import { MdOutlineMap, MdOutlineBookmark } from 'react-icons/md';
-import { useAuth } from '../../context/auth-context';
+import { useAuth, canCreate } from '../../context/auth-context';
 import { RxAvatar } from 'react-icons/rx';
+import { AiOutlinePlusCircle } from 'react-icons/ai';
 
 const SideBar = () => {
     const { user } = useAuth();
@@ -41,12 +42,19 @@ const SideBar = () => {
                     <MdOutlineBookmark size={24} />
                     <span className="hidden md:inline">Sammlung</span>
                 </NavLink>
+                {canCreate(user) && (
+                    <NavLink to="/erstellen" className={navClass}>
+                        <AiOutlinePlusCircle size={24} />
+                        <span className="hidden md:inline">Erstellen</span>
+                    </NavLink>
+                )}
                 {user && (
                     <NavLink to="/profile" className={navClass}>
                         <RxAvatar size={24} />
                         <span className="hidden md:inline">Profil</span>
                     </NavLink>
                 )}
+                {user?.role === 'creator'}
             </nav>
         </div>
     );

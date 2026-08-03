@@ -23,6 +23,11 @@ export interface AuthContextValue {
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
 
+// ponytail: one predicate for "darf erstellen", admin zählt als creator.
+// Eigene Rollen-Helper erst, wenn es mehr als diese eine Rollenfrage gibt.
+export const canCreate = (user: AuthUser | null) =>
+    user?.role === 'creator' || user?.role === 'admin';
+
 export function useAuth(): AuthContextValue {
     const ctx = useContext(AuthContext);
     if (!ctx) throw new Error('useAuth has to be used within <AuthProvider>');

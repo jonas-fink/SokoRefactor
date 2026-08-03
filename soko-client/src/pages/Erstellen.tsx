@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router';
@@ -7,6 +7,7 @@ import {
     type ActivityFormData,
 } from '../schemas/activitySchema';
 import { api } from '../utils/api';
+import { geocode } from '../utils/geocode';
 
 const field =
     'border border-line rounded-control p-4 focus:outline-none focus:border-primary bg-transparent';
@@ -18,13 +19,33 @@ const Erstellen = () => {
     const {
         register,
         handleSubmit,
+        setValue,
         formState: { errors, isSubmitting },
         setError,
     } = useForm<ActivityFormData>({
         resolver: zodResolver(activityFormSchema),
-        // ponytail: Kassel als Default, Map-Picker wenn Koordinaten-Tippen nervt
         defaultValues: { price: 0, lng: 9.4797, lat: 51.3127 },
     });
+
+    const [geo, setGeo] = useState<{
+        status: 'idle' | 'loading' | 'ok' | 'notfound' | 'error';
+        label?: string;
+    }>({ status: 'idle' });
+
+    const onAddressBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
+        const address = e.target.value.trim();
+        if (!address) return setGeo({ status: 'idle' });
+        setGeo({ status: 'loading' });
+        try {
+            const hit = await geocode(address);
+            if (!hit) return setGeo({ status: 'notfound' });
+            setValue('lng', hit.lng, { shouldValidate: true });
+            setValue('lat', hit.lat, { shouldValidate: true });
+            setGeo({ status: 'ok', label: hit.label });
+        } catch {
+            setGeo({ status: 'error' });
+        }
+    };
 
     const onSubmit = async (data: ActivityFormData) => {
         const form = new FormData();
@@ -34,7 +55,10 @@ const Erstellen = () => {
         form.append('price', String(data.price));
         form.append(
             'location',
-            JSON.stringify({ type: 'Point', coordinates: [data.lng, data.lat] }),
+            JSON.stringify({
+                type: 'Point',
+                coordinates: [data.lng, data.lat],
+            }),
         );
         form.append(
             'tags',
@@ -62,7 +86,7 @@ const Erstellen = () => {
     };
 
     return (
-        <div className="flex flex-col gap-8 w-full max-w-2xl px-4 min-h-screen mx-auto mt-16">
+        <div className="flex flex-col gap-8 w-full max-w-4xl px-4 min-h-screen mx-auto mb-8">
             <div className="flex flex-col gap-2">
                 <h1 className="font-display text-5xl text-ink">
                     Event erstellen
@@ -80,7 +104,11 @@ const Erstellen = () => {
                     <label htmlFor="title" className={labelClass}>
                         TITEL
                     </label>
-                    <input id="title" {...register('title')} className={field} />
+                    <input
+                        id="title"
+                        {...register('title')}
+                        className={field}
+                    />
                     {errors.title && (
                         <p className="text-error text-xs">
                             {errors.title.message}
@@ -130,6 +158,7 @@ const Erstellen = () => {
                         type="number"
                         step="0.01"
                         id="price"
+                        min="0"
                         {...register('price', { valueAsNumber: true })}
                         className={field}
                     />
@@ -140,35 +169,42 @@ const Erstellen = () => {
                     )}
                 </div>
 
-                <div className="flex gap-4">
-                    <div className="flex flex-col gap-2 flex-1">
-                        <label htmlFor="lng" className={labelClass}>
-                            LÄNGENGRAD
-                        </label>
-                        <input
-                            type="number"
-                            step="any"
-                            id="lng"
-                            {...register('lng', { valueAsNumber: true })}
-                            className={field}
-                        />
-                    </div>
-                    <div className="flex flex-col gap-2 flex-1">
-                        <label htmlFor="lat" className={labelClass}>
-                            BREITENGRAD
-                        </label>
-                        <input
-                            type="number"
-                            step="any"
-                            id="lat"
-                            {...register('lat', { valueAsNumber: true })}
-                            className={field}
-                        />
-                    </div>
+                <div className="flex flex-col gap-2">
+                    <label htmlFor="address" className={labelClass}>
+                        ADRESSE
+                    </label>
+                    <input
+                        id="address"
+                        placeholder="z.B. Königsplatz 1, Kassel"
+                        onBlur={onAddressBlur}
+                        className={field}
+                    />
+                    {geo.status === 'loading' && (
+                        <p className="text-ink-mute text-xs">Suche Adresse…</p>
+                    )}
+                    {geo.status === 'ok' && (
+                        <p className="text-ink-soft text-xs">✓ {geo.label}</p>
+                    )}
+                    {geo.status === 'notfound' && (
+                        <p className="text-error text-xs">
+                            Adresse nicht gefunden – bitte genauer eingeben.
+                        </p>
+                    )}
+                    {geo.status === 'error' && (
+                        <p className="text-error text-xs">
+                            Adresssuche momentan nicht verfügbar.
+                        </p>
+                    )}
+                    {/* verstecktes lng/lat, gefüllt vom Geocoder */}
+                    <input
+                        type="hidden"
+                        {...register('lng', { valueAsNumber: true })}
+                    />
+                    <input
+                        type="hidden"
+                        {...register('lat', { valueAsNumber: true })}
+                    />
                 </div>
-                {(errors.lng || errors.lat) && (
-                    <p className="text-error text-xs">Ungültige Koordinaten</p>
-                )}
 
                 <div className="flex flex-col gap-2">
                     <label htmlFor="tags" className={labelClass}>
@@ -198,7 +234,7 @@ const Erstellen = () => {
                 <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="btn-primary w-full"
+                    className="btn-primary w-full cursor-pointer"
                 >
                     {isSubmitting ? 'Wird gespeichert...' : 'Veröffentlichen'}
                 </button>

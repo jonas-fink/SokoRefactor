@@ -1,9 +1,10 @@
 import type { RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
+import type { UserRole } from '#models';
 
 interface TokenPayload {
     userId: string;
-    role?: 'user' | 'admin';
+    role?: UserRole;
 }
 
 const protect: RequestHandler = (req, res, next) => {

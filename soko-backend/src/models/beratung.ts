@@ -1,6 +1,27 @@
 import { Schema, model } from 'mongoose';
 
-const activitySchema = new Schema(
+const timeSlotSchema = new Schema(
+    {
+        open: { type: Number, required: true, min: 0, max: 1439 },
+        close: { type: Number, required: true, min: 0, max: 1439 },
+    },
+    { _id: false },
+);
+
+const businessHoursSchema = new Schema(
+    {
+        monday: [timeSlotSchema],
+        tuesday: [timeSlotSchema],
+        wednesday: [timeSlotSchema],
+        thursday: [timeSlotSchema],
+        friday: [timeSlotSchema],
+        saturday: [timeSlotSchema],
+        sunday: [timeSlotSchema],
+    },
+    { _id: false },
+);
+
+const beratungSchema = new Schema(
     {
         title: {
             type: String,
@@ -8,7 +29,7 @@ const activitySchema = new Schema(
             trim: true,
             maxlength: [
                 100,
-                'Titel kann nicht länger als 100 Zeichen lang sein',
+                'Titel kann nicht länger als 100 Zeichen lang sein.',
             ],
         },
         image: {
@@ -17,19 +38,10 @@ const activitySchema = new Schema(
         },
         description: {
             type: String,
-            required: [true, 'Beschreibung benötigt'],
+            required: [true, 'Beschreibung wird benötigt'],
             trim: true,
         },
-        date: {
-            type: Date,
-            required: [true, 'Datum wird benötigt'],
-            default: Date.now,
-        },
-        price: {
-            type: Number,
-            required: [true, 'Preis wird benötigt'],
-            default: 0,
-        },
+        openingHours: businessHoursSchema,
         location: {
             type: {
                 type: String,
@@ -55,6 +67,7 @@ const activitySchema = new Schema(
     { timestamps: true },
 );
 
-activitySchema.index({ location: '2dsphere' });
+// ponytail: 2dsphere kept for a future near-me feature; drop if it never ships
+beratungSchema.index({ location: '2dsphere' });
 
-export default model('Activity', activitySchema);
+export default model('Beratung', beratungSchema);

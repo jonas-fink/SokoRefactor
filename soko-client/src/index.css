@@ -155,7 +155,7 @@
 }
 
 /* ---- Component utilities (optional shortcuts) -------------- */
-/* Use these OR compose the utilities directly in JSX. */
+
 @layer components {
     .btn-primary {
         @apply inline-flex items-center justify-center gap-2 rounded-button bg-primary px-5 py-3 font-display font-bold text-primary-ink transition-transform active:scale-[0.98];

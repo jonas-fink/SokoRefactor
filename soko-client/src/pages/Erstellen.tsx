@@ -9,8 +9,6 @@ import {
 import { api } from '../utils/api';
 import { geocode } from '../utils/geocode';
 
-const field =
-    'border border-line rounded-control p-4 focus:outline-none focus:border-primary bg-transparent';
 const labelClass = 'text-md text-ink-soft cursor-pointer hover:text-ink';
 
 const Erstellen = () => {
@@ -107,7 +105,7 @@ const Erstellen = () => {
                     <input
                         id="title"
                         {...register('title')}
-                        className={field}
+                        className="field"
                     />
                     {errors.title && (
                         <p className="text-error text-xs">
@@ -124,7 +122,7 @@ const Erstellen = () => {
                         id="description"
                         rows={4}
                         {...register('description')}
-                        className={field}
+                        className="field"
                     />
                     {errors.description && (
                         <p className="text-error text-xs">
@@ -141,7 +139,7 @@ const Erstellen = () => {
                         type="datetime-local"
                         id="date"
                         {...register('date')}
-                        className={field}
+                        className="field"
                     />
                     {errors.date && (
                         <p className="text-error text-xs">
@@ -160,7 +158,7 @@ const Erstellen = () => {
                         id="price"
                         min="0"
                         {...register('price', { valueAsNumber: true })}
-                        className={field}
+                        className="field"
                     />
                     {errors.price && (
                         <p className="text-error text-xs">
@@ -177,7 +175,7 @@ const Erstellen = () => {
                         id="address"
                         placeholder="z.B. Königsplatz 1, Kassel"
                         onBlur={onAddressBlur}
-                        className={field}
+                        className="field"
                     />
                     {geo.status === 'loading' && (
                         <p className="text-ink-mute text-xs">Suche Adresse…</p>
@@ -210,7 +208,7 @@ const Erstellen = () => {
                     <label htmlFor="tags" className={labelClass}>
                         TAGS (komma-getrennt)
                     </label>
-                    <input id="tags" {...register('tags')} className={field} />
+                    <input id="tags" {...register('tags')} className="field" />
                 </div>
 
                 <div className="flex flex-col gap-2">
@@ -222,7 +220,7 @@ const Erstellen = () => {
                         id="image"
                         ref={imageRef}
                         accept="image/*"
-                        className={field}
+                        className="field"
                     />
                 </div>
 

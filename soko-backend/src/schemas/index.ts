@@ -4,3 +4,4 @@ export * from './activity.ts';
 export * from './favorite.ts';
 export * from './scrapedEvent.ts';
 export * from './shared.ts';
+export * from './beratung.ts';

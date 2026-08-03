@@ -1,7 +1,7 @@
 import { Router, type RequestHandler } from 'express';
 import {
     protect,
-    isActivityOwner,
+    isDocOwner,
     fileUploadHandler,
     canCreate,
 } from '#middlewares';
@@ -13,7 +13,10 @@ import {
     patchActivity,
     deleteActivity,
 } from '#controllers';
+import { Activity } from '#models';
 import { isValidObjectId } from 'mongoose';
+
+const isActivityOwner = isDocOwner(Activity, 'Activity');
 
 const validateId: RequestHandler = (req, res, next) => {
     if (!isValidObjectId(req.params.id)) {

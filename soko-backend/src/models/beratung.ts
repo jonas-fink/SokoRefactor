@@ -67,7 +67,7 @@ const beratungSchema = new Schema(
     { timestamps: true },
 );
 
-// ponytail: 2dsphere kept for a future near-me feature; drop if it never ships
+// 2dsphere kept for a future near-me feature; drop if it never ships
 beratungSchema.index({ location: '2dsphere' });
 
 export default model('Beratung', beratungSchema);

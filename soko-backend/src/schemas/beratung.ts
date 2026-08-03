@@ -42,15 +42,18 @@ export const beratungZodSchema = z.object({
             ),
     }),
 
-    userId: z
-        .string()
-        .length(24, 'User ID muss genau 24 Zeichen lang sein')
-        .regex(/^[0-9a-fA-F]{24}$/, 'Ungültige MongoDB Objekt-ID'),
+    userId: objectIdSchema,
 
     tags: z.array(z.string()).default([]),
 });
 
-export const populatedBeratungSchema = beratungZodSchema.extend({
+export const beratungOutputSchema = beratungZodSchema.extend({
+    _id: objectIdSchema,
+    createdAt: z.date(),
+    updatedAt: z.date(),
+});
+
+export const populatedBeratungSchema = beratungOutputSchema.extend({
     userId: z.object({
         _id: objectIdSchema,
         name: z.string().optional(),
@@ -66,6 +69,7 @@ export const beratungPatchBodySchema = beratungZodSchema
     .omit({ userId: true });
 
 export type BeratungInput = z.infer<typeof beratungZodSchema>;
+export type BeratungOutput = z.infer<typeof beratungOutputSchema>;
 export type PopulatedBeratungOutput = z.infer<typeof populatedBeratungSchema>;
 export type BeratungCreateBody = z.infer<typeof beratungCreateBodySchema>;
 export type BeratungPatchBody = z.infer<typeof beratungPatchBodySchema>;

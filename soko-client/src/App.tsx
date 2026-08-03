@@ -11,6 +11,11 @@ import Signup from './pages/Signup';
 import Settings from './pages/Settings';
 import LayoutSkeleton from './components/skeletons/LayoutSkeleton';
 import Profile from './pages/Profile';
+import Government from './pages/Government';
+import Asyl from './pages/Asyl';
+import Family from './pages/Family';
+import Sucht from './pages/Sucht';
+import Finanzen from './pages/Finanzen';
 
 const App = () => {
     return (
@@ -21,7 +26,15 @@ const App = () => {
                 <Route path="/" element={<AppLayout />}>
                     <Route index element={<LandingPage />} />
 
-                    <Route path="/beratung" element={<Beratung />} />
+                    <Route path="beratung">
+                        <Route index element={<Beratung />} />
+                        <Route path="gov" element={<Government />} />
+                        <Route path="asyl" element={<Asyl />} />
+                        <Route path="familie" element={<Family />} />
+                        <Route path="sucht" element={<Sucht />} />
+                        <Route path="finanzen" element={<Finanzen />} />
+                    </Route>
+
                     <Route path="/erleben" element={<Map />} />
                     <Route element={<ProtectedRoute />}>
                         <Route path="/library" element={<Library />} />

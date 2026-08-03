@@ -8,29 +8,35 @@ import {
 import { useNavigate } from 'react-router';
 import { PiHouseLine, PiGlobeSimple } from 'react-icons/pi';
 import { MdOutlineFamilyRestroom } from 'react-icons/md';
+import { Link } from 'react-router';
 
 const beratungCategory = [
     {
+        href: '/beratung/gov',
         name: 'Behörden & Ämter',
         description: 'Anträge, Formulare, Termine',
         icon: <PiHouseLine size={24} />,
     },
     {
+        href: '/beratung/asyl',
         name: 'Asyl & Migration',
         description: 'Aufenthalt, Sprache, Ankommen',
         icon: <PiGlobeSimple size={24} />,
     },
     {
+        href: '/beratung/familie',
         name: 'Familien & Kinder',
         description: 'Erziehung, Kita, Alltag',
         icon: <MdOutlineFamilyRestroom size={24} />,
     },
     {
+        href: '/beratung/sucht',
         name: 'Sucht & Gesundheit',
         description: 'Vertraulich, ohne Urteil',
         icon: <AiOutlineHeart size={24} />,
     },
     {
+        href: '/beratung/finanzen',
         name: 'Finanzen & Schulden',
         description: 'Budget, Schuldnerberatung',
         icon: <AiOutlineCreditCard size={24} />,
@@ -63,8 +69,12 @@ const Beratung = () => {
             <div className="flex flex-col gap-3">
                 <h3 className="text-xl">Lebensbereiche</h3>
                 {beratungCategory.map((c) => (
-                    <div className="flex justify-between card items-center p-4">
-                        <div key={c.name} className="flex items-center gap-4">
+                    <Link
+                        key={c.name}
+                        to={c.href}
+                        className="flex justify-between card items-center p-4"
+                    >
+                        <div className="flex items-center gap-4">
                             {c.icon}
                             <div>
                                 {' '}
@@ -77,7 +87,7 @@ const Beratung = () => {
                         <div>
                             <AiOutlineArrowRight size={24} />
                         </div>
-                    </div>
+                    </Link>
                 ))}
             </div>
         </div>

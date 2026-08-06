@@ -6,6 +6,7 @@ export {
     authRateLimiter,
     refreshRateLimiter,
     globalRateLimiter,
+    chatRateLimiter,
 } from './rateLimiter.ts';
 export { default as protect } from './protect.ts';
 export { default as isDocOwner } from './isDocOwner.ts';

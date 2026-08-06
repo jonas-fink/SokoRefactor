@@ -10,6 +10,7 @@ import {
     eventRouter,
     categoryRouter,
     beratungRouter,
+    chatRouter,
 } from '#routes';
 
 const app = express();
@@ -26,6 +27,7 @@ app.use('/api/v1/favorites', favoriteRouter);
 app.use('/api/v1/events', eventRouter);
 app.use('/api/v1/categories', categoryRouter);
 app.use('/api/v1/beratungen', beratungRouter);
+app.use('/api/v1/chat', chatRouter);
 
 app.use('*splat', (req, res) => res.status(404).json({ message: 'Not Found' }));
 app.use(errorHandler);

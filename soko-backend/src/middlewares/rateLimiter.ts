@@ -28,3 +28,13 @@ export const globalRateLimiter = rateLimit({
     legacyHeaders: false,
     message: { message: 'Zu viele Anfragen - bitte kurz warten' },
 });
+
+// Strenger als das globale Limit: hinter dem Chat stehen später Kosten pro
+// Call (GenAI), und ein Need-Finding-Dialog braucht keine 300 Requests.
+export const chatRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 20,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    message: { message: 'Zu viele Anfragen - bitte kurz warten' },
+});

@@ -5,3 +5,4 @@ export * from './favorites.ts';
 export * from './events.ts';
 export * from './categories.ts';
 export * from './beratungen.ts';
+export * from './chatbot.ts';

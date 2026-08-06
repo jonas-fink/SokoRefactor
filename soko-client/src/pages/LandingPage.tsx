@@ -5,6 +5,7 @@ import { NavLink } from 'react-router';
 import { AiOutlineCalendar, AiOutlineNotification } from 'react-icons/ai';
 import { useAuth } from '../context/auth-context';
 import OfferCard from '../components/OfferCard';
+import ChatModal from '../components/ChatModal';
 import { useFavorites } from '../hooks/useFavorites';
 
 interface EventsPage {
@@ -34,6 +35,7 @@ const LandingPage = () => {
     const [from, setFrom] = useState('');
     const [page, setPage] = useState(1);
     const [error, setError] = useState(false);
+    const [chatOpen, setChatOpen] = useState(false);
 
     useEffect(() => {
         // Nur Chips, die auf Angebote/Events passen — Beratungs-Keys
@@ -82,6 +84,15 @@ const LandingPage = () => {
             <h1 className="md:text-5xl text-3xl">
                 Guten Tag {user ? user.name : 'Guest'}. Was suchst du heute?
             </h1>
+            <button
+                type="button"
+                className="btn-primary w-full cursor-pointer sm:w-auto sm:self-start"
+                onClick={() => setChatOpen(true)}
+            >
+                Ich weiß nicht, wo ich anfangen soll
+            </button>
+            <ChatModal open={chatOpen} onClose={() => setChatOpen(false)} />
+
             <div className="flex gap-3 pb-8">
                 <div className="card bg-brand flex flex-col justify-center items-center w-1/2 shadow-card">
                     {' '}

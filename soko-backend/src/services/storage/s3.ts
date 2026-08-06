@@ -7,14 +7,10 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-// Credentials kommen über die Default-Provider-Chain aus AWS_ACCESS_KEY_ID /
-// AWS_SECRET_ACCESS_KEY — kein explizites `credentials`-Objekt nötig.
 const client = new S3Client({ region: process.env.S3_REGION });
 const Bucket = process.env.S3_BUCKET ?? '';
 
-// ponytail: Datei komplett in den Speicher lesen. formidable hat sie ohnehin
-// schon auf Platte geschrieben und Anträge sind < 20 MB. Auf `createReadStream`
-// umstellen, sobald grössere Dateien erlaubt werden.
+//  Auf `createReadStream` umstellen, sobald grössere Dateien erlaubt werden.
 export const uploadDocument = async (
     filepath: string,
     key: string,

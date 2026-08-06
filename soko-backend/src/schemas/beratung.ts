@@ -70,6 +70,10 @@ export const beratungZodSchema = z.object({
     userId: objectIdSchema,
 
     tags: z.array(z.string()).default([]),
+
+    // Nur bei importierten Datensätzen gesetzt (siehe docs/PARTNER-IMPORT.md).
+    externalId: z.string().trim().min(1).optional(),
+    source: z.string().trim().min(1).optional(),
 });
 
 export const beratungOutputSchema = beratungZodSchema.extend({

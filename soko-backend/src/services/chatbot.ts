@@ -132,7 +132,10 @@ export const buildReply = (
     } else if (matches.length === 0) {
         text = 'Ich habe dein Thema erkannt, aber aktuell ist keine passende Stelle eingetragen. Melde dich gern direkt bei einer Beratungsstelle.';
     } else {
-        text = `Das klingt nach einem Thema, bei dem dir diese ${matches.length === 1 ? 'Stelle' : 'Stellen'} weiterhelfen können:`;
+        text =
+            matches.length === 1
+                ? 'Das klingt nach einem Thema, bei dem dir diese Stelle weiterhelfen kann:'
+                : 'Das klingt nach einem Thema, bei dem dir diese Stellen weiterhelfen können:';
     }
 
     return { text, matches, handoff: HANDOFF, disclaimer };

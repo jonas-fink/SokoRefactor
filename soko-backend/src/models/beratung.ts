@@ -82,6 +82,10 @@ const beratungSchema = new Schema(
             type: [String],
             default: [],
         },
+        // Herkunft aus einem Partner-Import. `sparse`, weil manuell angelegte
+        // Beratungen keine externe ID haben — der Upsert-Schlüssel des Imports.
+        externalId: { type: String, sparse: true, unique: true },
+        source: { type: String },
     },
     { timestamps: true },
 );

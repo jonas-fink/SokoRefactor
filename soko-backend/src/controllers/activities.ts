@@ -5,6 +5,7 @@ import {
     type ActivityPatchBody,
 } from '#schemas';
 import { Activity } from '#models';
+import { assertCategories } from '#utils';
 
 type IdParams = { id: string };
 
@@ -60,6 +61,8 @@ export const createActivity: RequestHandler<
             });
             return;
         }
+        if (req.body.tags) await assertCategories(req.body.tags);
+
         const userId = req.userId;
         const activity = await Activity.create({
             ...(req.body satisfies ActivityCreateBody),
@@ -119,6 +122,8 @@ export const updateActivity: RequestHandler<
             return;
         }
 
+        if (req.body.tags) await assertCategories(req.body.tags);
+
         const activity = await Activity.findById(id);
         if (!activity) {
             res.status(404).json({ error: 'Activity not found' });
@@ -147,6 +152,7 @@ export const patchActivity: RequestHandler<
         const { id } = req.params;
         const updates: ActivityPatchBody = req.body;
         delete (updates as Record<string, unknown>)['_id'];
+        if (updates.tags) await assertCategories(updates.tags);
 
         const activity = await Activity.findByIdAndUpdate(
             id,

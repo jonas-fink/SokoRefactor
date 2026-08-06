@@ -32,6 +32,21 @@
     --color-cat-gesundheit-soft: #f6e7ef;
     --color-cat-finanzen: #5b4bb0; /* Finanzen & Schulden */
     --color-cat-finanzen-soft: #eae7f7;
+    --color-cat-asyl: #0e7490; /* Asyl & Migration */
+    --color-cat-asyl-soft: #e0f1f5;
+    --color-cat-sport: #c2410c; /* Sport & Bewegung */
+    --color-cat-sport-soft: #fbe8de;
+    --color-cat-natur: #3f7a34; /* Natur & Draußen */
+    --color-cat-natur-soft: #e8f1e4;
+    --color-cat-kunst: #8b3a9c; /* Kunst & Kultur */
+    --color-cat-kunst-soft: #f3e5f6;
+    --color-cat-bildung: #0f766e; /* Bildung & Kurse */
+    --color-cat-bildung-soft: #def0ee;
+    /* Sammelbecken — bewusst neutral, damit sie nicht wie ein Thema wirken */
+    --color-cat-markt: #6b5b4e; /* Markt & Gastronomie */
+    --color-cat-markt-soft: #efeae5;
+    --color-cat-sonstiges: #5b6470; /* Sonstiges */
+    --color-cat-sonstiges-soft: #eceef1;
 
     /* Status */
     --color-success: #1f6b4f;
@@ -77,6 +92,20 @@
     --color-cat-gesundheit-soft: #2e1f28;
     --color-cat-finanzen: #a99bec;
     --color-cat-finanzen-soft: #23203a;
+    --color-cat-asyl: #5ebacf;
+    --color-cat-asyl-soft: #14282e;
+    --color-cat-sport: #f0946a;
+    --color-cat-sport-soft: #33201a;
+    --color-cat-natur: #8cc47f;
+    --color-cat-natur-soft: #1e2a1b;
+    --color-cat-kunst: #d08ce0;
+    --color-cat-kunst-soft: #2a1b2e;
+    --color-cat-bildung: #5fc0b4;
+    --color-cat-bildung-soft: #122a28;
+    --color-cat-markt: #b6a091;
+    --color-cat-markt-soft: #26211d;
+    --color-cat-sonstiges: #9aa4b2;
+    --color-cat-sonstiges-soft: #20242a;
 
     --color-success: #4fb98c;
     --color-warning: #eab868;
@@ -117,6 +146,20 @@
     --color-cat-gesundheit-soft: var(--color-cat-gesundheit-soft);
     --color-cat-finanzen: var(--color-cat-finanzen);
     --color-cat-finanzen-soft: var(--color-cat-finanzen-soft);
+    --color-cat-asyl: var(--color-cat-asyl);
+    --color-cat-asyl-soft: var(--color-cat-asyl-soft);
+    --color-cat-sport: var(--color-cat-sport);
+    --color-cat-sport-soft: var(--color-cat-sport-soft);
+    --color-cat-natur: var(--color-cat-natur);
+    --color-cat-natur-soft: var(--color-cat-natur-soft);
+    --color-cat-kunst: var(--color-cat-kunst);
+    --color-cat-kunst-soft: var(--color-cat-kunst-soft);
+    --color-cat-bildung: var(--color-cat-bildung);
+    --color-cat-bildung-soft: var(--color-cat-bildung-soft);
+    --color-cat-markt: var(--color-cat-markt);
+    --color-cat-markt-soft: var(--color-cat-markt-soft);
+    --color-cat-sonstiges: var(--color-cat-sonstiges);
+    --color-cat-sonstiges-soft: var(--color-cat-sonstiges-soft);
 
     --color-success: var(--color-success);
     --color-warning: var(--color-warning);

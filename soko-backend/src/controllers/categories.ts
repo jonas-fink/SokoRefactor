@@ -1,20 +1,21 @@
 import type { RequestHandler } from 'express';
-import { Activity, ScrapedEvent } from '#models';
+import { Category } from '#models';
+import { categoryAppliesToSchema, categoryOutputSchema } from '#schemas';
 
-// Live category list: union of the free-form labels actually in use across
-// user activities and scraped events. No dedicated collection needed.
-export const getCategories: RequestHandler = async (_req, res, next) => {
+// Kuratierte Taxonomie aus der Category-Collection — kein distinct()-Union
+// ueber freie Tags mehr. `?appliesTo=beratung` filtert auf einen Bereich.
+export const getCategories: RequestHandler = async (req, res, next) => {
     try {
-        const [tags, categories] = await Promise.all([
-            Activity.distinct('tags'),
-            ScrapedEvent.distinct('category'),
-        ]);
-        const merged = [...new Set([...tags, ...categories])]
-            .filter(
-                (c): c is string => typeof c === 'string' && c.trim() !== '',
-            )
-            .sort((a, b) => a.localeCompare(b, 'de'));
-        res.json({ data: merged });
+        const { appliesTo } = req.query;
+        const filter = categoryAppliesToSchema.safeParse(appliesTo);
+        const categories = await Category.find(
+            filter.success ? { appliesTo: filter.data } : {},
+        )
+            .sort('label')
+            .lean();
+        res.json({
+            data: categories.map((c) => categoryOutputSchema.parse(c)),
+        });
     } catch (error: unknown) {
         next(error);
     }

@@ -5,3 +5,4 @@ export * from './favorite.ts';
 export * from './scrapedEvent.ts';
 export * from './shared.ts';
 export * from './beratung.ts';
+export * from './category.ts';

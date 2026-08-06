@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../utils/api';
-import type { Activity, ScrapedEvent } from '../types';
+import type { Activity, Category, ScrapedEvent } from '../types';
 import { NavLink } from 'react-router';
 import { AiOutlineCalendar, AiOutlineNotification } from 'react-icons/ai';
 import { useAuth } from '../context/auth-context';
@@ -29,14 +29,16 @@ const LandingPage = () => {
     const [query, setQuery] = useState('');
     const [data, setData] = useState<EventsPage | null>(null);
     const [activities, setActivities] = useState<Activity[]>([]);
-    const [categories, setCategories] = useState<string[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
     const [category, setCategory] = useState('');
     const [from, setFrom] = useState('');
     const [page, setPage] = useState(1);
     const [error, setError] = useState(false);
 
     useEffect(() => {
-        api.get<string[]>('/categories')
+        // Nur Chips, die auf Angebote/Events passen — Beratungs-Keys
+        // haetten hier nie einen Treffer.
+        api.get<Category[]>('/categories?appliesTo=activity')
             .then(setCategories)
             .catch(() => setError(true));
         api.get<Activity[]>('/activities')
@@ -54,6 +56,10 @@ const LandingPage = () => {
     }, [page, category, from]);
 
     const totalPages = data ? Math.ceil(data.total / data.pageSize) : 0;
+
+    // Gespeichert wird der Category-Key, angezeigt das Label.
+    const labelOf = (key?: string) =>
+        categories.find((c) => c.key === key)?.label ?? key;
 
     const matchesQuery = (...fields: (string | undefined)[]) =>
         fields.some((f) => f?.toLowerCase().includes(query.toLowerCase()));
@@ -155,19 +161,19 @@ const LandingPage = () => {
                 </button>
                 {categories.map((c) => (
                     <button
-                        key={c}
+                        key={c.key}
                         type="button"
                         className={
-                            category === c
+                            category === c.key
                                 ? 'chip-active cursor-pointer'
                                 : 'chip cursor-pointer'
                         }
                         onClick={() => {
-                            setCategory(c);
+                            setCategory(c.key);
                             setPage(1);
                         }}
                     >
-                        {c}
+                        {c.label}
                     </button>
                 ))}
             </div>
@@ -184,7 +190,7 @@ const LandingPage = () => {
                                 title={activity.title}
                                 description={activity.description}
                                 image={activity.image}
-                                category={activity.tags[0]}
+                                category={labelOf(activity.tags[0])}
                                 dateLabel={formatDate(activity.date)}
                                 isFavorite={isFavorite(
                                     'Activity',
@@ -209,7 +215,7 @@ const LandingPage = () => {
                         id={event._id}
                         title={event.title}
                         description={event.description}
-                        category={event.category}
+                        category={labelOf(event.category)}
                         dateLabel={formatDate(event.startDate)}
                         locationLabel={event.locationName}
                         href={event.sourceUrl}

@@ -17,29 +17,3 @@ export type FavoriteType = {
     createdAt?: Date;
     updatedAt?: Date;
 };
-
-export type ActivityTag =
-    | 'Sport'
-    | 'Essen'
-    | 'Kultur'
-    | 'Musik'
-    | 'Natur'
-    | 'Gaming'
-    | 'Soziales'
-    | 'Workshop'
-    | 'Familie';
-
-export type ActivityType = {
-    _id?: string | Types.ObjectId;
-    title: string;
-    description: string;
-    date: Date;
-    userId: string | Types.ObjectId;
-    location: {
-        type: 'Point';
-        coordinates: [number, number];
-    };
-    tags?: ActivityTag[];
-    createdAt?: Date;
-    updatedAt?: Date;
-};

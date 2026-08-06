@@ -5,3 +5,4 @@ export { default as Activity } from './activity.ts';
 export { default as Favorite } from './favorite.ts';
 export { default as ScrapedEvent } from './scrapedEvent.ts';
 export { default as Beratung } from './beratung.ts';
+export { default as Category } from './category.ts';

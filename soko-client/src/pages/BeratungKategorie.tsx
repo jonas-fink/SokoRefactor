@@ -2,21 +2,28 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { AiOutlineArrowLeft, AiOutlineArrowRight } from 'react-icons/ai';
 import { api } from '../utils/api';
-import { BERATUNG_CATEGORIES, CATEGORY_ICONS } from './Beratung';
-import type { Beratung } from '../types';
+import { CATEGORY_META } from '../categoryMeta';
+import type { Beratung, Category } from '../types';
 
 const BeratungKategorie = () => {
     const { key = '' } = useParams();
     const navigate = useNavigate();
     const [beratungen, setBeratungen] = useState<Beratung[]>([]);
+    const [label, setLabel] = useState('Beratung');
     const [error, setError] = useState('');
 
-    const meta = BERATUNG_CATEGORIES.find((c) => c.key === key);
+    const meta = CATEGORY_META[key];
 
     useEffect(() => {
         api.get<Beratung[]>(`/beratungen?tags=${key}`)
             .then(setBeratungen)
             .catch(() => setError('Angebote konnten nicht geladen werden'));
+        // Label kommt aus der Taxonomie, nicht aus einer zweiten lokalen Liste.
+        api.get<Category[]>('/categories?appliesTo=beratung')
+            .then((cats) =>
+                setLabel(cats.find((c) => c.key === key)?.label ?? 'Beratung'),
+            )
+            .catch(() => setLabel('Beratung'));
     }, [key]);
 
     return (
@@ -28,10 +35,8 @@ const BeratungKategorie = () => {
                 >
                     <AiOutlineArrowLeft size={24} />
                 </button>
-                <span className={meta?.accent}>{CATEGORY_ICONS[key]}</span>
-                <h2 className="text-2xl font-bold">
-                    {meta?.name ?? 'Beratung'}
-                </h2>
+                <span className={meta?.accent}>{meta?.icon}</span>
+                <h2 className="text-2xl font-bold">{label}</h2>
             </div>
             {meta && <p className="text-ink-soft">{meta.description}</p>}
 

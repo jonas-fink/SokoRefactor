@@ -25,6 +25,15 @@ export interface ApiResponse<T> {
 
 export type ItemType = 'Activity' | 'ScrapedEvent' | 'Beratung';
 
+/** Kuratierte Taxonomie aus `GET /categories`; `key` steht in `tags`. */
+export interface Category {
+    _id: string;
+    key: string;
+    label: string;
+    appliesTo: ('activity' | 'beratung')[];
+    colorToken?: string;
+}
+
 export interface GeoPoint {
     type: 'Point';
     coordinates: [number, number];

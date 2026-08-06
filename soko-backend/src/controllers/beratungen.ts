@@ -5,6 +5,7 @@ import {
     type BeratungPatchBody,
 } from '#schemas';
 import { Beratung } from '#models';
+import { assertCategories } from '#utils';
 
 type IdParams = { id: string };
 
@@ -38,6 +39,8 @@ export const createBeratung: RequestHandler<
     BeratungCreateBody
 > = async (req, res, next) => {
     try {
+        if (req.body.tags) await assertCategories(req.body.tags);
+
         const image = req.body.image ?? 'https://placehold.net/600x600.png';
         const userId = req.userId;
         const beratung = await Beratung.create({
@@ -84,6 +87,8 @@ export const updateBeratung: RequestHandler<
             params: { id },
         } = req;
 
+        if (req.body.tags) await assertCategories(req.body.tags);
+
         const beratung = await Beratung.findById(id);
         if (!beratung) {
             res.status(404).json({ error: 'Beratung not found' });
@@ -111,6 +116,7 @@ export const patchBeratung: RequestHandler<
         const { id } = req.params;
         const updates: BeratungPatchBody = req.body;
         delete (updates as Record<string, unknown>)['_id'];
+        if (updates.tags) await assertCategories(updates.tags);
 
         const beratung = await Beratung.findByIdAndUpdate(
             id,

@@ -46,6 +46,8 @@
         "test": "node --test --conditions dev 'src/**/*.test.ts'",
         "scrape": "node --conditions dev --env-file=.env src/scripts/scrapeKassel.ts",
         "migrate:favorites": "node --conditions dev --env-file=.env src/scripts/migrateFavorites.ts",
+        "seed:categories": "node --conditions dev --env-file=.env src/scripts/seedCategories.ts",
+        "migrate:tags": "node --conditions dev --env-file=.env src/scripts/migrateTags.ts",
         "prebuild": "rm -rf dist",
         "build": "tsc",
         "prestart": "npm run build",

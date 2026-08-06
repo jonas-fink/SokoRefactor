@@ -16,7 +16,14 @@ export const getFavorites: RequestHandler = async (req, res, next) => {
         const favorites = await Favorite.find({ userId })
             .populate('itemId')
             .lean();
-        res.json({ data: favorites.map((f) => populatedFavoriteSchema.parse(f)) });
+        // Zeigt ein Favorit auf ein geloeschtes Item, ist `itemId` nach dem
+        // populate `null`. Ohne diesen Filter reisst ein einziger toter Eintrag
+        // die komplette Sammlung in einen 500.
+        res.json({
+            data: favorites
+                .filter((f) => f.itemId)
+                .map((f) => populatedFavoriteSchema.parse(f)),
+        });
     } catch (error: unknown) {
         next(error);
     }

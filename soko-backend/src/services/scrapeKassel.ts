@@ -6,27 +6,34 @@ import { toCategoryKey, unmappedCategories } from '#utils';
 const BASE_URL = 'https://www.kassel.de/veranstaltungskalender.php';
 const PAGE_PARAM = 'sp:page[kassel-event-search.form][0]';
 
+// Schluessel sind die ersten drei Buchstaben: die Quelle schreibt lange
+// Monatsnamen ab ("6. Aug. 2026"), kurze aber aus ("9. Juli 2026"). Die
+// Abkuerzung hat frueher jeden Termin in Jan/Feb/Apr/Aug/Sep/Okt/Nov/Dez
+// verschluckt — die Events landeten still ohne Datum in der Datenbank.
 const MONTHS: Record<string, number> = {
-    januar: 0,
-    februar: 1,
-    märz: 2,
-    april: 3,
+    jan: 0,
+    feb: 1,
+    mär: 2,
+    apr: 3,
     mai: 4,
-    juni: 5,
-    juli: 6,
-    august: 7,
-    september: 8,
-    oktober: 9,
-    november: 10,
-    dezember: 11,
+    jun: 5,
+    jul: 6,
+    aug: 7,
+    sep: 8,
+    okt: 9,
+    nov: 10,
+    dez: 11,
 };
 
-// "9. Juli 2026" + "ab 00:00" -> Date. Local time, no tz/i18n lib.
+// "9. Juli 2026" / "6. Aug. 2026" + "ab 00:00" -> Date. Local time, no tz lib.
 // ponytail: naive parse; add date-fns/tz only if DST correctness bites.
-function parseGermanDate(dateStr: string, timeStr: string): Date | null {
-    const m = dateStr.match(/(\d{1,2})\.\s*([A-Za-zäöüÄÖÜ]+)\s*(\d{4})/);
+export function parseGermanDate(
+    dateStr: string,
+    timeStr: string,
+): Date | null {
+    const m = dateStr.match(/(\d{1,2})\.\s*([A-Za-zäöüÄÖÜ]+)\.?\s*(\d{4})/);
     if (!m) return null;
-    const month = MONTHS[m[2].toLowerCase()];
+    const month = MONTHS[m[2].toLowerCase().slice(0, 3)];
     if (month === undefined) return null;
     const day = Number(m[1]);
     const year = Number(m[3]);

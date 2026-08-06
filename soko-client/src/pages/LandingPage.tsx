@@ -72,9 +72,14 @@ const LandingPage = () => {
 
     // Activities werden clientseitig gefiltert — GET /activities kennt weder
     // Pagination noch Textsuche, die Liste ist klein.
+    // Vergangenes fliegt raus, genau wie bei den Events (dort filtert das
+    // Backend). Ab Mitternacht, damit ein Angebot von heute Mittag nicht schon
+    // vormittags verschwindet.
+    const startOfToday = new Date().setHours(0, 0, 0, 0);
     const filteredActivities = activities.filter(
         (a) =>
             (!category || a.tags.includes(category)) &&
+            new Date(a.date).getTime() >= startOfToday &&
             matchesQuery(a.title, a.description, ...a.tags),
     );
 

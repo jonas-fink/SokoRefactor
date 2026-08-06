@@ -56,6 +56,13 @@ const SideBar = () => {
                 )}
                 {user?.role === 'creator'}
             </nav>
+            {/* Auf Mobile trägt die untere Leiste nur die Hauptnavigation. */}
+            <NavLink
+                to="/datenschutz"
+                className="mt-auto hidden text-sm text-ink-mute hover:text-ink md:inline"
+            >
+                Datenschutz
+            </NavLink>
         </div>
     );
 };

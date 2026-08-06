@@ -1,0 +1,120 @@
+/**
+ * Datenschutzhinweise, Schwerpunkt Chat-Assistent.
+ *
+ * ACHTUNG, zwei Dinge sind noch offen und stehen absichtlich sichtbar im Text:
+ * 1. Die Angaben zum Verantwortlichen sind Platzhalter.
+ * 2. Der Abschnitt „Kostenloses Kontingent" gilt nur, solange der
+ *    Gemini-API-Key ohne Abrechnung läuft. Mit aktivierter Abrechnung nutzt
+ *    Google die Inhalte nicht mehr zur Produktverbesserung — dann muss dieser
+ *    Abschnitt ersetzt werden.
+ * Vor dem Live-Gang gehört der Text durch eine juristische Prüfung.
+ */
+const Datenschutz = () => (
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 py-8">
+        <h1 className="text-3xl sm:text-4xl">Datenschutz</h1>
+
+        <section className="flex flex-col gap-2">
+            <h2 className="text-2xl">Verantwortlich</h2>
+            <p className="text-ink-soft">
+                [Name des Betreibers], [Anschrift], [E-Mail-Adresse]. Bei Fragen
+                zum Datenschutz oder zu deinen Rechten erreichst du uns unter
+                dieser Adresse.
+            </p>
+        </section>
+
+        <section className="flex flex-col gap-2">
+            <h2 className="text-2xl">Der Chat-Assistent</h2>
+            <p className="text-ink-soft">
+                Wenn du den Chat nutzt, schickt deine App den Text, den du
+                eingibst, an unseren Server. Von dort geht er zusammen mit einer
+                Liste unserer Beratungsangebote an{' '}
+                <strong>Google Gemini</strong>, damit daraus ein Vorschlag
+                entsteht, welche Stelle zu deinem Anliegen passt. Die Antwort
+                bekommst du zurück — bei uns wird deine Nachricht{' '}
+                <strong>nicht gespeichert</strong>. Du brauchst dafür kein Konto.
+            </p>
+            <p className="text-ink-soft">
+                Deine IP-Adresse verarbeiten wir kurzzeitig, um die Zahl der
+                Anfragen pro Person zu begrenzen (Schutz vor Missbrauch). Dieser
+                Zähler liegt nur im Arbeitsspeicher und ist nach 15 Minuten weg.
+            </p>
+        </section>
+
+        <section className="flex flex-col gap-2">
+            <h2 className="text-2xl">Was das für sensible Themen bedeutet</h2>
+            <p className="text-ink-soft">
+                Google verarbeitet die Inhalte auch außerhalb der EU, unter
+                anderem in den USA. Wir nutzen die Gemini-Schnittstelle derzeit
+                im <strong>kostenlosen Kontingent</strong>. Dabei darf Google die
+                gesendeten Inhalte zur Verbesserung eigener Produkte verwenden,
+                und Mitarbeitende von Google können Inhalte einsehen.
+            </p>
+            <p className="text-ink-soft">
+                Deshalb ganz deutlich:{' '}
+                <strong>
+                    schreib in den Chat keine Namen, Adressen, Geburtsdaten,
+                    Aktenzeichen oder Angaben zu Gesundheit, Herkunft oder
+                    Finanzen, die dich identifizierbar machen.
+                </strong>{' '}
+                Beschreib dein Anliegen allgemein — für einen passenden Vorschlag
+                reicht „Ich habe Mietschulden" völlig aus.
+            </p>
+            <p className="text-ink-soft">
+                Du kannst alle Beratungsangebote auch{' '}
+                <strong>ohne den Chat</strong> finden: über die Themenübersicht
+                unter „Beratung &amp; Hilfe". Dabei verlässt keine Angabe von dir
+                unseren Server.
+            </p>
+        </section>
+
+        <section className="flex flex-col gap-2">
+            <h2 className="text-2xl">Rechtsgrundlage und Widerruf</h2>
+            <p className="text-ink-soft">
+                Die Übermittlung an Google erfolgt auf Grundlage deiner
+                Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), die du vor der ersten
+                Chat-Nachricht bestätigst. Du kannst sie jederzeit widerrufen,
+                indem du den Chat nicht weiter nutzt — auf die Rechtmäßigkeit der
+                bis dahin erfolgten Verarbeitung hat das keinen Einfluss.
+            </p>
+        </section>
+
+        <section className="flex flex-col gap-2">
+            <h2 className="text-2xl">Übrige Funktionen</h2>
+            <ul className="flex list-disc flex-col gap-1 pl-5 text-ink-soft">
+                <li>
+                    <strong>Konto:</strong> Name, E-Mail-Adresse und ein
+                    verschlüsseltes Passwort, um dich anzumelden und deine
+                    Sammlung zu speichern. Nur nötig, wenn du dir etwas merken
+                    willst.
+                </li>
+                <li>
+                    <strong>Sammlung:</strong> welche Angebote du dir gemerkt
+                    hast — sichtbar nur für dich.
+                </li>
+                <li>
+                    <strong>Karte:</strong> Kartenausschnitte und die Suche nach
+                    Adressen laufen über OpenStreetMap; dabei wird deine
+                    IP-Adresse an deren Server übertragen.
+                </li>
+                <li>
+                    <strong>Bilder und Dokumente</strong> liegen bei Cloudinary
+                    bzw. Amazon S3. Anträge und Merkblätter rufst du über einen
+                    zeitlich begrenzten Link ab.
+                </li>
+            </ul>
+        </section>
+
+        <section className="flex flex-col gap-2">
+            <h2 className="text-2xl">Deine Rechte</h2>
+            <p className="text-ink-soft">
+                Du hast das Recht auf Auskunft, Berichtigung, Löschung,
+                Einschränkung der Verarbeitung, Datenübertragbarkeit und
+                Widerspruch sowie das Recht, dich bei einer Aufsichtsbehörde zu
+                beschweren. Für Hessen ist das der Hessische Beauftragte für
+                Datenschutz und Informationsfreiheit.
+            </p>
+        </section>
+    </div>
+);
+
+export default Datenschutz;

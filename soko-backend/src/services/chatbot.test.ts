@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert';
-import { KEYWORDS, matchCategoryKeys, buildReply } from './chatbot.ts';
+import {
+    KEYWORDS,
+    matchCategoryKeys,
+    buildReply,
+    knownOnly,
+} from './chatbot.ts';
 import { CATEGORY_KEYS } from '#utils';
 
 const reply = (message: string) =>
@@ -31,6 +36,24 @@ test('neutrale Themen: kein Disclaimer, aber trotzdem Handoff', () => {
     assert.deepEqual(matchCategoryKeys('Wo melde ich mein Kind für die Kita an?')[0], 'familie');
     assert.equal(r.disclaimer, null);
     assert.ok(r.handoff.label && r.handoff.hint);
+});
+
+test('Gemini-Text ersetzt nur die Formulierung, nicht die Guardrails', () => {
+    const keys = matchCategoryKeys('Ich habe Schulden');
+    const r = buildReply(keys, [], 'Ich habe da etwas für dich gefunden.');
+    assert.equal(r.text, 'Ich habe da etwas für dich gefunden.');
+    assert.match(r.disclaimer ?? '', /keine Rechts- oder Finanzberatung/);
+    assert.ok(r.handoff.label);
+    // Leerer Modelltext faellt auf den festen Baustein zurueck.
+    assert.notEqual(buildReply(keys, [], '   ').text, '   ');
+});
+
+test('halluzinierte IDs werden verworfen', () => {
+    const byId = new Map([['echt', { title: 'Schuldnerberatung' }]]);
+    assert.deepEqual(knownOnly(['echt', 'erfunden'], byId), [
+        { title: 'Schuldnerberatung' },
+    ]);
+    assert.deepEqual(knownOnly(['nur-erfunden'], byId), []);
 });
 
 test('ohne Treffer bleibt der menschliche Ausweg stehen', () => {

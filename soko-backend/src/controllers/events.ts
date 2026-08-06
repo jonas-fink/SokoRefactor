@@ -4,6 +4,12 @@ import { scrapedEventOutputSchema } from '#schemas';
 
 const PAGE_SIZE = 50;
 
+const startOfToday = () => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+};
+
 export const getEvents: RequestHandler = async (req, res, next) => {
     try {
         const { category, from, page } = req.query;
@@ -11,7 +17,14 @@ export const getEvents: RequestHandler = async (req, res, next) => {
 
         const match: Record<string, unknown> = {};
         if (category) match.category = category;
-        if (from) match.startDate = { $gte: new Date(from as string) };
+
+        // Ohne `from` gilt „ab heute" — vergangene Veranstaltungen haben auf der
+        // Startseite nichts zu suchen. Ab Mitternacht, damit ein Event von heute
+        // Mittag nicht schon vormittags verschwindet.
+        const since = from ? new Date(from as string) : startOfToday();
+        // Events ohne Datum ("Termin offen") sind nicht vergangen — sie bleiben
+        // drin und sortieren ohnehin ans Ende.
+        match.$or = [{ startDate: { $gte: since } }, { startDate: null }];
 
         const [events, total] = await Promise.all([
             ScrapedEvent.aggregate([

@@ -118,11 +118,54 @@ export const parseOpeningHours = (input: string) => {
     return hours;
 };
 
+export type Coordinates = { lat: number; lng: number };
+
+// `Number('')` waere 0 — eine leere Spalte darf nicht als Nullmeridian
+// durchgehen und die Stelle vor Westafrika auf die Karte setzen.
+const num = (v?: string) => (v?.trim() ? Number(v.replace(',', '.')) : NaN);
+
+/** Koordinaten aus der Zeile, `null` wenn keine brauchbaren drinstehen. */
+export const coordsOf = (row: Record<string, string>): Coordinates | null => {
+    const lat = num(row.lat);
+    const lng = num(row.lng);
+    return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
+};
+
+/**
+ * Adresse → Koordinaten über Nominatim (OpenStreetMap, kein API-Key) —
+ * dasselbe Vorgehen wie `client/src/utils/geocode.ts` im Erstellen-Formular.
+ * Träger liefern Adressen, keine Geokoordinaten; ohne diesen Fallback wäre
+ * jede zweite Lieferung unbrauchbar.
+ *
+ * ponytail: sequenziell mit 1 s Pause — Nominatims Nutzungsrichtlinie erlaubt
+ * 1 Request/Sekunde. Bei Lieferungen über ~500 Zeilen lohnt ein eigener
+ * Geocoder (oder eine Batch-Vorabklärung mit dem Träger).
+ */
+export const geocode = async (
+    address: string,
+): Promise<Coordinates | null> => {
+    const url = new URL('https://nominatim.openstreetmap.org/search');
+    url.searchParams.set('q', address);
+    url.searchParams.set('format', 'json');
+    url.searchParams.set('limit', '1');
+    url.searchParams.set('countrycodes', 'de');
+
+    const res = await fetch(url, {
+        // Nominatim verlangt eine identifizierende Kennung.
+        headers: { 'User-Agent': 'soko-import', 'Accept-Language': 'de' },
+    });
+    if (!res.ok) throw new Error(`Geocoding fehlgeschlagen (${res.status})`);
+
+    const [hit] = (await res.json()) as { lat: string; lon: string }[];
+    return hit ? { lat: Number(hit.lat), lng: Number(hit.lon) } : null;
+};
+
 /** Eine CSV-Zeile → validierter Beratungs-Datensatz. Wirft mit Klartextgrund. */
 export const toBeratung = (
     row: Record<string, string>,
     userId: string,
     source: string,
+    coords: Coordinates | null = coordsOf(row),
 ): BeratungInput => {
     const tags = row.kategorie
         ? row.kategorie
@@ -135,14 +178,10 @@ export const toBeratung = (
         throw new Error(`Unbekannte Kategorie: ${unknown.join(', ')}`);
     }
 
-    // `Number('')` waere 0 — eine leere Spalte darf nicht als Nullmeridian
-    // durchgehen und die Stelle vor Afrika auf die Karte setzen.
-    const num = (v?: string) =>
-        v?.trim() ? Number(v.replace(',', '.')) : NaN;
-    const lat = num(row.lat);
-    const lng = num(row.lng);
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-        throw new Error('lat/lng fehlen oder sind keine Zahlen');
+    if (!coords) {
+        throw new Error(
+            'lat/lng fehlen und die Adresse liess sich nicht geokodieren',
+        );
     }
 
     return beratungZodSchema.parse({
@@ -161,7 +200,7 @@ export const toBeratung = (
             .map((s) => s.trim())
             .filter(Boolean)
             .map((name) => ({ name, documents: [] })),
-        location: { type: 'Point', coordinates: [lng, lat] },
+        location: { type: 'Point', coordinates: [coords.lng, coords.lat] },
         tags,
         userId,
     });
@@ -171,8 +210,11 @@ export type ImportResult = {
     gelesen: number;
     neu: number;
     aktualisiert: number;
+    geokodiert: number;
     uebersprungen: { zeile: number; externalId: string; grund: string }[];
 };
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export const importBeratungen = async (
     csv: string,
@@ -182,11 +224,20 @@ export const importBeratungen = async (
     const rows = parseCsv(csv);
     const valid: BeratungInput[] = [];
     const uebersprungen: ImportResult['uebersprungen'] = [];
+    let geokodiert = 0;
 
-    rows.forEach((row, i) => {
+    for (const [i, row] of rows.entries()) {
         try {
             if (!row.externalId) throw new Error('externalId fehlt');
-            valid.push(toBeratung(row, userId, source));
+
+            let coords = coordsOf(row);
+            if (!coords && row.adresse) {
+                if (geokodiert > 0) await sleep(1000); // Nominatim: 1 Req./s
+                coords = await geocode(row.adresse);
+                if (coords) geokodiert++;
+            }
+
+            valid.push(toBeratung(row, userId, source, coords));
         } catch (err) {
             // Eine kaputte Zeile bricht den Import nicht ab — sie wird gezählt.
             uebersprungen.push({
@@ -195,7 +246,7 @@ export const importBeratungen = async (
                 grund: err instanceof Error ? err.message : String(err),
             });
         }
-    });
+    }
 
     if (valid.length === 0) {
         throw new Error(
@@ -222,6 +273,7 @@ export const importBeratungen = async (
         gelesen: rows.length,
         neu: result.upsertedCount,
         aktualisiert: result.modifiedCount,
+        geokodiert,
         uebersprungen,
     };
 };

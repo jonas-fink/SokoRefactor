@@ -15,6 +15,7 @@ import BeratungKategorie from './pages/BeratungKategorie';
 import BeratungDetail from './pages/BeratungDetail';
 import Erstellen from './pages/Erstellen';
 import AngebotDetail from './pages/AngebotDetail';
+import Datenschutz from './pages/Datenschutz';
 
 const App = () => {
     return (
@@ -36,6 +37,7 @@ const App = () => {
                     </Route>
 
                     <Route path="/erleben" element={<Map />} />
+                    <Route path="/datenschutz" element={<Datenschutz />} />
                     <Route element={<ProtectedRoute />}>
                         <Route path="/library" element={<Library />} />
                         <Route path="/settings" element={<Settings />} />

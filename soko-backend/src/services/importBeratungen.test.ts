@@ -5,6 +5,7 @@ import {
     parseCsv,
     parseOpeningHours,
     toBeratung,
+    coordsOf,
 } from './importBeratungen.ts';
 
 const USER = String(new Types.ObjectId());
@@ -60,10 +61,30 @@ test('ungueltige Zeilen werfen mit Klartextgrund', () => {
         () => toBeratung({ ...row, kategorie: 'schulden' }, USER, 'x'),
         /Unbekannte Kategorie/,
     );
+    // Ohne Koordinaten *und* ohne Geocoding-Treffer bleibt nichts zu verorten.
     assert.throws(
         () => toBeratung({ ...row, lat: '' }, USER, 'x'),
         /lat\/lng/,
     );
+});
+
+test('leere Koordinatenspalte wird nicht zu 0/0', () => {
+    const [row] = parseCsv(CSV);
+    assert.equal(coordsOf({ ...row, lat: '', lng: '' }), null);
+    assert.equal(coordsOf({ ...row, lng: 'k. A.' }), null);
+    assert.deepEqual(coordsOf({ lat: '51,3127', lng: '9,4797' }), {
+        lat: 51.3127,
+        lng: 9.4797,
+    });
+});
+
+test('Geocoding-Ergebnis schlaegt die fehlende Spalte', () => {
+    const [row] = parseCsv(CSV);
+    const b = toBeratung({ ...row, lat: '', lng: '' }, USER, 'x', {
+        lat: 51.3,
+        lng: 9.5,
+    });
+    assert.deepEqual(b.location.coordinates, [9.5, 51.3]);
 });
 
 test('derselbe Datensatz ergibt zweimal dasselbe — Upsert auf externalId ist idempotent', () => {

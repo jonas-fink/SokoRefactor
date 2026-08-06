@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { api } from '../utils/api';
-import type { ScrapedEvent } from '../types';
+import type { Activity, ScrapedEvent } from '../types';
 import { NavLink } from 'react-router';
 import { AiOutlineCalendar, AiOutlineNotification } from 'react-icons/ai';
 import { useAuth } from '../context/auth-context';
+import OfferCard from '../components/OfferCard';
+import { useFavorites } from '../hooks/useFavorites';
 
 interface EventsPage {
     events: ScrapedEvent[];
@@ -23,8 +25,10 @@ const formatDate = (iso: string | null) =>
 
 const LandingPage = () => {
     const { user } = useAuth();
+    const { isFavorite, toggle, enabled } = useFavorites();
     const [query, setQuery] = useState('');
     const [data, setData] = useState<EventsPage | null>(null);
+    const [activities, setActivities] = useState<Activity[]>([]);
     const [categories, setCategories] = useState<string[]>([]);
     const [category, setCategory] = useState('');
     const [from, setFrom] = useState('');
@@ -34,6 +38,9 @@ const LandingPage = () => {
     useEffect(() => {
         api.get<string[]>('/categories')
             .then(setCategories)
+            .catch(() => setError(true));
+        api.get<Activity[]>('/activities')
+            .then(setActivities)
             .catch(() => setError(true));
     }, []);
 
@@ -48,11 +55,19 @@ const LandingPage = () => {
 
     const totalPages = data ? Math.ceil(data.total / data.pageSize) : 0;
 
-    const filteredData = data?.events.filter(
-        (d) =>
-            d.title.toLowerCase().includes(query.toLowerCase()) ||
-            d.description.toLowerCase().includes(query.toLowerCase()) ||
-            d.category.toLowerCase().includes(query.toLowerCase()),
+    const matchesQuery = (...fields: (string | undefined)[]) =>
+        fields.some((f) => f?.toLowerCase().includes(query.toLowerCase()));
+
+    const filteredData = data?.events.filter((d) =>
+        matchesQuery(d.title, d.description, d.category),
+    );
+
+    // Activities werden clientseitig gefiltert — GET /activities kennt weder
+    // Pagination noch Textsuche, die Liste ist klein.
+    const filteredActivities = activities.filter(
+        (a) =>
+            (!category || a.tags.includes(category)) &&
+            matchesQuery(a.title, a.description, ...a.tags),
     );
 
     return (
@@ -103,21 +118,6 @@ const LandingPage = () => {
                         onChange={(e) => setQuery(e.target.value)}
                     />
                     <div className="flex w-full flex-nowrap gap-3">
-                        <select
-                            className="field flex-1 min-w-0"
-                            value={category}
-                            onChange={(e) => {
-                                setCategory(e.target.value);
-                                setPage(1);
-                            }}
-                        >
-                            <option value="">Alle Kategorien</option>
-                            {categories.map((c) => (
-                                <option key={c} value={c}>
-                                    {c}
-                                </option>
-                            ))}
-                        </select>
                         <input
                             type="date"
                             className="field shrink-0"
@@ -141,29 +141,85 @@ const LandingPage = () => {
                     </div>
                 </div>
             </div>
+            {/* Kategorie-Chips */}
+            <div className="flex flex-wrap gap-2">
+                <button
+                    type="button"
+                    className={category ? 'chip' : 'chip-active'}
+                    onClick={() => {
+                        setCategory('');
+                        setPage(1);
+                    }}
+                >
+                    Alle
+                </button>
+                {categories.map((c) => (
+                    <button
+                        key={c}
+                        type="button"
+                        className={
+                            category === c
+                                ? 'chip-active cursor-pointer'
+                                : 'chip cursor-pointer'
+                        }
+                        onClick={() => {
+                            setCategory(c);
+                            setPage(1);
+                        }}
+                    >
+                        {c}
+                    </button>
+                ))}
+            </div>
+
+            {filteredActivities.length > 0 && (
+                <section className="flex flex-col gap-4">
+                    <h2 className="text-2xl">Angebote aus der Nachbarschaft</h2>
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        {filteredActivities.map((activity) => (
+                            <OfferCard
+                                key={activity._id}
+                                itemType="Activity"
+                                id={activity._id}
+                                title={activity.title}
+                                description={activity.description}
+                                image={activity.image}
+                                category={activity.tags[0]}
+                                dateLabel={formatDate(activity.date)}
+                                isFavorite={isFavorite(
+                                    'Activity',
+                                    activity._id,
+                                )}
+                                onToggleFavorite={
+                                    enabled
+                                        ? () => toggle('Activity', activity._id)
+                                        : undefined
+                                }
+                            />
+                        ))}
+                    </div>
+                </section>
+            )}
+
             <div className="mt-8 grid snap-x snap-mandatory auto-cols-[minmax(280px,1fr)] grid-flow-col grid-rows-2 gap-4 overflow-x-auto pb-4 pt-2">
                 {filteredData?.map((event) => (
-                    <a
+                    <OfferCard
                         key={event._id}
+                        itemType="ScrapedEvent"
+                        id={event._id}
+                        title={event.title}
+                        description={event.description}
+                        category={event.category}
+                        dateLabel={formatDate(event.startDate)}
+                        locationLabel={event.locationName}
                         href={event.sourceUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="card block cursor-pointer snap-start p-5 transition-transform hover:-translate-y-0.5"
-                    >
-                        {event.category && (
-                            <span className="chip mb-3">{event.category}</span>
-                        )}
-                        <h4 className="text-lg">{event.title}</h4>
-                        {event.description && (
-                            <p className="mt-2 line-clamp-3 text-sm text-ink-soft">
-                                {event.description}
-                            </p>
-                        )}
-                        <p className="mt-3 text-sm text-ink-mute">
-                            {formatDate(event.startDate)}
-                            {event.locationName && ` · ${event.locationName}`}
-                        </p>
-                    </a>
+                        isFavorite={isFavorite('ScrapedEvent', event._id)}
+                        onToggleFavorite={
+                            enabled
+                                ? () => toggle('ScrapedEvent', event._id)
+                                : undefined
+                        }
+                    />
                 ))}
             </div>
             {totalPages > 1 && (

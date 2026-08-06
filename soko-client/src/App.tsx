@@ -17,6 +17,7 @@ import Family from './pages/Family';
 import Sucht from './pages/Sucht';
 import Finanzen from './pages/Finanzen';
 import Erstellen from './pages/Erstellen';
+import AngebotDetail from './pages/AngebotDetail';
 
 const App = () => {
     return (
@@ -26,6 +27,10 @@ const App = () => {
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/" element={<AppLayout />}>
                     <Route index element={<LandingPage />} />
+                    <Route
+                        path="angebot/:itemType/:id"
+                        element={<AngebotDetail />}
+                    />
 
                     <Route path="beratung">
                         <Route index element={<Beratung />} />

@@ -23,6 +23,50 @@ export interface ApiResponse<T> {
     data: T;
 }
 
+export type ItemType = 'Activity' | 'ScrapedEvent' | 'Beratung';
+
+export interface GeoPoint {
+    type: 'Point';
+    coordinates: [number, number];
+}
+
+export interface Activity {
+    _id: string;
+    title: string;
+    description: string;
+    image: string;
+    date: string;
+    price: number;
+    tags: string[];
+    location: GeoPoint;
+    userId: PopulatedUser;
+    createdAt: string;
+    updatedAt: string;
+}
+
+/** Gemeinsames Minimal-Shape aus `GET /favorites` (populatedFavoriteSchema). */
+export interface FavoriteItem {
+    _id: string;
+    title: string;
+    description?: string;
+    image?: string;
+    tags?: string[];
+    date?: string;
+    price?: number;
+    startDate?: string;
+    locationName?: string;
+    sourceUrl?: string;
+    location?: GeoPoint;
+}
+
+export interface Favorite {
+    _id: string;
+    itemType: ItemType;
+    itemId: FavoriteItem;
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface ScrapedEvent {
     _id: string;
     title: string;

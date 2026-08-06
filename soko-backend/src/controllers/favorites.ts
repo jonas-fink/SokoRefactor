@@ -1,15 +1,20 @@
 import type { RequestHandler } from 'express';
+import type { Model } from 'mongoose';
+import type { FavoriteType } from '#types';
 import { populatedFavoriteSchema, favoriteDocumentSchema } from '#schemas';
-import { Activity, Favorite } from '#models';
+import { Activity, Beratung, Favorite, ScrapedEvent } from '#models';
+
+const FAVORITABLE: Record<string, Model<any>> = {
+    Activity,
+    ScrapedEvent,
+    Beratung,
+};
 
 export const getFavorites: RequestHandler = async (req, res, next) => {
     try {
         const userId = req.userId;
         const favorites = await Favorite.find({ userId })
-            .populate(
-                'activityId',
-                'title image description date location price tags',
-            )
+            .populate('itemId')
             .lean();
         res.json({ data: favorites.map((f) => populatedFavoriteSchema.parse(f)) });
     } catch (error: unknown) {
@@ -20,19 +25,26 @@ export const getFavorites: RequestHandler = async (req, res, next) => {
 export const addFavorite: RequestHandler = async (req, res, next) => {
     try {
         const userId = req.userId;
-        const { activityId } = req.params;
+        const itemType = String(req.params.itemType) as FavoriteType['itemType'];
+        const itemId = String(req.params.itemId);
 
-        const activity = await Activity.findById(activityId).lean();
-        if (!activity) {
-            res.status(404).json({ error: 'Activity not found' });
+        const ItemModel = FAVORITABLE[itemType];
+        if (!ItemModel) {
+            res.status(400).json({ error: 'Unknown item type' });
             return;
         }
 
-        const favorite = await Favorite.create({ userId, activityId: activity._id });
+        const item = await ItemModel.findById(itemId).lean();
+        if (!item) {
+            res.status(404).json({ error: `${itemType} not found` });
+            return;
+        }
+
+        const favorite = await Favorite.create({ userId, itemType, itemId });
         res.status(201).json({ data: favoriteDocumentSchema.parse(favorite.toObject()) });
     } catch (error: any) {
         if (error?.code === 11000) {
-            res.status(409).json({ error: 'Activity already in favorites' });
+            res.status(409).json({ error: 'Item already in favorites' });
             return;
         }
         next(error);
@@ -42,11 +54,10 @@ export const addFavorite: RequestHandler = async (req, res, next) => {
 export const removeFavorite: RequestHandler = async (req, res, next) => {
     try {
         const userId = req.userId;
-        const { activityId } = req.params;
-
         const favorite = await Favorite.findOneAndDelete({
             userId,
-            activityId,
+            itemType: String(req.params.itemType) as FavoriteType['itemType'],
+            itemId: String(req.params.itemId),
         });
         if (!favorite) {
             res.status(404).json({ error: 'Favorite not found' });

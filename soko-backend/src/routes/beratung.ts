@@ -2,6 +2,7 @@ import { Router, type RequestHandler } from 'express';
 import {
     protect,
     fileUploadHandler,
+    documentUploadHandler,
     adminOnly,
     validateBody,
 } from '#middlewares';
@@ -12,8 +13,14 @@ import {
     updateBeratung,
     patchBeratung,
     deleteBeratung,
+    addServiceDocument,
+    getServiceDocument,
 } from '#controllers';
-import { beratungCreateBodySchema, beratungPatchBodySchema } from '#schemas';
+import {
+    beratungCreateBodySchema,
+    beratungPatchBodySchema,
+    beratungDocumentBodySchema,
+} from '#schemas';
 import { isValidObjectId } from 'mongoose';
 
 const validateId: RequestHandler = (req, res, next) => {
@@ -59,5 +66,17 @@ router.patch(
     patchBeratung,
 );
 router.delete('/:id', protect, adminOnly, validateId, deleteBeratung);
+
+// Dokumente: Hochladen nur Admin, Abrufen öffentlich (Redirect auf presigned URL).
+router.post(
+    '/:id/services/:serviceId/documents',
+    protect,
+    adminOnly,
+    validateId,
+    documentUploadHandler,
+    validateBody(beratungDocumentBodySchema),
+    addServiceDocument,
+);
+router.get('/:id/documents/:docId', validateId, getServiceDocument);
 
 export default router;

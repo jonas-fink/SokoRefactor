@@ -39,7 +39,18 @@ export const beratungFormSchema = z.object({
     lng: z.number().min(-180).max(180),
     lat: z.number().min(-90).max(90),
     tags: z.string().optional(),
+    phone: z.string().trim().optional(),
+    address: z.string().trim().optional(),
+    /** komma-getrennte Anwendungsfälle, wie `tags` — Dokumente kommen per Upload dazu. */
+    services: z.string().optional(),
 });
+
+// "a, b, ,c" -> ['a','b','c']
+export const splitList = (value?: string) =>
+    value
+        ?.split(',')
+        .map((v) => v.trim())
+        .filter(Boolean) ?? [];
 
 export type BeratungFormData = z.infer<typeof beratungFormSchema>;
 export type Weekday = keyof BeratungFormData['openingHours'];

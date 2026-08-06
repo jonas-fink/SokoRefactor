@@ -1,4 +1,6 @@
-const BASE = `${import.meta.env.VITE_API_URL ?? ''}/api/v1`;
+// exportiert, weil Dokument-Downloads als normaler <a href> laufen (Redirect
+// auf eine presigned S3-URL) und nicht durch `request` gehen.
+export const BASE = `${import.meta.env.VITE_API_URL ?? ''}/api/v1`;
 
 let accessToken: string | null = null;
 

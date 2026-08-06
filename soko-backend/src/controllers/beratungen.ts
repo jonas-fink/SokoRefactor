@@ -3,9 +3,16 @@ import {
     populatedBeratungSchema,
     type BeratungCreateBody,
     type BeratungPatchBody,
+    type BeratungDocumentBody,
 } from '#schemas';
 import { Beratung } from '#models';
-import { assertCategories } from '#utils';
+import { assertCategories, s3Keys, orphanedKeys } from '#utils';
+import {
+    getSignedDocumentUrl,
+    uploadDocument,
+    deleteDocuments,
+} from '#services';
+import { randomUUID } from 'node:crypto';
 
 type IdParams = { id: string };
 
@@ -95,8 +102,11 @@ export const updateBeratung: RequestHandler<
             return;
         }
 
+        // PUT ersetzt `services` komplett — was rausfaellt, muss aus S3 mit raus.
+        const before = { services: beratung.toObject().services };
         beratung.set(req.body satisfies BeratungCreateBody);
         await beratung.save();
+        await deleteDocuments(orphanedKeys(before, beratung.toObject()));
 
         const populatedBeratung = await beratung.populate('userId', 'name');
         res.json({
@@ -118,6 +128,11 @@ export const patchBeratung: RequestHandler<
         delete (updates as Record<string, unknown>)['_id'];
         if (updates.tags) await assertCategories(updates.tags);
 
+        // nur laden, wenn dieser PATCH `services` ueberhaupt anfasst
+        const before = updates.services
+            ? await Beratung.findById(id).lean()
+            : null;
+
         const beratung = await Beratung.findByIdAndUpdate(
             id,
             { $set: updates },
@@ -128,9 +143,93 @@ export const patchBeratung: RequestHandler<
             res.status(404).json({ error: 'Beratung not found' });
             return;
         }
+        if (before) {
+            await deleteDocuments(orphanedKeys(before, beratung.toObject()));
+        }
         res.json({
             data: populatedBeratungSchema.parse(beratung.toObject()),
         });
+    } catch (error: unknown) {
+        next(error);
+    }
+};
+
+// `documentUploadHandler` hat die Datei nur geparst — hochgeladen wird erst,
+// wenn Beratung und Service wirklich existieren. Andernfalls wuerde jeder 404
+// eine Datei im Bucket zuruecklassen, auf die nie wieder jemand zeigt.
+export const addServiceDocument: RequestHandler<
+    { id: string; serviceId: string },
+    unknown,
+    BeratungDocumentBody
+> = async (req, res, next) => {
+    try {
+        const upload = req.uploadedDocument;
+        if (!upload) {
+            res.status(400).json({ error: 'Kein Dokument hochgeladen' });
+            return;
+        }
+
+        const beratung = await Beratung.findById(req.params.id);
+        if (!beratung) {
+            res.status(404).json({ error: 'Beratung not found' });
+            return;
+        }
+
+        const service = beratung.services.id(req.params.serviceId);
+        if (!service) {
+            res.status(404).json({ error: 'Service not found' });
+            return;
+        }
+
+        const s3Key = `beratung/${req.params.id}/${randomUUID()}`;
+        await uploadDocument(upload.filepath, s3Key, upload.mimeType);
+
+        service.documents.push({
+            title: req.body.title,
+            s3Key,
+            mimeType: upload.mimeType,
+        });
+
+        try {
+            await beratung.save();
+        } catch (saveError: unknown) {
+            // Datei liegt schon in S3, das Subdokument nicht in der DB —
+            // zuruecknehmen, sonst ist genau das ein verwaistes Objekt.
+            await deleteDocuments([s3Key]);
+            throw saveError;
+        }
+
+        const populatedBeratung = await beratung.populate('userId', 'name');
+        res.json({
+            data: populatedBeratungSchema.parse(populatedBeratung.toObject()),
+        });
+    } catch (error: unknown) {
+        next(error);
+    }
+};
+
+// Öffentlich: der Bucket bleibt privat, ausgeliefert wird eine 5 Minuten
+// gültige presigned URL per Redirect.
+export const getServiceDocument: RequestHandler<{
+    id: string;
+    docId: string;
+}> = async (req, res, next) => {
+    try {
+        const beratung = await Beratung.findById(req.params.id).lean();
+        if (!beratung) {
+            res.status(404).json({ error: 'Beratung not found' });
+            return;
+        }
+
+        const doc = beratung.services
+            ?.flatMap((s) => s.documents)
+            .find((d) => String(d._id) === req.params.docId);
+        if (!doc) {
+            res.status(404).json({ error: 'Document not found' });
+            return;
+        }
+
+        res.redirect(await getSignedDocumentUrl(doc.s3Key));
     } catch (error: unknown) {
         next(error);
     }
@@ -144,6 +243,7 @@ export const deleteBeratung: RequestHandler = async (req, res, next) => {
             res.status(404).json({ error: 'Beratung not found' });
             return;
         }
+        await deleteDocuments(s3Keys(beratung.toObject()));
         res.json({ message: 'Beratung deleted' });
     } catch (error: unknown) {
         next(error);

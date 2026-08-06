@@ -58,6 +58,20 @@ export interface TimeSlot {
     close: number;
 }
 
+export interface BeratungDocument {
+    _id: string;
+    title: string;
+    mimeType: string;
+    uploadedAt?: string;
+}
+
+/** Ein Anwendungsfall der Stelle (z.B. „Grundsicherung") samt Anträgen. */
+export interface BeratungService {
+    _id: string;
+    name: string;
+    documents: BeratungDocument[];
+}
+
 export interface Beratung {
     _id: string;
     title: string;
@@ -65,6 +79,9 @@ export interface Beratung {
     image: string;
     /** Wochentag → Zeitfenster in Minuten seit Mitternacht; leer = geschlossen. */
     openingHours?: Record<string, TimeSlot[]>;
+    phone?: string;
+    address?: string;
+    services?: BeratungService[];
     location: GeoPoint;
     tags: string[];
     userId: PopulatedUser;

@@ -7,6 +7,7 @@ import {
     beratungFormSchema,
     emptyOpeningHours,
     toBusinessHours,
+    splitList,
     type BeratungFormData,
 } from '../../schemas/beratungSchema';
 import { api } from '../../utils/api';
@@ -29,6 +30,10 @@ const BeratungsForm = () => {
         },
     });
     const navigate = useNavigate();
+
+    // Die Adresse wird jetzt gespeichert *und* geokodiert — register liefert das
+    // eigene onBlur, das vor der Geocoder-Suche laufen muss.
+    const addressField = register('address');
 
     const [geo, setGeo] = useState<{
         status: 'idle' | 'loading' | 'ok' | 'notfound' | 'error';
@@ -65,16 +70,12 @@ const BeratungsForm = () => {
                 coordinates: [data.lng, data.lat],
             }),
         );
+        form.append('tags', JSON.stringify(splitList(data.tags)));
+        if (data.phone) form.append('phone', data.phone);
+        if (data.address) form.append('address', data.address);
         form.append(
-            'tags',
-            JSON.stringify(
-                data.tags
-                    ? data.tags
-                          .split(',')
-                          .map((t) => t.trim())
-                          .filter(Boolean)
-                    : [],
-            ),
+            'services',
+            JSON.stringify(splitList(data.services).map((name) => ({ name }))),
         );
         const image = imageRef.current?.files?.[0];
         if (image) form.append('image', image);
@@ -166,7 +167,11 @@ const BeratungsForm = () => {
                 <input
                     id="address"
                     placeholder="z.B. Königsplatz 1, Kassel"
-                    onBlur={onAddressBlur}
+                    {...addressField}
+                    onBlur={(e) => {
+                        addressField.onBlur(e);
+                        onAddressBlur(e);
+                    }}
                     className="field"
                 />
                 {geo.status === 'loading' && (
@@ -194,6 +199,34 @@ const BeratungsForm = () => {
                     type="hidden"
                     {...register('lat', { valueAsNumber: true })}
                 />
+            </div>
+
+            <div className="flex flex-col gap-2">
+                <label htmlFor="phone" className="label">
+                    TELEFON
+                </label>
+                <input
+                    type="tel"
+                    id="phone"
+                    placeholder="z.B. 0561 787-0"
+                    {...register('phone')}
+                    className="field"
+                />
+            </div>
+
+            <div className="flex flex-col gap-2">
+                <label htmlFor="services" className="label">
+                    ANGEBOTE (komma-getrennt)
+                </label>
+                <input
+                    id="services"
+                    placeholder="z.B. Grundsicherung, Wohngeld"
+                    {...register('services')}
+                    className="field"
+                />
+                <p className="text-ink-mute text-xs">
+                    Anträge lassen sich nach dem Speichern je Angebot hochladen.
+                </p>
             </div>
 
             <div className="flex flex-col gap-2">

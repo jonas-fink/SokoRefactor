@@ -18,7 +18,26 @@ const businessHoursUserSchema = z.object({
     sunday: z.array(timeSlotUserSchema),
 });
 
-// 3. Haupt-Schema: Beratung
+// 3. Dokumente & Services
+// `_id` ist optional, weil dasselbe Schema Ein- und Ausgabe beschreibt: beim
+// Anlegen schickt der Client nur `{ name }`, Mongoose vergibt die IDs.
+const documentUserSchema = z.object({
+    _id: objectIdSchema.optional(),
+    title: z.string().trim().min(1),
+    s3Key: z.string().min(1),
+    mimeType: z.string().min(1),
+    // coerce, weil dasselbe Schema Mongoose-`Date`s *und* den ISO-String liest,
+    // den der Client aus einem vorherigen GET zurueckschickt.
+    uploadedAt: z.coerce.date().optional(),
+});
+
+const serviceUserSchema = z.object({
+    _id: objectIdSchema.optional(),
+    name: z.string().trim().min(1, 'Name des Angebots wird benötigt'),
+    documents: z.array(documentUserSchema).default([]),
+});
+
+// 4. Haupt-Schema: Beratung
 export const beratungZodSchema = z.object({
     title: z
         .string()
@@ -30,7 +49,13 @@ export const beratungZodSchema = z.object({
 
     description: z.string().trim().min(1, 'Beschreibung wird benötigt'),
 
-    openingHours: businessHoursUserSchema,
+    // optional wie im Modell — eine Beratung ohne hinterlegte Zeiten ist gueltig
+    // und darf beim Lesen nicht in einen 500 laufen (trifft spaeter den Import).
+    openingHours: businessHoursUserSchema.optional(),
+
+    phone: z.string().trim().optional(),
+    address: z.string().trim().optional(),
+    services: z.array(serviceUserSchema).default([]),
 
     location: z.object({
         type: z.literal('Point').default('Point'),
@@ -68,8 +93,15 @@ export const beratungPatchBodySchema = beratungZodSchema
     .partial()
     .omit({ userId: true });
 
+// Der Body traegt nur den Titel — `s3Key`/`mimeType` entstehen erst, wenn der
+// Controller die Datei nach der Validierung hochlaedt.
+export const beratungDocumentBodySchema = documentUserSchema.pick({
+    title: true,
+});
+
 export type BeratungInput = z.infer<typeof beratungZodSchema>;
 export type BeratungOutput = z.infer<typeof beratungOutputSchema>;
 export type PopulatedBeratungOutput = z.infer<typeof populatedBeratungSchema>;
 export type BeratungCreateBody = z.infer<typeof beratungCreateBodySchema>;
 export type BeratungPatchBody = z.infer<typeof beratungPatchBodySchema>;
+export type BeratungDocumentBody = z.infer<typeof beratungDocumentBodySchema>;

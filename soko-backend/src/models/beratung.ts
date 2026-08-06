@@ -21,6 +21,21 @@ const businessHoursSchema = new Schema(
     { _id: false },
 );
 
+// Anträge/PDFs pro Anwendungsfall. Embedded wie openingHours — eine eigene
+// Document-Collection erst, wenn dieselbe Datei über mehrere Stellen hinweg
+// wiederverwendet wird (bundesweite Formulare).
+const documentSchema = new Schema({
+    title: { type: String, required: true, trim: true },
+    s3Key: { type: String, required: true },
+    mimeType: { type: String, required: true },
+    uploadedAt: { type: Date, default: Date.now },
+});
+
+const serviceSchema = new Schema({
+    name: { type: String, required: true, trim: true },
+    documents: [documentSchema],
+});
+
 const beratungSchema = new Schema(
     {
         title: {
@@ -42,6 +57,10 @@ const beratungSchema = new Schema(
             trim: true,
         },
         openingHours: businessHoursSchema,
+        phone: { type: String, trim: true },
+        // Postanschrift als Klartext; die Geo-`location` daneben füttert die Karte.
+        address: { type: String, trim: true },
+        services: [serviceSchema],
         location: {
             type: {
                 type: String,

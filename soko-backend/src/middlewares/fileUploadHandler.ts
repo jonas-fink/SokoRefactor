@@ -9,6 +9,13 @@ cloudinary.config({
 });
 
 const fileUploadHandler: RequestHandler = (req, res, next) => {
+    // `express.json()` hat den Body bei nicht-multipart-Requests bereits gelesen —
+    // formidable wuerde auf einen Stream warten, der nie mehr kommt (Request haengt).
+    if (!req.is('multipart/form-data')) {
+        next();
+        return;
+    }
+
     const form = formidable({
         multiples: false,
         maxFileSize: 5 * 1024 * 1024,

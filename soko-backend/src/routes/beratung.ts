@@ -1,9 +1,8 @@
 import { Router, type RequestHandler } from 'express';
 import {
     protect,
-    isDocOwner,
     fileUploadHandler,
-    canCreate,
+    adminOnly,
     validateBody,
 } from '#middlewares';
 import {
@@ -15,7 +14,6 @@ import {
     deleteBeratung,
 } from '#controllers';
 import { beratungCreateBodySchema, beratungPatchBodySchema } from '#schemas';
-import { Beratung } from '#models';
 import { isValidObjectId } from 'mongoose';
 
 const validateId: RequestHandler = (req, res, next) => {
@@ -26,8 +24,8 @@ const validateId: RequestHandler = (req, res, next) => {
     next();
 };
 
-const isBeratungOwner = isDocOwner(Beratung, 'Beratung');
-
+// Beratungsangebote pflegt ausschliesslich `admin` — die Owner-Pruefung waere
+// damit redundant.
 const router = Router();
 
 router.get('/', getBeratung);
@@ -36,7 +34,7 @@ router.get('/:id', validateId, getBeratungById);
 router.post(
     '/',
     protect,
-    canCreate,
+    adminOnly,
     fileUploadHandler,
     validateBody(beratungCreateBodySchema),
     createBeratung,
@@ -45,7 +43,7 @@ router.post(
 router.put(
     '/:id',
     protect,
-    isBeratungOwner,
+    adminOnly,
     validateId,
     fileUploadHandler,
     validateBody(beratungCreateBodySchema),
@@ -54,12 +52,12 @@ router.put(
 router.patch(
     '/:id',
     protect,
-    isBeratungOwner,
+    adminOnly,
     validateId,
     fileUploadHandler,
     validateBody(beratungPatchBodySchema),
     patchBeratung,
 );
-router.delete('/:id', protect, isBeratungOwner, validateId, deleteBeratung);
+router.delete('/:id', protect, adminOnly, validateId, deleteBeratung);
 
 export default router;

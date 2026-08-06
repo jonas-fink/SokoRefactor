@@ -23,8 +23,6 @@ const LandingPage = () => {
     const [chatOpen, setChatOpen] = useState(false);
 
     useEffect(() => {
-        // Nur Chips, die auf Angebote/Events passen — Beratungs-Keys
-        // haetten hier nie einen Treffer.
         api.get<Category[]>('/categories?appliesTo=activity')
             .then(setCategories)
             .catch(() => setError(true));
@@ -69,40 +67,51 @@ const LandingPage = () => {
     );
 
     return (
-        <div className="mx-auto w-full py-8 flex flex-col gap-8">
+        <div className="mx-auto md:max-w-6xl py-8 flex flex-col gap-8">
             {/* Header */}
             <h1 className="md:text-5xl text-3xl">
-                Guten Tag {user ? user.name : 'Guest'}. Was suchst du heute?
+                Guten Tag{' '}
+                <span className="text-primary">
+                    {user ? user.name : 'Guest'}
+                </span>
+                . Was suchst du heute?
             </h1>
-            <button
-                type="button"
-                className="btn-primary w-full cursor-pointer sm:w-auto sm:self-start"
-                onClick={() => setChatOpen(true)}
-            >
-                Ich weiß nicht, wo ich anfangen soll
-            </button>
-            <ChatModal open={chatOpen} onClose={() => setChatOpen(false)} />
 
-            <div className="flex gap-3 pb-8">
-                <div className="card bg-brand flex flex-col justify-center items-center w-1/2 shadow-card">
-                    {' '}
-                    <NavLink to="/events" className="flex flex-col gap-2 p-4">
-                        <AiOutlineCalendar size={24} />
-                        <h2 className="font-bold text-xl">Erleben</h2>
-                        <p className="text-md">Events & Angebote</p>
-                    </NavLink>
-                </div>
-
-                <div className="card bg-warning text-primary-ink w-1/2 flex flex-col justify-center items-center shadow-card">
-                    <NavLink to="/beratung" className="flex flex-col gap-2 p-4">
-                        <AiOutlineNotification size={24} />
-                        <h2 className="text-primary-ink font-bold text-xl">
-                            Beratung & Hilfe
-                        </h2>
-                        <p className="text-md">Kostenlos & vertraulich</p>
-                    </NavLink>
-                </div>
+            <div className="flex md:flex-row flex-col gap-3 md:min-w-3xl w-full mx-auto justify-center items-center">
+                {' '}
+                <NavLink
+                    to="/events"
+                    className="card bg-brand flex flex-col w-full gap-2 p-4 justify-center items-center shadow-card h-48"
+                >
+                    <AiOutlineCalendar size={36} />
+                    <h2 className="font-bold text-3xl">Erleben</h2>
+                    <p className="text-md">Events & Angebote</p>
+                </NavLink>
+                <NavLink
+                    to="/beratung"
+                    className="card bg-warning text-primary-ink p-4 flex flex-col w-full gap-2 justify-center items-center shadow-card h-48"
+                >
+                    <AiOutlineNotification size={36} />
+                    <h2 className="text-primary-ink font-bold text-3xl">
+                        Beratung & Hilfe
+                    </h2>
+                    <p className="text-md">Kostenlos & vertraulich</p>
+                </NavLink>
             </div>
+            <div className="flex md:flex-row flex-col gap-6 justify-around items-center pb-12 pt-6">
+                <h3 className="text-3xl font-bold">
+                    Du bist dir unsicher wonach du suchen sollst?
+                </h3>{' '}
+                <button
+                    type="button"
+                    className="btn-primary bg-error text-ink w-full cursor-pointer sm:w-auto sm:self-start"
+                    onClick={() => setChatOpen(true)}
+                >
+                    Chatte mit mir!
+                </button>
+            </div>
+
+            <ChatModal open={chatOpen} onClose={() => setChatOpen(false)} />
 
             {/* Discover */}
             <div className="flex flex-col lg:flex-row justify-center items-start gap-3">

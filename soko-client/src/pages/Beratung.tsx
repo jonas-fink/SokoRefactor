@@ -10,36 +10,49 @@ import { PiHouseLine, PiGlobeSimple } from 'react-icons/pi';
 import { MdOutlineFamilyRestroom } from 'react-icons/md';
 import { Link } from 'react-router';
 
-const beratungCategory = [
+import type { ReactNode } from 'react';
+
+// Icons bleiben im Client. In Phase 7 kommt die Kategorie-Liste aus
+// GET /categories?appliesTo=beratung — diese Map bleibt dann bestehen.
+export const CATEGORY_ICONS: Record<string, ReactNode> = {
+    behoerden: <PiHouseLine size={24} />,
+    asyl: <PiGlobeSimple size={24} />,
+    familie: <MdOutlineFamilyRestroom size={24} />,
+    gesundheit: <AiOutlineHeart size={24} />,
+    finanzen: <AiOutlineCreditCard size={24} />,
+};
+
+// ponytail: cat-asyl gibt es als Token erst ab Phase 7 — bis dahin ink.
+export const BERATUNG_CATEGORIES = [
     {
-        href: '/beratung/gov',
+        key: 'behoerden',
         name: 'Behörden & Ämter',
         description: 'Anträge, Formulare, Termine',
-        icon: <PiHouseLine size={24} />,
+        accent: 'text-cat-behoerden',
     },
     {
-        href: '/beratung/asyl',
+        key: 'asyl',
         name: 'Asyl & Migration',
         description: 'Aufenthalt, Sprache, Ankommen',
-        icon: <PiGlobeSimple size={24} />,
+        accent: 'text-ink',
     },
     {
-        href: '/beratung/familie',
+        key: 'familie',
         name: 'Familien & Kinder',
         description: 'Erziehung, Kita, Alltag',
-        icon: <MdOutlineFamilyRestroom size={24} />,
+        accent: 'text-cat-familie',
     },
     {
-        href: '/beratung/sucht',
+        key: 'gesundheit',
         name: 'Sucht & Gesundheit',
         description: 'Vertraulich, ohne Urteil',
-        icon: <AiOutlineHeart size={24} />,
+        accent: 'text-cat-gesundheit',
     },
     {
-        href: '/beratung/finanzen',
+        key: 'finanzen',
         name: 'Finanzen & Schulden',
         description: 'Budget, Schuldnerberatung',
-        icon: <AiOutlineCreditCard size={24} />,
+        accent: 'text-cat-finanzen',
     },
 ];
 
@@ -68,14 +81,16 @@ const Beratung = () => {
             </div>
             <div className="flex flex-col gap-3">
                 <h3 className="text-xl">Lebensbereiche</h3>
-                {beratungCategory.map((c) => (
+                {BERATUNG_CATEGORIES.map((c) => (
                     <Link
-                        key={c.name}
-                        to={c.href}
+                        key={c.key}
+                        to={`/beratung/${c.key}`}
                         className="flex justify-between card items-center p-4"
                     >
                         <div className="flex items-center gap-4">
-                            {c.icon}
+                            <span className={c.accent}>
+                                {CATEGORY_ICONS[c.key]}
+                            </span>
                             <div>
                                 {' '}
                                 <h3 className="font-bold">{c.name}</h3>

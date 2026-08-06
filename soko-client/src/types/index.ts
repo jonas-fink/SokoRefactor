@@ -44,6 +44,25 @@ export interface Activity {
     updatedAt: string;
 }
 
+export interface TimeSlot {
+    open: number;
+    close: number;
+}
+
+export interface Beratung {
+    _id: string;
+    title: string;
+    description: string;
+    image: string;
+    /** Wochentag → Zeitfenster in Minuten seit Mitternacht; leer = geschlossen. */
+    openingHours?: Record<string, TimeSlot[]>;
+    location: GeoPoint;
+    tags: string[];
+    userId: PopulatedUser;
+    createdAt: string;
+    updatedAt: string;
+}
+
 /** Gemeinsames Minimal-Shape aus `GET /favorites` (populatedFavoriteSchema). */
 export interface FavoriteItem {
     _id: string;

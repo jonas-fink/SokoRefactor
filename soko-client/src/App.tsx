@@ -11,11 +11,8 @@ import Signup from './pages/Signup';
 import Settings from './pages/Settings';
 import LayoutSkeleton from './components/skeletons/LayoutSkeleton';
 import Profile from './pages/Profile';
-import Government from './pages/Government';
-import Asyl from './pages/Asyl';
-import Family from './pages/Family';
-import Sucht from './pages/Sucht';
-import Finanzen from './pages/Finanzen';
+import BeratungKategorie from './pages/BeratungKategorie';
+import BeratungDetail from './pages/BeratungDetail';
 import Erstellen from './pages/Erstellen';
 import AngebotDetail from './pages/AngebotDetail';
 
@@ -34,11 +31,8 @@ const App = () => {
 
                     <Route path="beratung">
                         <Route index element={<Beratung />} />
-                        <Route path="gov" element={<Government />} />
-                        <Route path="asyl" element={<Asyl />} />
-                        <Route path="familie" element={<Family />} />
-                        <Route path="sucht" element={<Sucht />} />
-                        <Route path="finanzen" element={<Finanzen />} />
+                        <Route path="detail/:id" element={<BeratungDetail />} />
+                        <Route path=":key" element={<BeratungKategorie />} />
                     </Route>
 
                     <Route path="/erleben" element={<Map />} />

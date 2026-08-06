@@ -58,6 +58,12 @@ export const emptyOpeningHours = Object.fromEntries(
     WEEKDAYS.map(({ key }) => [key, { open: '', close: '' }]),
 ) as BeratungFormData['openingHours'];
 
+// 540 -> "09:00" (Umkehrung von toMinutes, fürs Anzeigen)
+export const fromMinutes = (minutes: number) =>
+    `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(
+        minutes % 60,
+    ).padStart(2, '0')}`;
+
 // "09:00" -> [{ open: 540, close: 1080 }], leer -> [] (geschlossen)
 export const toBusinessHours = (hours: BeratungFormData['openingHours']) =>
     Object.fromEntries(

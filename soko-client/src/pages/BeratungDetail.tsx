@@ -1,0 +1,94 @@
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router';
+import { AiOutlineArrowLeft, AiOutlineLock } from 'react-icons/ai';
+import { api } from '../utils/api';
+import MapView from '../components/map/MapView';
+import { WEEKDAYS, fromMinutes } from '../schemas/beratungSchema';
+import type { Beratung } from '../types';
+
+const BeratungDetail = () => {
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const [beratung, setBeratung] = useState<Beratung | null>(null);
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        api.get<Beratung>(`/beratungen/${id}`)
+            .then(setBeratung)
+            .catch(() => setError('Angebot konnte nicht geladen werden'));
+    }, [id]);
+
+    if (error) return <p className="py-8 text-error">{error}</p>;
+    if (!beratung) return <p className="py-8 text-ink-mute">Lädt …</p>;
+
+    return (
+        <div className="flex flex-col gap-6">
+            <div className="flex gap-4 items-center">
+                <button
+                    className="card bg-surface p-2 cursor-pointer"
+                    onClick={() => navigate(-1)}
+                >
+                    <AiOutlineArrowLeft size={24} />
+                </button>
+                <h2 className="text-2xl font-bold">{beratung.title}</h2>
+            </div>
+
+            <img
+                src={beratung.image}
+                alt=""
+                className="h-56 w-full rounded-card object-cover"
+            />
+
+            <div className="field flex gap-3 bg-ink text-primary-ink items-center p-3">
+                <AiOutlineLock size={24} />
+                <p>
+                    Dieses Angebot ist{' '}
+                    <span className="font-bold">kostenlos</span> und{' '}
+                    <span className="font-bold">vertraulich</span>.
+                </p>
+            </div>
+
+            <p className="text-ink-soft">{beratung.description}</p>
+
+            {beratung.openingHours && (
+                <div className="card flex flex-col gap-1 p-4">
+                    <h3 className="mb-2 text-xl">Öffnungszeiten</h3>
+                    {WEEKDAYS.map(({ key, label }) => {
+                        const slots = beratung.openingHours?.[key] ?? [];
+                        return (
+                            <div key={key} className="flex justify-between">
+                                <span>{label}</span>
+                                <span className="text-ink-soft">
+                                    {slots.length === 0
+                                        ? 'geschlossen'
+                                        : slots
+                                              .map(
+                                                  (s) =>
+                                                      `${fromMinutes(s.open)}–${fromMinutes(s.close)}`,
+                                              )
+                                              .join(', ')}
+                                </span>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+
+            {beratung.location?.coordinates && (
+                <div className="h-72 overflow-hidden rounded-card">
+                    <MapView center={beratung.location.coordinates} />
+                </div>
+            )}
+
+            <div className="flex flex-wrap gap-2">
+                {beratung.tags.map((t) => (
+                    <span key={t} className="chip">
+                        {t}
+                    </span>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+export default BeratungDetail;

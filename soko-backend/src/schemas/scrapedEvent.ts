@@ -16,6 +16,13 @@ export const scrapedEventSchema = z.object({
 export const scrapedEventOutputSchema = scrapedEventSchema.extend({
     _id: objectIdSchema,
     startDate: z.date().nullable(),
+    // Optional: nur geokodierte Events haben Koordinaten.
+    location: z
+        .object({
+            type: z.literal('Point'),
+            coordinates: z.array(z.number()).length(2),
+        })
+        .nullish(),
     createdAt: z.date(),
     updatedAt: z.date(),
 });

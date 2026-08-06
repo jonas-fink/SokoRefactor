@@ -122,4 +122,14 @@ export interface ScrapedEvent {
     municipality: string;
     sourceUrl: string;
     source: string;
+    /** Nachtraeglich geokodiert — nicht jeder Veranstaltungsort loest auf. */
+    location?: GeoPoint | null;
+}
+
+/** Seitenweise Antwort von `GET /events`. */
+export interface EventsPage {
+    events: ScrapedEvent[];
+    total: number;
+    page: number;
+    pageSize: number;
 }

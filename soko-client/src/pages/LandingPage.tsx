@@ -1,28 +1,13 @@
 import { useEffect, useState } from 'react';
 import { api } from '../utils/api';
-import type { Activity, Category, ScrapedEvent } from '../types';
+import { formatDate } from '../utils/formatDate';
+import type { Activity, Category, EventsPage } from '../types';
 import { NavLink } from 'react-router';
 import { AiOutlineCalendar, AiOutlineNotification } from 'react-icons/ai';
 import { useAuth } from '../context/auth-context';
 import OfferCard from '../components/OfferCard';
 import ChatModal from '../components/ChatModal';
 import { useFavorites } from '../hooks/useFavorites';
-
-interface EventsPage {
-    events: ScrapedEvent[];
-    total: number;
-    page: number;
-    pageSize: number;
-}
-
-const formatDate = (iso: string | null) =>
-    iso
-        ? new Date(iso).toLocaleDateString('de-DE', {
-              day: '2-digit',
-              month: 'long',
-              year: 'numeric',
-          })
-        : 'Termin offen';
 
 const LandingPage = () => {
     const { user } = useAuth();
@@ -101,7 +86,7 @@ const LandingPage = () => {
             <div className="flex gap-3 pb-8">
                 <div className="card bg-brand flex flex-col justify-center items-center w-1/2 shadow-card">
                     {' '}
-                    <NavLink to="/erleben" className="flex flex-col gap-2 p-4">
+                    <NavLink to="/events" className="flex flex-col gap-2 p-4">
                         <AiOutlineCalendar size={24} />
                         <h2 className="font-bold text-xl">Erleben</h2>
                         <p className="text-md">Events & Angebote</p>

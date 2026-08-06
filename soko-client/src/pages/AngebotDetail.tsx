@@ -4,21 +4,14 @@ import { api } from '../utils/api';
 import MapView from '../components/map/MapView';
 import { useFavorites } from '../hooks/useFavorites';
 import { AiFillHeart, AiOutlineHeart } from 'react-icons/ai';
-import type { Activity, ItemType, ScrapedEvent } from '../types';
-
-const formatDate = (iso?: string | null) =>
-    iso
-        ? new Date(iso).toLocaleDateString('de-DE', {
-              day: '2-digit',
-              month: 'long',
-              year: 'numeric',
-          })
-        : 'Termin offen';
+import { formatDate } from '../utils/formatDate';
+import type { Activity, Category, ItemType, ScrapedEvent } from '../types';
 
 const AngebotDetail = () => {
     const { itemType, id } = useParams<{ itemType: ItemType; id: string }>();
     const { isFavorite, toggle, enabled } = useFavorites();
     const [item, setItem] = useState<Activity | ScrapedEvent | null>(null);
+    const [categories, setCategories] = useState<Category[]>([]);
     const [error, setError] = useState('');
 
     useEffect(() => {
@@ -30,6 +23,13 @@ const AngebotDetail = () => {
             .catch(() => setError('Angebot konnte nicht geladen werden'));
     }, [itemType, id]);
 
+    useEffect(() => {
+        // Gespeichert wird der Category-Key, angezeigt das Label.
+        api.get<Category[]>('/categories?appliesTo=activity')
+            .then(setCategories)
+            .catch(() => setCategories([]));
+    }, []);
+
     if (error) return <p className="py-8 text-error">{error}</p>;
     if (!item || !itemType || !id)
         return <p className="py-8 text-ink-mute">Lädt …</p>;
@@ -37,8 +37,13 @@ const AngebotDetail = () => {
     const isActivity = itemType === 'Activity';
     const activity = isActivity ? (item as Activity) : null;
     const event = isActivity ? null : (item as ScrapedEvent);
-    const coordinates = activity?.location?.coordinates;
+    // Events bekommen ihre Koordinaten nachtraeglich vom Geocoder — wer keine
+    // hat, zeigt eben nur den Ortsnamen.
+    const coordinates =
+        activity?.location?.coordinates ?? event?.location?.coordinates;
     const favorite = isFavorite(itemType, id);
+    const labelOf = (key?: string) =>
+        categories.find((c) => c.key === key)?.label ?? key;
 
     return (
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 py-8">
@@ -74,11 +79,11 @@ const AngebotDetail = () => {
 
             <div className="flex flex-wrap gap-2">
                 {event?.category && (
-                    <span className="chip">{event.category}</span>
+                    <span className="chip">{labelOf(event.category)}</span>
                 )}
                 {activity?.tags.map((t) => (
                     <span key={t} className="chip">
-                        {t}
+                        {labelOf(t)}
                     </span>
                 ))}
             </div>

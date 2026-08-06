@@ -44,8 +44,27 @@ const scrapedEventSchema = new Schema(
             type: String,
             default: 'kassel.de',
         },
+        // Die Quelle liefert nur `locationName` als Text — die Koordinaten
+        // kommen nachtraeglich aus dem Geocoder. Anders als bei Beratung
+        // deshalb optional: die meisten Events starten ohne.
+        location: {
+            type: {
+                type: String,
+                enum: ['Point'],
+            },
+            coordinates: {
+                type: [Number],
+            },
+        },
+        // Auf jeden Versuch gesetzt, auch auf den erfolglosen. Sonst fragt
+        // jeder Lauf dieselben unaufloesbaren Veranstaltungsorte erneut ab.
+        geocodedAt: {
+            type: Date,
+        },
     },
     { timestamps: true },
 );
+
+scrapedEventSchema.index({ location: '2dsphere' });
 
 export default model('ScrapedEvent', scrapedEventSchema);

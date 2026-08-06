@@ -2,6 +2,7 @@ import * as cheerio from 'cheerio';
 import { ScrapedEvent } from '#models';
 import { scrapedEventSchema, type ScrapedEventInput } from '#schemas';
 import { toCategoryKey, unmappedCategories } from '#utils';
+import { geocodeMissingEvents } from './geocodeEvents.ts';
 
 const BASE_URL = 'https://www.kassel.de/veranstaltungskalender.php';
 const PAGE_PARAM = 'sp:page[kassel-event-search.form][0]';
@@ -26,11 +27,8 @@ const MONTHS: Record<string, number> = {
 };
 
 // "9. Juli 2026" / "6. Aug. 2026" + "ab 00:00" -> Date. Local time, no tz lib.
-// ponytail: naive parse; add date-fns/tz only if DST correctness bites.
-export function parseGermanDate(
-    dateStr: string,
-    timeStr: string,
-): Date | null {
+// naive parse; add date-fns/tz only if DST correctness bites.
+export function parseGermanDate(dateStr: string, timeStr: string): Date | null {
     const m = dateStr.match(/(\d{1,2})\.\s*([A-Za-zäöüÄÖÜ]+)\.?\s*(\d{4})/);
     if (!m) return null;
     const month = MONTHS[m[2].toLowerCase().slice(0, 3)];
@@ -175,6 +173,11 @@ export async function scrapeKasselEvents() {
         { ordered: false },
     );
 
+    // Neue Events kommen nur mit `locationName` als Text an. Das `$set` oben
+    // fasst `location` nicht an, bereits geokodierte Events behalten ihre
+    // Koordinaten also — hier bekommen nur die neuen ihre.
+    const geo = await geocodeMissingEvents();
+
     return {
         pages: first.pageCount,
         scraped: all.length,
@@ -182,5 +185,6 @@ export async function scrapeKasselEvents() {
         upserted: result.upsertedCount,
         matched: result.matchedCount,
         skipped,
+        geocoded: geo.resolved,
     };
 }

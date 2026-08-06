@@ -3,7 +3,8 @@ import { Routes, Route } from 'react-router';
 import AppLayout from './layout/AppLayout';
 import LandingPage from './pages/LandingPage';
 import Beratung from './pages/Beratung';
-import Map from './pages/Map';
+import Events from './pages/Events';
+import EventKategorie from './pages/EventKategorie';
 import Library from './pages/Library';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
@@ -36,7 +37,11 @@ const App = () => {
                         <Route path=":key" element={<BeratungKategorie />} />
                     </Route>
 
-                    <Route path="/erleben" element={<Map />} />
+                    <Route path="events">
+                        <Route index element={<Events />} />
+                        <Route path=":key" element={<EventKategorie />} />
+                    </Route>
+
                     <Route path="/datenschutz" element={<Datenschutz />} />
                     <Route element={<ProtectedRoute />}>
                         <Route path="/library" element={<Library />} />

@@ -45,6 +45,7 @@
         "dev": "node --watch --conditions dev --env-file=.env src/server.ts",
         "test": "node --test --conditions dev 'src/**/*.test.ts'",
         "scrape": "node --conditions dev --env-file=.env src/scripts/scrapeKassel.ts",
+        "geocode:events": "node --conditions dev --env-file=.env src/scripts/geocodeEvents.ts",
         "migrate:favorites": "node --conditions dev --env-file=.env src/scripts/migrateFavorites.ts",
         "seed:categories": "node --conditions dev --env-file=.env src/scripts/seedCategories.ts",
         "migrate:tags": "node --conditions dev --env-file=.env src/scripts/migrateTags.ts",

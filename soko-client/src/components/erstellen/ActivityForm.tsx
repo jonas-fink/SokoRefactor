@@ -72,7 +72,7 @@ const ActivityForm = () => {
 
         try {
             await api.upload('/activities', form);
-            navigate('/erleben');
+            navigate('/events');
         } catch (e) {
             setError('root', {
                 message:

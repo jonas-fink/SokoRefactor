@@ -1,14 +1,19 @@
 import { useEffect, useRef } from 'react';
-import { Map } from 'mapbox-gl';
+import { Map, Marker } from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_PUBLIC_MAPBOX_TOKEN;
 
-// lift to props when Activity/Response land
-const INITIAL_CENTER: [number, number] = [9.51667, 51.3166]; // Nairobi
+const INITIAL_CENTER: [number, number] = [9.51667, 51.3166]; // Kassel
 const INITIAL_ZOOM = 11;
 
-const MapView = () => {
+interface MapViewProps {
+    /** Ohne Angabe: Übersicht über Kassel, ohne Marker. */
+    center?: [number, number];
+    zoom?: number;
+}
+
+const MapView = ({ center, zoom }: MapViewProps) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<Map | null>(null);
 
@@ -19,9 +24,10 @@ const MapView = () => {
             accessToken: MAPBOX_TOKEN,
             container: containerRef.current,
             style: 'mapbox://styles/mapbox/streets-v12',
-            center: INITIAL_CENTER,
-            zoom: INITIAL_ZOOM,
+            center: center ?? INITIAL_CENTER,
+            zoom: zoom ?? (center ? 14 : INITIAL_ZOOM),
         });
+        if (center) new Marker().setLngLat(center).addTo(map);
         mapRef.current = map;
         map.once('load', () => map.resize()); // ponytail: nudge size after grid settles on SPA nav
 

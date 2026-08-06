@@ -1,11 +1,16 @@
 import { z } from 'zod';
 import { objectIdSchema } from './shared.ts';
 
+export const favoritableTypeSchema = z.enum([
+    'Activity',
+    'ScrapedEvent',
+    'Beratung',
+]);
+
 export const favoriteSchema = z.object({
     userId: objectIdSchema.describe('The Id of the user who is favoriting'),
-    activityId: objectIdSchema.describe(
-        'The Id of the activity being favorited',
-    ),
+    itemType: favoritableTypeSchema.describe('The model of the favorited item'),
+    itemId: objectIdSchema.describe('The Id of the favorited item'),
 });
 
 export const favoriteDocumentSchema = favoriteSchema.extend({
@@ -14,19 +19,27 @@ export const favoriteDocumentSchema = favoriteSchema.extend({
     updatedAt: z.date(),
 });
 
+// ponytail: ein gemeinsames Minimal-Shape statt drei Varianten — typspezifische
+// Felder sind optional. Unbekannte Keys strippt zod ohnehin.
 export const populatedFavoriteSchema = favoriteDocumentSchema.extend({
-    activityId: z.object({
+    itemId: z.object({
         _id: objectIdSchema,
         title: z.string(),
-        description: z.string(),
-        date: z.date(),
-        price: z.number().default(0),
+        description: z.string().optional(),
         image: z.string().optional(),
-        tags: z.array(z.string()).default([]),
-        location: z.object({
-            type: z.literal('Point'),
-            coordinates: z.array(z.number()).length(2),
-        }),
+        tags: z.array(z.string()).optional(),
+        date: z.date().optional(),
+        price: z.number().optional(),
+        startDate: z.date().optional(),
+        openingHours: z.record(z.string(), z.unknown()).optional(),
+        location: z
+            .object({
+                type: z.literal('Point'),
+                coordinates: z.array(z.number()).length(2),
+            })
+            .optional(),
+        locationName: z.string().optional(),
+        sourceUrl: z.string().optional(),
     }),
 });
 

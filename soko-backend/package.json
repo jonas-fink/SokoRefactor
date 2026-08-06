@@ -44,6 +44,7 @@
     "scripts": {
         "dev": "node --watch --conditions dev --env-file=.env src/server.ts",
         "scrape": "node --conditions dev --env-file=.env src/scripts/scrapeKassel.ts",
+        "migrate:favorites": "node --conditions dev --env-file=.env src/scripts/migrateFavorites.ts",
         "prebuild": "rm -rf dist",
         "build": "tsc",
         "prestart": "npm run build",

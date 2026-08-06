@@ -12,7 +12,8 @@ export type UserType = {
 export type FavoriteType = {
     _id?: string | Types.ObjectId;
     userId: string | Types.ObjectId;
-    activityId: string | Types.ObjectId;
+    itemType: 'Activity' | 'ScrapedEvent' | 'Beratung';
+    itemId: string | Types.ObjectId;
     createdAt?: Date;
     updatedAt?: Date;
 };

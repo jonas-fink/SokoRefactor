@@ -76,7 +76,7 @@ const LandingPage = () => {
     return (
         <div className="mx-auto md:max-w-6xl pt-4 flex flex-col gap-8">
             {/* Header */}
-            <h1 className="md:text-5xl text-3xl self-start pb-8">
+            <h1 className="md:text-5xl text-3xl self-start md:pb-8 font-bold">
                 Hi{' '}
                 <span className="text-primary">
                     {user ? user.name : 'lieber Gast'}
@@ -112,68 +112,77 @@ const LandingPage = () => {
 
             <ChatModal open={chatOpen} onClose={() => setChatOpen(false)} />
 
-            <div className="flex flex-col gap-6 mx-auto">
-                <div className="flex flex-col gap-3 md:flex-row pb-6">
-                    <StatCard
-                        title="Veranstaltungen"
-                        count={data?.total ?? 0}
-                        description={
-                            error
-                                ? 'Konnten nicht geladen werden'
-                                : category || from
-                                  ? 'Passend zu deinem Filter'
-                                  : 'in Kassel und Umgebung'
-                        }
-                        className="stat-events items-center"
-                    />
-                    <StatCard
-                        title="Beratungsangebote"
-                        count={beratungCount}
-                        description="Kostenlos & vertraulich"
-                        className="stat-beratung items-center"
-                    />
-                </div>
-            </div>
-
             {/* Discover */}
-            <div className="flex flex-col justify-center mx-auto w-full gap-3">
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl">
-                    Entdecke deine Nachbarschaft
-                </h1>
-                <div className="flex w-full flex-wrap gap-3 flex-1">
-                    <input
-                        type="search"
-                        className="field w-full"
-                        placeholder="Suche nach Schlagwort..."
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                    />
-                    <div className="flex w-full flex-nowrap gap-3">
-                        <input
-                            type="date"
-                            className="field shrink-0"
-                            value={from}
-                            onChange={(e) => {
-                                setFrom(e.target.value);
-                                setPage(1);
-                            }}
-                        />
-                        {from && (
-                            <button
-                                className="btn-secondary text-error"
-                                onClick={() => {
-                                    setFrom('');
-                                    setPage(1);
-                                }}
-                            >
-                                X
-                            </button>
-                        )}
+            <div className="flex flex-col justify-center w-full mx-auto pt-8">
+                <div className="flex md:flex-row flex-col gap-6 md:justify-between">
+                    <div className="flex flex-col gap-3">
+                        <h1 className="md:text-3xl text-3xl lg:text-5xl font-bold">
+                            Entdecke deine Umgebung
+                        </h1>
+                        <p className="text-ink-soft">
+                            Finde das passende für dich aus einer breiten
+                            Auswahl an Angeboten
+                        </p>
+                        <div className="flex md:flex-nowrap md:flex-row flex-col gap-3">
+                            <input
+                                type="search"
+                                className="field flex-1 min-w-0"
+                                placeholder="Suche nach Schlagwort..."
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                            />
+                            <div className="relative shrink-0">
+                                <input
+                                    type="date"
+                                    className="field pr-8 w-full md:min-w-0"
+                                    value={from}
+                                    onChange={(e) => {
+                                        setFrom(e.target.value);
+                                        setPage(1);
+                                    }}
+                                />
+                                {from && (
+                                    <button
+                                        className="btn-secondary text-error absolute right-2 top-1/2 -translate-y-1/2 leading-none"
+                                        aria-label="Datum zurücksetzen"
+                                        onClick={() => {
+                                            setFrom('');
+                                            setPage(1);
+                                        }}
+                                    >
+                                        X
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-6">
+                        <div className="flex flex-col gap-3 md:flex-row">
+                            <StatCard
+                                title="Veranstaltungen"
+                                count={data?.total ?? 0}
+                                description={
+                                    error
+                                        ? 'Konnten nicht geladen werden'
+                                        : category || from
+                                          ? 'Passend zu deinem Filter'
+                                          : 'in Kassel & Umgebung'
+                                }
+                                className="stat-events items-center"
+                            />
+                            <StatCard
+                                title="Beratungsangebote"
+                                count={beratungCount}
+                                description="Umsonst & vertraulich"
+                                className="stat-beratung items-center"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
             {/* Kategorie-Chips */}
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 items-center justify-center md:justify-start">
                 <button
                     type="button"
                     className={category ? 'chip' : 'chip-active'}
@@ -254,7 +263,7 @@ const LandingPage = () => {
                 ))}
             </div>
             {totalPages > 1 && (
-                <div className="mt-6 flex items-center justify-center gap-4">
+                <div className="mt-6 flex items-center justify-center gap-4 pb-8">
                     <button
                         className="btn-secondary disabled:opacity-40 cursor-pointer"
                         disabled={page <= 1}

@@ -216,7 +216,17 @@
         @apply overflow-hidden rounded-card border border-line bg-surface shadow-card;
     }
     .field {
-        @apply flex items-center gap-2.5 rounded-control border border-line bg-surface px-3.5 py-3 text-ink;
+        @apply rounded-control border border-line bg-surface px-3.5 py-3 text-ink focus:border-primary 
+         focus:ring-2 
+         focus:ring-primary/20 
+         focus:outline-none;
+    }
+    /* ponytail: plain CSS statt @apply — arbitrary values mit Leerzeichen (viewBox="0 0 24 24") zerlegt Tailwind in Einzel-Utilities */
+    .field::-webkit-search-cancel-button {
+        @apply h-4 w-4 cursor-pointer appearance-none bg-primary;
+        --x-icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>');
+        -webkit-mask: var(--x-icon) no-repeat center / contain;
+        mask: var(--x-icon) no-repeat center / contain;
     }
     .label {
         @apply text-ink-soft cursor-pointer hover:text-ink;
@@ -228,7 +238,7 @@
         @apply bg-linear-to-br from-warning/40 via-warning/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 flex flex-col w-full gap-2 p-4 justify-center items-center shadow-card h-48 transition-all duration-500 ease-out hover:shadow-[0_10px_30px_rgba(234,184,104,0.2)] hover:bg-linear-to-tl hover:from-white/15 hover:via-warning/20 hover:to-warning/50;
     }
     .stat-card {
-        @apply relative flex h-48 w-full flex-col justify-center gap-1 overflow-hidden rounded-card border border-white/25 p-5 backdrop-blur-xl;
+        @apply relative flex h-40 w-full flex-col justify-center gap-1 overflow-hidden rounded-card border border-white/25 p-5 backdrop-blur-xl;
         background-image: linear-gradient(
             to bottom right,
             rgb(255 255 255 / 0.1),

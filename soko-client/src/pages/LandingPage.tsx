@@ -41,7 +41,7 @@ const LandingPage = () => {
     useEffect(() => {
         const params = new URLSearchParams({ page: String(page) });
         if (category) params.set('category', category);
-        if (from) params.set('from', from);
+        if (from) params.set('date', from);
         api.get<EventsPage>(`/events?${params}`)
             .then(setData)
             .catch(() => setError(true));
@@ -62,19 +62,26 @@ const LandingPage = () => {
 
     // Activities werden clientseitig gefiltert — GET /activities kennt weder
     // Pagination noch Textsuche, die Liste ist klein.
-    // Vergangenes fliegt raus, genau wie bei den Events (dort filtert das
-    // Backend). Ab Mitternacht, damit ein Angebot von heute Mittag nicht schon
-    // vormittags verschwindet.
-    const startOfToday = new Date().setHours(0, 0, 0, 0);
+    // Mit Datumsauswahl genau dieser Tag, sonst alles ab heute Mitternacht —
+    // dieselbe Logik wie im Backend für die Events.
+    // `from` ist YYYY-MM-DD; ohne Zeitanteil würde Date() das als UTC lesen.
+    const dayStart = from
+        ? new Date(`${from}T00:00`).getTime()
+        : new Date().setHours(0, 0, 0, 0);
+    // Nicht +24h: an den Zeitumstellungs-Sonntagen hat der Tag 23 bzw. 25h.
+    const dayEnd = from
+        ? new Date(dayStart).setDate(new Date(dayStart).getDate() + 1)
+        : Infinity;
     const filteredActivities = activities.filter(
         (a) =>
             (!category || a.tags.includes(category)) &&
-            new Date(a.date).getTime() >= startOfToday &&
+            new Date(a.date).getTime() >= dayStart &&
+            new Date(a.date).getTime() < dayEnd &&
             matchesQuery(a.title, a.description, ...a.tags),
     );
 
     return (
-        <div className="mx-auto md:max-w-6xl pt-4 flex flex-col gap-8">
+        <div className="mx-auto md:max-w-6xl pt-4 md:pt-8 flex flex-col gap-8">
             {/* Header */}
             <h1 className="md:text-5xl text-3xl self-start md:pb-8 font-bold">
                 Hi{' '}
@@ -214,7 +221,7 @@ const LandingPage = () => {
 
             {filteredActivities.length > 0 && (
                 <section className="flex flex-col gap-4">
-                    <h2 className="text-2xl">Angebote aus der Nachbarschaft</h2>
+                    <h2 className="text-2xl">Angebote unserer Partner</h2>
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {filteredActivities.map((activity) => (
                             <OfferCard
@@ -240,8 +247,10 @@ const LandingPage = () => {
                     </div>
                 </section>
             )}
-
-            <div className="mt-8 grid snap-x snap-mandatory auto-cols-[minmax(280px,1fr)] grid-flow-col grid-rows-2 gap-4 overflow-x-auto pb-4 pt-2">
+            <h2 className="text-2xl">
+                Veranstaltungskalender der Stadt Kassel
+            </h2>
+            <div className="grid snap-x snap-mandatory auto-cols-[minmax(280px,1fr)] grid-flow-col grid-rows-2 gap-4 overflow-x-auto pb-4">
                 {filteredData?.map((event) => (
                     <OfferCard
                         key={event._id}

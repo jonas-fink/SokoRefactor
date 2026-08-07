@@ -10,21 +10,36 @@ const startOfToday = () => {
     return d;
 };
 
+// `date` ist YYYY-MM-DD und meint genau diesen Tag. Ohne Zeitanteil läse Date()
+// das als UTC — der Scraper schreibt aber Serverzeit. Nicht +24h rechnen: an den
+// Zeitumstellungs-Sonntagen hat der Tag 23 bzw. 25 Stunden.
+export const dayRange = (date: string) => {
+    const day = new Date(`${date}T00:00`);
+    const nextDay = new Date(day);
+    nextDay.setDate(day.getDate() + 1);
+    return { $gte: day, $lt: nextDay };
+};
+
 export const getEvents: RequestHandler = async (req, res, next) => {
     try {
-        const { category, from, page } = req.query;
+        const { category, date, page } = req.query;
         const currentPage = Math.max(1, Number(page) || 1);
 
         const match: Record<string, unknown> = {};
         if (category) match.category = category;
 
-        // Ohne `from` gilt „ab heute" — vergangene Veranstaltungen haben auf der
-        // Startseite nichts zu suchen. Ab Mitternacht, damit ein Event von heute
-        // Mittag nicht schon vormittags verschwindet.
-        const since = from ? new Date(from as string) : startOfToday();
-        // Events ohne Datum ("Termin offen") sind nicht vergangen — sie bleiben
-        // drin und sortieren ohnehin ans Ende.
-        match.$or = [{ startDate: { $gte: since } }, { startDate: null }];
+        if (date) {
+            match.startDate = dayRange(date as string);
+        } else {
+            // Vergangene Veranstaltungen haben auf der Startseite nichts zu
+            // suchen. Ab Mitternacht, damit ein Event von heute Mittag nicht
+            // schon vormittags verschwindet. Events ohne Datum ("Termin offen")
+            // sind nicht vergangen — sie bleiben drin und sortieren ans Ende.
+            match.$or = [
+                { startDate: { $gte: startOfToday() } },
+                { startDate: null },
+            ];
+        }
 
         const [events, total] = await Promise.all([
             ScrapedEvent.aggregate([

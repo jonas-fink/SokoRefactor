@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { api } from '../utils/api';
 import { formatDate } from '../utils/formatDate';
-import type { Activity, Category, EventsPage } from '../types';
+import type { Activity, Beratung, Category, EventsPage } from '../types';
 import { NavLink } from 'react-router';
 import { AiOutlineCalendar, AiOutlineNotification } from 'react-icons/ai';
 import { useAuth } from '../context/auth-context';
 import OfferCard from '../components/OfferCard';
 import ChatModal from '../components/ChatModal';
 import { useFavorites } from '../hooks/useFavorites';
+import StatCard from '../components/StatCard';
 
 const LandingPage = () => {
     const { user } = useAuth();
@@ -16,6 +17,7 @@ const LandingPage = () => {
     const [data, setData] = useState<EventsPage | null>(null);
     const [activities, setActivities] = useState<Activity[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
+    const [beratungCount, setBeratungCount] = useState(0);
     const [category, setCategory] = useState('');
     const [from, setFrom] = useState('');
     const [page, setPage] = useState(1);
@@ -28,6 +30,11 @@ const LandingPage = () => {
             .catch(() => setError(true));
         api.get<Activity[]>('/activities')
             .then(setActivities)
+            .catch(() => setError(true));
+        // ponytail: /beratungen liefert das volle Array, es gibt keinen
+        // Count-Endpunkt. Reicht solange die Liste klein bleibt.
+        api.get<Beratung[]>('/beratungen')
+            .then((b) => setBeratungCount(b.length))
             .catch(() => setError(true));
     }, []);
 
@@ -67,64 +74,72 @@ const LandingPage = () => {
     );
 
     return (
-        <div className="mx-auto md:max-w-6xl py-8 flex flex-col gap-8">
+        <div className="mx-auto md:max-w-6xl pt-4 flex flex-col gap-8">
             {/* Header */}
-            <h1 className="md:text-5xl text-3xl">
-                Guten Tag{' '}
+            <h1 className="md:text-5xl text-3xl self-start pb-8">
+                Hi{' '}
                 <span className="text-primary">
-                    {user ? user.name : 'Guest'}
+                    {user ? user.name : 'lieber Gast'}
                 </span>
-                . Was suchst du heute?
+                ! Was suchst du heute?
             </h1>
 
             <div className="flex md:flex-row flex-col gap-3 md:min-w-3xl w-full mx-auto justify-center items-center">
                 {' '}
-                <NavLink
-                    to="/events"
-                    className="card bg-brand flex flex-col w-full gap-2 p-4 justify-center items-center shadow-card h-48"
-                >
+                <NavLink to="/events" className="card events">
                     <AiOutlineCalendar size={36} />
                     <h2 className="font-bold text-3xl">Erleben</h2>
                     <p className="text-md">Events & Angebote</p>
                 </NavLink>
-                <NavLink
-                    to="/beratung"
-                    className="card bg-warning text-primary-ink p-4 flex flex-col w-full gap-2 justify-center items-center shadow-card h-48"
-                >
+                <NavLink to="/beratung" className="card beratung">
                     <AiOutlineNotification size={36} />
-                    <h2 className="text-primary-ink font-bold text-3xl">
-                        Beratung & Hilfe
-                    </h2>
+                    <h2 className=" font-bold text-3xl">Beratung & Hilfe</h2>
                     <p className="text-md">Kostenlos & vertraulich</p>
                 </NavLink>
             </div>
-            <div className="flex md:flex-row flex-col gap-6 justify-around items-center pb-12 pt-6">
+            <div className="flex flex-col gap-6 items-center pt-6">
                 <h3 className="text-3xl font-bold">
                     Du bist dir unsicher wonach du suchen sollst?
                 </h3>{' '}
                 <button
                     type="button"
-                    className="btn-primary bg-error text-ink w-full cursor-pointer sm:w-auto sm:self-start"
+                    className="btn-cta w-full cursor-pointer sm:w-auto  font-bold text-xl"
                     onClick={() => setChatOpen(true)}
                 >
-                    Chatte mit mir!
+                    Frag mich!
                 </button>
             </div>
 
             <ChatModal open={chatOpen} onClose={() => setChatOpen(false)} />
 
-            {/* Discover */}
-            <div className="flex flex-col lg:flex-row justify-center items-start gap-3">
-                <div className="flex flex-col gap-2 flex-1">
-                    <h1 className="text-3xl sm:text-4xl lg:text-5xl">
-                        Entdecke deine Nachbarschaft
-                    </h1>
-                    <h3 className="text-ink-soft">
-                        {error
-                            ? 'Angebote konnten nicht geladen werden'
-                            : `${data?.total ?? '…'} Angebote & Events rund aus dem Kasseler Veranstaltungskalender`}
-                    </h3>
+            <div className="flex flex-col gap-6 mx-auto">
+                <div className="flex flex-col gap-3 md:flex-row pb-6">
+                    <StatCard
+                        title="Veranstaltungen"
+                        count={data?.total ?? 0}
+                        description={
+                            error
+                                ? 'Konnten nicht geladen werden'
+                                : category || from
+                                  ? 'Passend zu deinem Filter'
+                                  : 'in Kassel und Umgebung'
+                        }
+                        className="stat-events items-center"
+                    />
+                    <StatCard
+                        title="Beratungsangebote"
+                        count={beratungCount}
+                        description="Kostenlos & vertraulich"
+                        className="stat-beratung items-center"
+                    />
                 </div>
+            </div>
+
+            {/* Discover */}
+            <div className="flex flex-col justify-center mx-auto w-full gap-3">
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl">
+                    Entdecke deine Nachbarschaft
+                </h1>
                 <div className="flex w-full flex-wrap gap-3 flex-1">
                     <input
                         type="search"

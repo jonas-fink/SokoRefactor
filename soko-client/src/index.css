@@ -221,4 +221,33 @@
     .label {
         @apply text-ink-soft cursor-pointer hover:text-ink;
     }
+    .events {
+        @apply bg-linear-to-br from-brand/40 via-brand/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 flex flex-col w-full gap-2 p-4 justify-center items-center shadow-card h-48 transition-all duration-500 ease-out hover:shadow-[0_10px_30px_rgba(0,210,100,0.15)] hover:bg-linear-to-tl hover:from-white/15 hover:via-brand/20 hover:to-brand/50;
+    }
+    .beratung {
+        @apply bg-linear-to-br from-warning/40 via-warning/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 flex flex-col w-full gap-2 p-4 justify-center items-center shadow-card h-48 transition-all duration-500 ease-out hover:shadow-[0_10px_30px_rgba(234,184,104,0.2)] hover:bg-linear-to-tl hover:from-white/15 hover:via-warning/20 hover:to-warning/50;
+    }
+    .stat-card {
+        @apply relative flex h-48 w-full flex-col justify-center gap-1 overflow-hidden rounded-card border border-white/25 p-5 backdrop-blur-xl;
+        background-image: linear-gradient(
+            to bottom right,
+            rgb(255 255 255 / 0.1),
+            rgb(255 255 255 / 0.01)
+        );
+        box-shadow:
+            inset 0 1px 0 rgb(255 255 255 / 0.25),
+            var(--shadow-card);
+    }
+    .stat-value {
+        color: var(--stat-accent);
+    }
+    .stat-events {
+        --stat-accent: var(--color-brand);
+    }
+    .stat-beratung {
+        --stat-accent: var(--color-warning);
+    }
+    .btn-cta {
+        @apply bg-linear-to-br rounded-xl from-error/80 via-error/20 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 gap-2 p-4 justify-center items-center shadow-card transition-all duration-500 ease-out hover:shadow-[0_10px_30px_rgba(232,116,110,0.25)] hover:bg-linear-to-tl hover:from-white/15 hover:via-error/20 hover:to-error/50;
+    }
 }

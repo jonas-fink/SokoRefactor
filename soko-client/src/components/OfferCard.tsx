@@ -31,7 +31,7 @@ const OfferCard = ({
     isFavorite,
     onToggleFavorite,
 }: OfferCardProps) => (
-    <div className="card relative flex snap-start flex-col transition-transform hover:-translate-y-0.5">
+    <div className="card relative flex flex-col transition-transform hover:-translate-y-0.5">
         {onToggleFavorite && (
             <button
                 type="button"
@@ -39,7 +39,7 @@ const OfferCard = ({
                     isFavorite ? 'Aus Sammlung entfernen' : 'Zur Sammlung'
                 }
                 aria-pressed={isFavorite}
-                className="absolute right-3 top-3 z-10 cursor-pointer rounded-chip bg-surface p-2 text-error shadow-card"
+                className="absolute right-3 top-3 z-9 cursor-pointer rounded-chip bg-surface p-2 text-error shadow-card"
                 onClick={onToggleFavorite}
             >
                 {isFavorite ? (

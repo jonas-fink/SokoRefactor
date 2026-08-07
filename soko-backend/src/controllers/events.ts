@@ -2,7 +2,9 @@ import type { RequestHandler } from 'express';
 import { ScrapedEvent } from '#models';
 import { scrapedEventOutputSchema } from '#schemas';
 
-const PAGE_SIZE = 50;
+// 9 = 3 Reihen im 3-spaltigen Grid, damit die Seite kurz bleibt und
+// eher gefiltert als gescrollt wird.
+const PAGE_SIZE = 9;
 
 const startOfToday = () => {
     const d = new Date();

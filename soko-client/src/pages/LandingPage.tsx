@@ -9,6 +9,9 @@ import OfferCard from '../components/OfferCard';
 import ChatModal from '../components/ChatModal';
 import { useFavorites } from '../hooks/useFavorites';
 import StatCard from '../components/StatCard';
+import Pagination from '../components/Pagination';
+
+const PAGE_SIZE = 9;
 
 const LandingPage = () => {
     const { user } = useAuth();
@@ -21,6 +24,7 @@ const LandingPage = () => {
     const [category, setCategory] = useState('');
     const [from, setFrom] = useState('');
     const [page, setPage] = useState(1);
+    const [activityPage, setActivityPage] = useState(1);
     const [error, setError] = useState(false);
     const [chatOpen, setChatOpen] = useState(false);
 
@@ -31,8 +35,6 @@ const LandingPage = () => {
         api.get<Activity[]>('/activities')
             .then(setActivities)
             .catch(() => setError(true));
-        // ponytail: /beratungen liefert das volle Array, es gibt keinen
-        // Count-Endpunkt. Reicht solange die Liste klein bleibt.
         api.get<Beratung[]>('/beratungen')
             .then((b) => setBeratungCount(b.length))
             .catch(() => setError(true));
@@ -68,7 +70,6 @@ const LandingPage = () => {
     const dayStart = from
         ? new Date(`${from}T00:00`).getTime()
         : new Date().setHours(0, 0, 0, 0);
-    // Nicht +24h: an den Zeitumstellungs-Sonntagen hat der Tag 23 bzw. 25h.
     const dayEnd = from
         ? new Date(dayStart).setDate(new Date(dayStart).getDate() + 1)
         : Infinity;
@@ -78,6 +79,16 @@ const LandingPage = () => {
             new Date(a.date).getTime() >= dayStart &&
             new Date(a.date).getTime() < dayEnd &&
             matchesQuery(a.title, a.description, ...a.tags),
+    );
+
+    // Clientseitige Pagination: geladen ist ohnehin alles, und die Textsuche
+    // muss über die komplette Liste laufen, nicht nur über die aktuelle Seite.
+    // Beim Filtern schrumpft die Liste — geclamped statt per Effect zurückgesetzt.
+    const activityPages = Math.ceil(filteredActivities.length / PAGE_SIZE);
+    const currentActivityPage = Math.min(activityPage, activityPages || 1);
+    const visibleActivities = filteredActivities.slice(
+        (currentActivityPage - 1) * PAGE_SIZE,
+        currentActivityPage * PAGE_SIZE,
     );
 
     return (
@@ -223,7 +234,7 @@ const LandingPage = () => {
                 <section className="flex flex-col gap-4">
                     <h2 className="text-2xl">Angebote unserer Partner</h2>
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        {filteredActivities.map((activity) => (
+                        {visibleActivities.map((activity) => (
                             <OfferCard
                                 key={activity._id}
                                 itemType="Activity"
@@ -245,12 +256,17 @@ const LandingPage = () => {
                             />
                         ))}
                     </div>
+                    <Pagination
+                        page={currentActivityPage}
+                        totalPages={activityPages}
+                        onChange={setActivityPage}
+                    />
                 </section>
             )}
             <h2 className="text-2xl">
                 Veranstaltungskalender der Stadt Kassel
             </h2>
-            <div className="grid snap-x snap-mandatory auto-cols-[minmax(280px,1fr)] grid-flow-col grid-rows-2 gap-4 overflow-x-auto pb-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredData?.map((event) => (
                     <OfferCard
                         key={event._id}
@@ -271,27 +287,13 @@ const LandingPage = () => {
                     />
                 ))}
             </div>
-            {totalPages > 1 && (
-                <div className="mt-6 flex items-center justify-center gap-4 pb-8">
-                    <button
-                        className="btn-secondary disabled:opacity-40 cursor-pointer"
-                        disabled={page <= 1}
-                        onClick={() => setPage((p) => p - 1)}
-                    >
-                        Zurück
-                    </button>
-                    <span className="text-sm text-ink-mute">
-                        Seite {page} von {totalPages}
-                    </span>
-                    <button
-                        className="btn-secondary disabled:opacity-40 cursor-pointer"
-                        disabled={page >= totalPages}
-                        onClick={() => setPage((p) => p + 1)}
-                    >
-                        Weiter
-                    </button>
-                </div>
-            )}
+            <div className="pb-8">
+                <Pagination
+                    page={page}
+                    totalPages={totalPages}
+                    onChange={setPage}
+                />
+            </div>
         </div>
     );
 };

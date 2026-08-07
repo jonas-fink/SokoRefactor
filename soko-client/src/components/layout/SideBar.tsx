@@ -20,7 +20,7 @@ const SideBar = () => {
     }
 `;
     return (
-        <div className="flex flex-row justify-around gap-2 border-t border-line bg-surface p-3 h-full md:flex-col md:justify-start md:gap-8 md:border-t-0 md:p-8">
+        <div className="flex flex-row justify-around gap-2 border-t border-line bg-surface p-3 h-full md:flex-col md:justify-start md:gap-8 md:border-t-0 md:p-8 z-10">
             <div className="hidden items-center md:flex">
                 <img src={mainLogo} width={88} height={88} />
                 <h1 className="text-2xl">Soko</h1>

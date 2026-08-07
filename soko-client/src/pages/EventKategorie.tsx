@@ -42,7 +42,8 @@ const EventKategorie = () => {
             .then((res) => !cancelled && setData(res))
             .catch(
                 () =>
-                    !cancelled && setError('Events konnten nicht geladen werden'),
+                    !cancelled &&
+                    setError('Events konnten nicht geladen werden'),
             );
         return () => {
             cancelled = true;

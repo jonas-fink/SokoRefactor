@@ -18,8 +18,8 @@ const Events = () => {
     }, []);
 
     return (
-        <div className="flex flex-col gap-6 md:max-w-6xl mx-auto pb-3">
-            <div className="flex gap-4 items-center">
+        <div className="flex flex-col gap-6 md:max-w-6xl mx-auto md:p-8 pb-3">
+            <div className="flex gap-3 items-center">
                 <button
                     className="card bg-surface p-2 cursor-pointer"
                     onClick={() => navigate(-1)}

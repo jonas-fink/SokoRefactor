@@ -10,7 +10,7 @@
  * Vor dem Live-Gang gehört der Text durch eine juristische Prüfung.
  */
 const Datenschutz = () => (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 py-8">
+    <div className="mx-auto flex w-full md:max-w-6xl flex-col gap-6 p-8">
         <h1 className="text-3xl sm:text-4xl">Datenschutz</h1>
 
         <section className="flex flex-col gap-2">
@@ -31,7 +31,8 @@ const Datenschutz = () => (
                 <strong>Google Gemini</strong>, damit daraus ein Vorschlag
                 entsteht, welche Stelle zu deinem Anliegen passt. Die Antwort
                 bekommst du zurück — bei uns wird deine Nachricht{' '}
-                <strong>nicht gespeichert</strong>. Du brauchst dafür kein Konto.
+                <strong>nicht gespeichert</strong>. Du brauchst dafür kein
+                Konto.
             </p>
             <p className="text-ink-soft">
                 Deine IP-Adresse verarbeiten wir kurzzeitig, um die Zahl der
@@ -45,9 +46,9 @@ const Datenschutz = () => (
             <p className="text-ink-soft">
                 Google verarbeitet die Inhalte auch außerhalb der EU, unter
                 anderem in den USA. Wir nutzen die Gemini-Schnittstelle derzeit
-                im <strong>kostenlosen Kontingent</strong>. Dabei darf Google die
-                gesendeten Inhalte zur Verbesserung eigener Produkte verwenden,
-                und Mitarbeitende von Google können Inhalte einsehen.
+                im <strong>kostenlosen Kontingent</strong>. Dabei darf Google
+                die gesendeten Inhalte zur Verbesserung eigener Produkte
+                verwenden, und Mitarbeitende von Google können Inhalte einsehen.
             </p>
             <p className="text-ink-soft">
                 Deshalb ganz deutlich:{' '}
@@ -56,14 +57,14 @@ const Datenschutz = () => (
                     Aktenzeichen oder Angaben zu Gesundheit, Herkunft oder
                     Finanzen, die dich identifizierbar machen.
                 </strong>{' '}
-                Beschreib dein Anliegen allgemein — für einen passenden Vorschlag
-                reicht „Ich habe Mietschulden" völlig aus.
+                Beschreib dein Anliegen allgemein — für einen passenden
+                Vorschlag reicht „Ich habe Mietschulden" völlig aus.
             </p>
             <p className="text-ink-soft">
                 Du kannst alle Beratungsangebote auch{' '}
                 <strong>ohne den Chat</strong> finden: über die Themenübersicht
-                unter „Beratung &amp; Hilfe". Dabei verlässt keine Angabe von dir
-                unseren Server.
+                unter „Beratung &amp; Hilfe". Dabei verlässt keine Angabe von
+                dir unseren Server.
             </p>
         </section>
 
@@ -73,8 +74,8 @@ const Datenschutz = () => (
                 Die Übermittlung an Google erfolgt auf Grundlage deiner
                 Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), die du vor der ersten
                 Chat-Nachricht bestätigst. Du kannst sie jederzeit widerrufen,
-                indem du den Chat nicht weiter nutzt — auf die Rechtmäßigkeit der
-                bis dahin erfolgten Verarbeitung hat das keinen Einfluss.
+                indem du den Chat nicht weiter nutzt — auf die Rechtmäßigkeit
+                der bis dahin erfolgten Verarbeitung hat das keinen Einfluss.
             </p>
         </section>
 

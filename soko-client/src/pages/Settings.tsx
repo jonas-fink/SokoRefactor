@@ -24,19 +24,23 @@ const SettingsPage = () => {
     const isCreator = canCreate(user);
 
     return (
-        <div className="flex flex-col gap-8 w-full max-w-2xl px-4 min-h-screen mx-auto mt-16">
-            <AiOutlineArrowLeft
-                size={24}
-                className="absolute top-26 left-3/12"
-                onClick={() => navigate(-1)}
-            />
-            <div className="flex flex-col items-left gap-2">
-                <h1 className="font-display text-5xl text-ink">
-                    Einstellungen
-                </h1>
-                <p className="font-sans text-ink-mute">
-                    Verwalte deinen Account
-                </p>
+        <div className="flex flex-col gap-8 md:max-w-6xl p-8 mx-auto">
+            <div className="flex items-center gap-3">
+                <button
+                    className="card bg-surface p-2 cursor-pointer"
+                    onClick={() => navigate(-1)}
+                >
+                    <AiOutlineArrowLeft size={24} />
+                </button>
+                <div>
+                    {' '}
+                    <h1 className="font-display text-2xl text-ink">
+                        Einstellungen
+                    </h1>
+                    <p className="font-sans text-ink-mute">
+                        Verwalte deinen Account
+                    </p>
+                </div>
             </div>
             <div className="bg-surface w-full p-8 rounded-card flex flex-col gap-4 items-center shadow-card">
                 <h2 className="font-display text-2xl text-primary">
@@ -56,7 +60,7 @@ const SettingsPage = () => {
                             type="button"
                             onClick={onBecomeCreator}
                             disabled={busy}
-                            className="btn-primary w-full"
+                            className="btn-primary md:w-1/2 cursor-pointer"
                         >
                             {busy ? 'wird umgestellt...' : 'Creator werden'}
                         </button>

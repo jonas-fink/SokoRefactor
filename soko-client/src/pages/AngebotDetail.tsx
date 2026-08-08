@@ -53,8 +53,8 @@ const AngebotDetail = () => {
         categories.find((c) => c.key === key)?.label ?? key;
 
     return (
-        <div className="mx-auto flex w-full md:max-w-6xl flex-col gap-6 p-8">
-            <div className="flex items-start justify-between gap-4">
+        <div className="mx-auto flex md:max-w-6xl flex-col gap-6 md:p-8 pb-3">
+            <div className="flex justify-between gap-3">
                 <div className="flex gap-3 items-center">
                     <button
                         className="card bg-surface p-2 cursor-pointer"
@@ -79,7 +79,6 @@ const AngebotDetail = () => {
                         ) : (
                             <AiOutlineHeart size={20} />
                         )}
-                        Merken
                     </button>
                 )}
             </div>
@@ -105,7 +104,7 @@ const AngebotDetail = () => {
 
             <p className="text-ink-soft">{item.description}</p>
 
-            <div className="field flex items-start gap-6">
+            <div className="field flex flex-col md:flex-row items-start gap-3 md:gap-6">
                 <p className="flex gap-3">
                     <AiOutlineCalendar size={20} />
                     {formatDate(activity ? activity.date : event?.startDate)}

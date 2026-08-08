@@ -25,7 +25,7 @@ const Beratung = () => {
     }, []);
 
     return (
-        <div className="flex flex-col gap-6 md:max-w-6xl mx-auto">
+        <div className="flex flex-col gap-6 md:max-w-6xl mx-auto md:p-8 pb-3">
             <div className="flex gap-4 items-center">
                 <button
                     className="card bg-surface p-2 cursor-pointer"
@@ -69,7 +69,10 @@ const Beratung = () => {
                                 </div>
                             </div>
                             <div>
-                                <AiOutlineArrowRight size={24} className="shrink-0" />
+                                <AiOutlineArrowRight
+                                    size={24}
+                                    className="shrink-0"
+                                />
                             </div>
                         </Link>
                     );

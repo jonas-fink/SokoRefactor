@@ -9,10 +9,7 @@ import {
     PiBasket,
     PiDotsThreeCircle,
 } from 'react-icons/pi';
-import {
-    MdOutlineFamilyRestroom,
-    MdOutlineSportsSoccer,
-} from 'react-icons/md';
+import { MdOutlineFamilyRestroom, MdOutlineSportsSoccer } from 'react-icons/md';
 
 /**
  * Darstellung pro Kategorie-Key. Label und Reihenfolge kommen aus

@@ -92,7 +92,7 @@ const LandingPage = () => {
     );
 
     return (
-        <div className="mx-auto md:max-w-6xl pt-4 md:pt-8 flex flex-col gap-8">
+        <div className="mx-auto md:max-w-6xl md:p-8 pb-3 flex flex-col gap-8">
             {/* Header */}
             <h1 className="md:text-5xl text-3xl self-start md:pb-8 font-bold">
                 Hi{' '}

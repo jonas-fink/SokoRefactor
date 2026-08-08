@@ -17,6 +17,7 @@ export interface AuthUser {
     name?: string;
     email: string;
     role: 'user' | 'admin' | 'creator';
+    createdAt: string;
 }
 
 export interface ApiResponse<T> {

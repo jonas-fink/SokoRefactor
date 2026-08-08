@@ -1,25 +1,27 @@
 services:
-  mongo:
-    image: mongo:8
-    restart: unless-stopped
-    volumes:
-      - mongo-data:/data/db
+    mongo:
+        image: mongo:8
+        restart: unless-stopped
+        ports:
+            - '27017:27017'
+        volumes:
+            - mongo-data:/data/db
 
-  backend:
-    build: ./soko-backend
-    restart: unless-stopped
-    env_file: .env
-    depends_on: [mongo]
+    backend:
+        build: ./soko-backend
+        restart: unless-stopped
+        env_file: .env
+        depends_on: [mongo]
 
-  client:
-    build:
-      context: ./soko-client
-      args:
-        VITE_PUBLIC_MAPBOX_TOKEN: ${VITE_PUBLIC_MAPBOX_TOKEN}
-    restart: unless-stopped
-    ports:
-      - '8080:80'
-    depends_on: [backend]
+    client:
+        build:
+            context: ./soko-client
+            args:
+                VITE_PUBLIC_MAPBOX_TOKEN: ${VITE_PUBLIC_MAPBOX_TOKEN}
+        restart: unless-stopped
+        ports:
+            - '8080:80'
+        depends_on: [backend]
 
 volumes:
-  mongo-data:
+    mongo-data:

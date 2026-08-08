@@ -18,7 +18,7 @@ const Erstellen = () => {
     return (
         <div className="flex flex-col gap-6 md:max-w-6xl md:p-8 mx-auto">
             {choice === null && (
-                <div className="flex gap-4">
+                <div className="flex md:flex-row flex-col gap-3">
                     <button
                         className="card events cursor-pointer font-bold text-3xl"
                         onClick={() => setUserChoice('Event erstellen')}

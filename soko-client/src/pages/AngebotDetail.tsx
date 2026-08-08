@@ -1,9 +1,15 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router';
+import { useParams, useNavigate } from 'react-router';
 import { api } from '../utils/api';
 import MapView from '../components/map/MapView';
 import { useFavorites } from '../hooks/useFavorites';
-import { AiFillHeart, AiOutlineHeart } from 'react-icons/ai';
+import {
+    AiFillHeart,
+    AiOutlineHeart,
+    AiOutlineArrowLeft,
+    AiOutlineEnvironment,
+    AiOutlineCalendar,
+} from 'react-icons/ai';
 import { formatDate } from '../utils/formatDate';
 import type { Activity, Category, ItemType, ScrapedEvent } from '../types';
 
@@ -13,6 +19,7 @@ const AngebotDetail = () => {
     const [item, setItem] = useState<Activity | ScrapedEvent | null>(null);
     const [categories, setCategories] = useState<Category[]>([]);
     const [error, setError] = useState('');
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (!itemType || !id) return;
@@ -46,9 +53,17 @@ const AngebotDetail = () => {
         categories.find((c) => c.key === key)?.label ?? key;
 
     return (
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 py-8">
+        <div className="mx-auto flex w-full md:max-w-6xl flex-col gap-6 p-8">
             <div className="flex items-start justify-between gap-4">
-                <h1 className="text-3xl sm:text-4xl">{item.title}</h1>
+                <div className="flex gap-3 items-center">
+                    <button
+                        className="card bg-surface p-2 cursor-pointer"
+                        onClick={() => navigate(-1)}
+                    >
+                        <AiOutlineArrowLeft size={24} />
+                    </button>
+                    <h1 className="text-2xl font-bold">{item.title}</h1>
+                </div>
                 {enabled && (
                     <button
                         type="button"
@@ -56,7 +71,7 @@ const AngebotDetail = () => {
                             favorite ? 'Aus Sammlung entfernen' : 'Zur Sammlung'
                         }
                         aria-pressed={favorite}
-                        className="btn-secondary text-error"
+                        className="btn-secondary text-error cursor-pointer"
                         onClick={() => toggle(itemType, id)}
                     >
                         {favorite ? (
@@ -90,9 +105,17 @@ const AngebotDetail = () => {
 
             <p className="text-ink-soft">{item.description}</p>
 
-            <div className="field flex-col items-start gap-1">
-                <p>{formatDate(activity ? activity.date : event?.startDate)}</p>
-                {event?.locationName && <p>{event.locationName}</p>}
+            <div className="field flex items-start gap-6">
+                <p className="flex gap-3">
+                    <AiOutlineCalendar size={20} />
+                    {formatDate(activity ? activity.date : event?.startDate)}
+                </p>
+                {event?.locationName && (
+                    <p className="flex gap-3">
+                        <AiOutlineEnvironment size={20} />
+                        {event.locationName}
+                    </p>
+                )}
                 {activity && (
                     <p>
                         {activity.price === 0

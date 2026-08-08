@@ -78,7 +78,7 @@ const EventKategorie = () => {
     ].sort((a, b) => a.time - b.time);
 
     return (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 md:max-w-6xl mx-auto">
             <div className="flex gap-4 items-center">
                 <button
                     className="card bg-surface p-2 cursor-pointer"

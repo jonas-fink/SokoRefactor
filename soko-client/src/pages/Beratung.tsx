@@ -69,7 +69,7 @@ const Beratung = () => {
                                 </div>
                             </div>
                             <div>
-                                <AiOutlineArrowRight size={24} />
+                                <AiOutlineArrowRight size={24} className="shrink-0" />
                             </div>
                         </Link>
                     );

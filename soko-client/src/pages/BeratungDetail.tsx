@@ -28,7 +28,7 @@ const BeratungDetail = () => {
     if (!beratung) return <p className="py-8 text-ink-mute">Lädt …</p>;
 
     return (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 max-w-6xl mx-auto">
             <div className="flex gap-4 items-center">
                 <button
                     className="card bg-surface p-2 cursor-pointer"
@@ -55,9 +55,25 @@ const BeratungDetail = () => {
             </div>
 
             <p className="text-ink-soft">{beratung.description}</p>
+            <div className="flex flex-wrap gap-2 items-center">
+                {beratung.tags.map((t) => (
+                    <span key={t} className="chip">
+                        {t}
+                    </span>
+                ))}
+            </div>
 
             {(beratung.phone || beratung.address) && (
-                <div className="card flex flex-col gap-3 p-4">
+                <div className="flex md:flex-row flex-col gap-3">
+                    {' '}
+                    {beratung.address && (
+                        <p className="flex items-center gap-3">
+                            <AiOutlineEnvironment size={20} />
+                            <span className="text-ink-soft">
+                                {beratung.address}
+                            </span>
+                        </p>
+                    )}
                     {beratung.phone && (
                         <a
                             href={`tel:${beratung.phone}`}
@@ -66,14 +82,6 @@ const BeratungDetail = () => {
                             <AiOutlinePhone size={20} />
                             <span>{beratung.phone}</span>
                         </a>
-                    )}
-                    {beratung.address && (
-                        <p className="flex items-center gap-3">
-                            <AiOutlineEnvironment size={20} />
-                            <span className="text-ink-soft">
-                                {beratung.address}
-                            </span>
-                        </p>
                     )}
                 </div>
             )}
@@ -137,14 +145,6 @@ const BeratungDetail = () => {
                     <MapView center={beratung.location.coordinates} />
                 </div>
             )}
-
-            <div className="flex flex-wrap gap-2">
-                {beratung.tags.map((t) => (
-                    <span key={t} className="chip">
-                        {t}
-                    </span>
-                ))}
-            </div>
         </div>
     );
 };

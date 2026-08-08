@@ -1,0 +1,16 @@
+name: Deploy
+
+on:
+    push:
+        branches: [main]
+    workflow_dispatch:
+
+jobs:
+    deploy:
+        runs-on: self-hosted
+        steps:
+            - uses: actions/checkout@v5
+            # .env liegt ausserhalb des Workspaces, weil checkout mit git clean -ffdx aufraeumt
+            - run: cp /srv/soko/.env .env
+            - run: docker compose up -d --build
+            - run: docker image prune -f

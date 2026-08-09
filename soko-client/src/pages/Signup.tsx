@@ -52,7 +52,7 @@ const SignupPage = () => {
                                 id="name"
                                 {...register('name')}
                                 placeholder="Jane Doe"
-                                className="border border-line rounded-control p-4 focus:outline-none focus:border-primary bg-transparent"
+                                className="border border-line-strong rounded-control p-4 focus:outline-none focus:border-primary bg-transparent"
                             />
                             {errors.name && (
                                 <p className="text-error text-xs">
@@ -73,7 +73,7 @@ const SignupPage = () => {
                                 id="email"
                                 {...register('email')}
                                 placeholder="you@example.com"
-                                className="border border-line rounded-control p-4 focus:outline-none focus:border-primary bg-transparent"
+                                className="border border-line-strong rounded-control p-4 focus:outline-none focus:border-primary bg-transparent"
                                 required
                             />
                             {errors.email && (
@@ -95,7 +95,7 @@ const SignupPage = () => {
                                 id="password"
                                 {...register('password')}
                                 placeholder="**********"
-                                className="border border-line rounded-control p-4 focus:outline-none focus:border-primary bg-transparent"
+                                className="border border-line-strong rounded-control p-4 focus:outline-none focus:border-primary bg-transparent"
                                 required
                             />
                             {errors.password && (

@@ -37,11 +37,18 @@ const issueRefreshToken = async (userId: string, family?: string) => {
     return token;
 };
 
-const isProd = process.env.NODE_ENV === 'production';
+// `secure` hängt daran, ob wirklich TLS anliegt — nicht an NODE_ENV. Über
+// Tailscale läuft die App als http://<host>:8080, und dort verwirft der
+// Browser ein Secure-Cookie stillschweigend: nach jedem Reload ist die
+// Session weg. localhost ist von der Regel ausgenommen, deshalb fiel es
+// lokal nie auf. Mit `tailscale serve` (echtes Zertifikat) COOKIE_SECURE=true.
 const COOKIE_OPTS = {
     httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? ('none' as const) : ('strict' as const),
+    secure: process.env.COOKIE_SECURE === 'true',
+    // Client und /api/ liegen hinter demselben nginx, die Auth-Requests sind
+    // also same-origin. 'none' bräuchte zwingend Secure und gäbe den
+    // CSRF-Schutz auf, ohne dass hier je cross-site gesendet würde.
+    sameSite: 'lax' as const,
     path: '/api/v1/auth',
     maxAge: REFRESH_TTL_MS,
 };

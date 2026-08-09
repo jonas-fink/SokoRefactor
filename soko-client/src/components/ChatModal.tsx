@@ -245,7 +245,7 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
                             <div className="mb-3 flex flex-col gap-1">
                                 <NavLink
                                     to="/beratung"
-                                    className="btn-secondary cursor-pointer hover:border-accent hover:text-accent active:translate-y-1 transition-colors duration-300 ease-in"
+                                    className="btn-secondary cursor-pointer hover:border-accent-strong hover:text-accent-strong active:translate-y-1 transition-colors duration-300 ease-in"
                                     onClick={onClose}
                                 >
                                     {handoff.label}

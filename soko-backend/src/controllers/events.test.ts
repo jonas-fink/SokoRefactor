@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { dayRange } from './events.ts';
+import { dayRange, searchFilter } from './events.ts';
 
 test('dayRange umfasst genau den gewählten Tag in Ortszeit', () => {
     const { $gte, $lt } = dayRange('2026-08-08');
@@ -13,4 +13,17 @@ test('dayRange umfasst genau den gewählten Tag in Ortszeit', () => {
     assert.ok(new Date(2026, 7, 8, 23, 30) >= $gte);
     assert.ok(new Date(2026, 7, 8, 23, 30) < $lt);
     assert.ok(!(new Date(2026, 7, 9, 0, 0) < $lt));
+});
+
+test('searchFilter matcht Teilwoerter case-insensitiv', () => {
+    const [{ title }] = searchFilter('kaff').$or;
+    assert.ok(title.test('Offenes Kaffeetrinken'));
+    assert.ok(!title.test('Konzert'));
+});
+
+test('searchFilter escaped Regex-Sonderzeichen', () => {
+    const [{ title }] = searchFilter('a.c').$or;
+    assert.ok(title.test('a.c'));
+    // Ohne Escaping wuerde der Punkt auf jedes Zeichen passen.
+    assert.ok(!title.test('abc'));
 });

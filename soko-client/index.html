@@ -5,6 +5,18 @@
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Soko</title>
+        <script>
+            // ponytail: 4 Zeilen inline statt Theme-Context — verhindert FOUC
+            // und themt auch /login + /signup, die außerhalb von AppLayout
+            // liegen. Geschrieben wird 'soko:theme' nur in Profile.tsx.
+            var t =
+                localStorage.getItem('soko:theme') ||
+                (matchMedia('(prefers-color-scheme: dark)').matches
+                    ? 'dark'
+                    : 'light');
+            document.documentElement.classList.toggle('dark', t === 'dark');
+            document.documentElement.style.colorScheme = t;
+        </script>
     </head>
     <body>
         <div id="root"></div>

@@ -22,13 +22,27 @@ export const dayRange = (date: string) => {
     return { $gte: day, $lt: nextDay };
 };
 
+// Substring statt $text-Index: gesucht wird tippend, und ein Text-Index findet
+// nur ganze Woerter ("kaff" faende "Kaffeetrinken" nicht). Regex-Sonderzeichen
+// werden escaped, sonst wird die Eingabe zum Suchmuster.
+// ponytail: Collection-Scan. Ab ~zehntausenden Events auf Atlas Search
+// bzw. einen $text-Index mit Prefix-Handling wechseln.
+export const searchFilter = (q: string) => {
+    const rx = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    return { $or: [{ title: rx }, { description: rx }, { category: rx }] };
+};
+
 export const getEvents: RequestHandler = async (req, res, next) => {
     try {
-        const { category, date, page } = req.query;
+        const { category, date, page, q } = req.query;
         const currentPage = Math.max(1, Number(page) || 1);
 
         const match: Record<string, unknown> = {};
         if (category) match.category = category;
+
+        // Als $and, weil $or unten schon fuer die Datumslogik belegt ist.
+        const search = typeof q === 'string' && q.trim();
+        if (search) match.$and = [searchFilter(search)];
 
         if (date) {
             match.startDate = dayRange(date as string);

@@ -5,6 +5,9 @@ import { api } from '../utils/api';
 import { formatDate } from '../utils/formatDate';
 import { CATEGORY_META } from '../categoryMeta';
 import OfferCard from '../components/OfferCard';
+import SearchFilter from '../components/SearchFilter';
+import { matchesQuery } from '../utils/search';
+import { useDebounced } from '../hooks/useDebounced';
 import { useFavorites } from '../hooks/useFavorites';
 import type { Activity, Category, EventsPage } from '../types';
 
@@ -15,8 +18,11 @@ const EventKategorie = () => {
     const [data, setData] = useState<EventsPage | null>(null);
     const [activities, setActivities] = useState<Activity[]>([]);
     const [label, setLabel] = useState('Events');
+    const [query, setQuery] = useState('');
+    const [from, setFrom] = useState('');
     const [page, setPage] = useState(1);
     const [error, setError] = useState('');
+    const search = useDebounced(query);
 
     const meta = CATEGORY_META[key];
 
@@ -38,7 +44,14 @@ const EventKategorie = () => {
         // Anfragen. Ohne das Flag koennte die alte als letzte ankommen und die
         // richtige Liste ueberschreiben.
         let cancelled = false;
-        api.get<EventsPage>(`/events?category=${key}&page=${page}`)
+        const params = new URLSearchParams({
+            category: key,
+            page: String(page),
+        });
+        if (from) params.set('date', from);
+        // Die Events sind paginiert, also sucht das Backend ueber alle Seiten.
+        if (search) params.set('q', search);
+        api.get<EventsPage>(`/events?${params}`)
             .then((res) => !cancelled && setData(res))
             .catch(
                 () =>
@@ -48,27 +61,45 @@ const EventKategorie = () => {
         return () => {
             cancelled = true;
         };
-    }, [key, page]);
+    }, [key, page, from, search]);
 
     const totalPages = data ? Math.ceil(data.total / data.pageSize) : 0;
 
     // Vergangenes fliegt raus — bei den Events filtert das Backend, bei den
-    // Activities niemand. Ab Mitternacht, damit ein Angebot von heute Mittag
-    // nicht schon vormittags verschwindet.
-    const startOfToday = new Date().setHours(0, 0, 0, 0);
+    // Activities niemand. Mit Datumsauswahl genau dieser Tag, sonst alles ab
+    // heute Mitternacht, damit ein Angebot von heute Mittag nicht schon
+    // vormittags verschwindet. `from` ist YYYY-MM-DD; ohne Zeitanteil würde
+    // Date() das als UTC lesen.
+    const dayStart = from
+        ? new Date(`${from}T00:00`).getTime()
+        : new Date().setHours(0, 0, 0, 0);
+    const dayEnd = from
+        ? new Date(dayStart).setDate(new Date(dayStart).getDate() + 1)
+        : Infinity;
 
-    // ponytail: Activities sind wenige und unpaginiert, sie erscheinen nur auf
+    // Activities sind wenige und unpaginiert, sie erscheinen nur auf
     // Seite 1. Wenn es mehr werden, gehoeren sie in die Events-Aggregation.
     const entries = [
         ...(page === 1
             ? activities
-                  .filter((a) => new Date(a.date).getTime() >= startOfToday)
+                  .filter(
+                      (a) =>
+                          new Date(a.date).getTime() >= dayStart &&
+                          new Date(a.date).getTime() < dayEnd &&
+                          matchesQuery(
+                              query,
+                              a.title,
+                              a.description,
+                              ...a.tags,
+                          ),
+                  )
                   .map((a) => ({
                       itemType: 'Activity' as const,
                       activity: a,
                       time: new Date(a.date).getTime(),
                   }))
             : []),
+        // Events kommen vom Backend schon gefiltert.
         ...(data?.events ?? []).map((e) => ({
             itemType: 'ScrapedEvent' as const,
             event: e,
@@ -90,6 +121,19 @@ const EventKategorie = () => {
                 <h2 className="text-2xl font-bold">{label}</h2>
             </div>
             {meta && <p className="text-ink-soft">{meta.description}</p>}
+
+            <SearchFilter
+                query={query}
+                onQuery={(value) => {
+                    setQuery(value);
+                    setPage(1);
+                }}
+                date={from}
+                onDate={(value) => {
+                    setFrom(value);
+                    setPage(1);
+                }}
+            />
 
             {error && <p className="text-error">{error}</p>}
             {!error && data && entries.length === 0 && (

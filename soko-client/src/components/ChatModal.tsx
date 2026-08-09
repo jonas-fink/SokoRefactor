@@ -9,6 +9,11 @@ interface ChatReply {
     disclaimer: string | null;
 }
 
+/** Ein Beitrag im Verlauf. Bot-Turns tragen die ganze Antwort, nicht nur Text. */
+type Turn =
+    | { role: 'user'; text: string }
+    | { role: 'bot'; reply: ChatReply };
+
 interface ChatModalProps {
     open: boolean;
     onClose: () => void;
@@ -23,13 +28,18 @@ const CONSENT_KEY = 'soko:chat-consent';
 // Esc kommen vom Browser.
 const ChatModal = ({ open, onClose }: ChatModalProps) => {
     const ref = useRef<HTMLDialogElement>(null);
+    const threadRef = useRef<HTMLDivElement>(null);
     const [message, setMessage] = useState('');
-    const [reply, setReply] = useState<ChatReply | null>(null);
+    const [turns, setTurns] = useState<Turn[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [consented, setConsented] = useState(
         () => localStorage.getItem(CONSENT_KEY) === 'ja',
     );
+
+    // Der Handoff ist serverseitig konstant — einmal unten anheften statt in
+    // jeder Bubble wiederholen. Der menschliche Ausweg steht damit dauerhaft da.
+    const handoff = turns.findLast((t) => t.role === 'bot')?.reply.handoff;
 
     const consent = () => {
         localStorage.setItem(CONSENT_KEY, 'ja');
@@ -43,13 +53,35 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
         if (!open && dialog.open) dialog.close();
     }, [open]);
 
+    // Neue Beiträge sollen sichtbar sein, ohne dass jemand scrollt.
+    useEffect(() => {
+        const thread = threadRef.current;
+        if (thread) thread.scrollTop = thread.scrollHeight;
+    }, [turns.length, loading]);
+
     const send = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!message.trim()) return;
+        const text = message.trim();
+        if (!text || loading) return;
+
+        // Verlauf für den Request: der Server ist zustandslos, den Kontext für
+        // Rückfragen liefern wir mit — ohne den gerade getippten Beitrag.
+        const history = turns.map((t) =>
+            t.role === 'user'
+                ? { role: 'user' as const, text: t.text }
+                : { role: 'bot' as const, text: t.reply.text },
+        );
+
+        setTurns([...turns, { role: 'user', text }]);
+        setMessage('');
         setLoading(true);
         setError('');
         try {
-            setReply(await api.post<ChatReply>('/chat', { message }));
+            const reply = await api.post<ChatReply>('/chat', {
+                message: text,
+                history: history.slice(-10), // Backend nimmt maximal 10
+            });
+            setTurns((prev) => [...prev, { role: 'bot', reply }]);
         } catch (err) {
             setError(
                 err instanceof Error ? err.message : 'Etwas ist schiefgelaufen',
@@ -63,9 +95,15 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
         <dialog
             ref={ref}
             onClose={onClose}
-            className="m-auto w-[min(32rem,92vw)] rounded-card border border-line bg-surface p-6 text-ink shadow-modal backdrop:bg-black/40"
+            /* `hidden open:flex`, nicht `flex`: eine display-Utility überschreibt
+               das `display: none`, mit dem der Browser ein geschlossenes
+               <dialog> versteckt — sonst steht das Modal permanent im Layout.
+               Feste Höhe erst im Chat; das Einwilligungs-Panel ist kürzer. */
+            className={`m-auto hidden w-[min(32rem,92vw)] flex-col overflow-hidden rounded-card border border-line bg-surface p-0 text-ink shadow-modal open:flex backdrop:bg-black/40 ${
+                consented ? 'h-[min(85dvh,42rem)]' : 'max-h-[85dvh]'
+            }`}
         >
-            <div className="mb-4 flex items-start justify-between gap-4">
+            <div className="flex shrink-0 items-start justify-between gap-4 border-b border-line p-4">
                 <div>
                     <h2 className="text-2xl">Wobei brauchst du Hilfe?</h2>
                     <p className="text-sm text-ink-mute">
@@ -85,7 +123,7 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
             {!consented ? (
                 /* Einwilligung vor der ersten Nachricht — ohne sie geht kein
                    Text an Google (Art. 6 Abs. 1 lit. a DSGVO). */
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3 overflow-y-auto p-4">
                     <p className="text-ink-soft">
                         Für den Vorschlag wird dein Text an{' '}
                         <strong>Google Gemini</strong> übermittelt und dort auch
@@ -126,68 +164,125 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
                     </button>
                 </div>
             ) : (
-                <form onSubmit={send} className="flex flex-col gap-3">
-                    <textarea
-                        className="field min-h-24 w-full"
-                        maxLength={500}
-                        placeholder="z. B. Ich habe Schulden und weiß nicht weiter"
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                    />
-                    <button
-                        type="submit"
-                        className="btn-primary cursor-pointer disabled:opacity-50"
-                        disabled={loading || !message.trim()}
+                <>
+                    <div
+                        ref={threadRef}
+                        className="flex flex-1 flex-col gap-3 overflow-y-auto p-4"
                     >
-                        {loading ? 'Suche…' : 'Passende Hilfe finden'}
-                    </button>
-                    <p className="text-xs text-ink-mute">
-                        Geht an Google Gemini — bitte keine Namen oder
-                        Aktenzeichen.{' '}
-                        <NavLink
-                            to="/datenschutz"
-                            className="underline"
-                            onClick={onClose}
-                        >
-                            Datenschutz
-                        </NavLink>
-                    </p>
-                </form>
-            )}
+                        {turns.length === 0 && (
+                            <p className="text-sm text-ink-mute">
+                                z. B. „Ich habe Schulden und weiß nicht weiter".
+                                Du kannst danach jederzeit nachfragen.
+                            </p>
+                        )}
 
-            {error && <p className="mt-4 text-sm text-error">{error}</p>}
+                        {turns.map((turn, i) =>
+                            turn.role === 'user' ? (
+                                <p
+                                    key={i}
+                                    className="ml-auto max-w-[85%] rounded-card bg-primary px-3.5 py-2.5 text-primary-ink"
+                                >
+                                    {turn.text}
+                                </p>
+                            ) : (
+                                <div
+                                    key={i}
+                                    className="mr-auto flex max-w-[90%] flex-col gap-2 rounded-card bg-surface-2 px-3.5 py-2.5"
+                                >
+                                    <p>{turn.reply.text}</p>
 
-            {reply && !loading && (
-                <div className="mt-5 flex flex-col gap-3">
-                    <p>{reply.text}</p>
+                                    {turn.reply.matches.map((m) => (
+                                        <NavLink
+                                            key={m.id}
+                                            to={`/beratung/detail/${m.id}`}
+                                            className="card block p-3 hover:-translate-y-0.5"
+                                            onClick={onClose}
+                                        >
+                                            <span className="font-semibold">
+                                                {m.title}
+                                            </span>
+                                        </NavLink>
+                                    ))}
 
-                    {reply.matches.map((m) => (
-                        <NavLink
-                            key={m.id}
-                            to={`/beratung/detail/${m.id}`}
-                            className="card block p-3 hover:-translate-y-0.5"
-                            onClick={onClose}
-                        >
-                            <span className="font-semibold">{m.title}</span>
-                        </NavLink>
-                    ))}
+                                    {turn.reply.disclaimer && (
+                                        <p className="rounded-control bg-surface p-3 text-sm text-ink-soft">
+                                            {turn.reply.disclaimer}
+                                        </p>
+                                    )}
+                                </div>
+                            ),
+                        )}
 
-                    {reply.disclaimer && (
-                        <p className="rounded-control bg-surface-2 p-3 text-sm text-ink-soft">
-                            {reply.disclaimer}
+                        {loading && (
+                            <p className="mr-auto rounded-card bg-surface-2 px-3.5 py-2.5 text-ink-mute">
+                                Suche…
+                            </p>
+                        )}
+                    </div>
+
+                    <div className="shrink-0 border-t border-line p-4">
+                        {error && (
+                            <p className="mb-2 text-sm text-error">{error}</p>
+                        )}
+
+                        {/* Pflichtfeld aus der API — der menschliche Ausweg steht immer. */}
+                        {handoff && (
+                            <div className="mb-3 flex flex-col gap-1">
+                                <NavLink
+                                    to="/beratung"
+                                    className="btn-secondary cursor-pointer"
+                                    onClick={onClose}
+                                >
+                                    {handoff.label}
+                                </NavLink>
+                                <p className="text-xs text-ink-mute">
+                                    {handoff.hint}
+                                </p>
+                            </div>
+                        )}
+
+                        <form onSubmit={send} className="flex items-end gap-2">
+                            <textarea
+                                className="field min-w-0 flex-1 resize-none"
+                                rows={2}
+                                maxLength={500}
+                                placeholder={
+                                    turns.length
+                                        ? 'Nachfragen…'
+                                        : 'z. B. Ich habe Schulden und weiß nicht weiter'
+                                }
+                                value={message}
+                                onChange={(e) => setMessage(e.target.value)}
+                                onKeyDown={(e) => {
+                                    // Enter sendet, Shift+Enter macht eine Zeile.
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault();
+                                        e.currentTarget.form?.requestSubmit();
+                                    }
+                                }}
+                            />
+                            <button
+                                type="submit"
+                                className="btn-primary shrink-0 cursor-pointer disabled:opacity-50"
+                                disabled={loading || !message.trim()}
+                            >
+                                Senden
+                            </button>
+                        </form>
+
+                        <p className="mt-2 text-xs text-ink-mute">
+                            Geht an Google Gemini — bitte keine Namen oder
+                            Aktenzeichen.{' '}
+                            <NavLink
+                                to="/datenschutz"
+                                className="underline"
+                                onClick={onClose}
+                            >
+                                Datenschutz
+                            </NavLink>
                         </p>
-                    )}
-
-                    {/* Pflichtfeld aus der API — der menschliche Ausweg steht immer. */}
-                    <NavLink
-                        to="/beratung"
-                        className="btn-secondary cursor-pointer"
-                        onClick={onClose}
-                    >
-                        {reply.handoff.label}
-                    </NavLink>
-                    <p className="text-sm text-ink-mute">{reply.handoff.hint}</p>
-                </div>
+                    </div>
+                </>
             )}
         </dialog>
     );

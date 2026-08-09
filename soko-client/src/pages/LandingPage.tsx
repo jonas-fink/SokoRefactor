@@ -141,7 +141,7 @@ const LandingPage = () => {
                             Finde das passende für dich aus einer breiten
                             Auswahl an Angeboten
                         </p>
-                        <div className="flex md:flex-nowrap md:flex-row flex-col gap-3">
+                        <div className="flex md:flex-nowrap md:flex-row md:items-end flex-col gap-3">
                             <input
                                 type="search"
                                 className="field flex-1 min-w-0"
@@ -149,28 +149,42 @@ const LandingPage = () => {
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
                             />
-                            <div className="relative shrink-0">
-                                <input
-                                    type="date"
-                                    className="field pr-8 w-full md:min-w-0"
-                                    value={from}
-                                    onChange={(e) => {
-                                        setFrom(e.target.value);
-                                        setPage(1);
-                                    }}
-                                />
-                                {from && (
-                                    <button
-                                        className="btn-secondary text-error absolute right-2 top-1/2 -translate-y-1/2 leading-none"
-                                        aria-label="Datum zurücksetzen"
-                                        onClick={() => {
-                                            setFrom('');
+                            <div className="flex flex-col gap-1 shrink-0">
+                                {/* Sichtbares Label: ein leeres Datumsfeld sagt
+                                    von sich aus nicht, wofür es da ist. */}
+                                <label
+                                    htmlFor="date-filter"
+                                    className="text-sm text-ink-mute"
+                                >
+                                    Datum
+                                </label>
+                                <div className="relative">
+                                    <input
+                                        id="date-filter"
+                                        type="date"
+                                        className="field pr-14 w-full md:min-w-0"
+                                        value={from}
+                                        onChange={(e) => {
+                                            setFrom(e.target.value);
                                             setPage(1);
                                         }}
-                                    >
-                                        X
-                                    </button>
-                                )}
+                                    />
+                                    {from && (
+                                        // right-9: links neben dem nativen
+                                        // Picker-Indikator, nicht darüber.
+                                        <button
+                                            type="button"
+                                            className="text-error absolute right-9 top-1/2 -translate-y-1/2 cursor-pointer text-sm leading-none"
+                                            aria-label="Datum zurücksetzen"
+                                            onClick={() => {
+                                                setFrom('');
+                                                setPage(1);
+                                            }}
+                                        >
+                                            ✕
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>

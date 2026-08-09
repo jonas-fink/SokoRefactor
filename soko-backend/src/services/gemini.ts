@@ -1,4 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
+import type { ChatTurn } from '#schemas';
 
 /**
  * Dünner Wrapper um die Gemini-API. Zwei Regeln, die hier nicht verhandelbar sind:
@@ -34,7 +35,10 @@ Regeln:
 - Nenne im Text KEINE Telefonnummern, Adressen oder Öffnungszeiten — die stehen daneben.
 - Wähle ausschließlich Stellen aus der übergebenen Liste aus, höchstens drei.
   Passt nichts, gib eine leere Liste zurück und sag das ehrlich.
-- Erfinde nichts: keine Stellen, keine Zuständigkeiten, keine Fristen.`;
+- Erfinde nichts: keine Stellen, keine Zuständigkeiten, keine Fristen.
+- Steht ein Gespräch davor, ist die neue Nachricht eine Rückfrage dazu: grenze
+  die vorherige Auswahl weiter ein, statt von vorn anzufangen. Frag nach, wenn
+  eine Angabe fehlt, die die Auswahl schärfen würde.`;
 
 const SCHEMA = {
     type: 'object',
@@ -63,6 +67,7 @@ export const askGemini = async (
     message: string,
     candidates: Candidate[],
     categories: { key: string; label: string }[],
+    history: ChatTurn[] = [],
 ): Promise<GeminiAnswer | null> => {
     if (!geminiEnabled()) return null;
 
@@ -75,6 +80,18 @@ export const askGemini = async (
             model: MODEL,
             system_instruction: SYSTEM,
             input: [
+                // Verlauf zuerst, damit `Anliegen` als die aktuelle Nachricht
+                // stehen bleibt und nicht im Transkript untergeht.
+                ...(history.length
+                    ? [
+                          'Bisheriges Gespräch:',
+                          ...history.map(
+                              (h) =>
+                                  `${h.role === 'user' ? 'Du' : 'Assistent'}: ${h.text}`,
+                          ),
+                          '',
+                      ]
+                    : []),
                 `Anliegen: ${message}`,
                 '',
                 `Themen: ${categories.map((c) => `${c.key} (${c.label})`).join(', ')}`,

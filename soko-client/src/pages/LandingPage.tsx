@@ -4,6 +4,7 @@ import { formatDate } from '../utils/formatDate';
 import type { Activity, Beratung, Category, EventsPage } from '../types';
 import { NavLink } from 'react-router';
 import { AiOutlineCalendar, AiOutlineNotification } from 'react-icons/ai';
+import { IoChatbubblesOutline } from 'react-icons/io5';
 import { useAuth } from '../context/auth-context';
 import OfferCard from '../components/OfferCard';
 import ChatModal from '../components/ChatModal';
@@ -95,7 +96,7 @@ const LandingPage = () => {
         <div className="mx-auto md:max-w-6xl md:p-8 pb-3 flex flex-col gap-8">
             {/* Header */}
             <h1 className="md:text-5xl text-3xl self-start md:pb-8 font-bold">
-                Hi{' '}
+                Willkommen{' '}
                 <span className="text-primary">
                     {user ? user.name : 'lieber Gast'}
                 </span>
@@ -104,12 +105,18 @@ const LandingPage = () => {
 
             <div className="flex md:flex-row flex-col gap-3 md:min-w-3xl w-full mx-auto justify-center items-center">
                 {' '}
-                <NavLink to="/events" className="card events">
+                <NavLink
+                    to="/events"
+                    className="card events active:translate-y-1"
+                >
                     <AiOutlineCalendar size={36} />
                     <h2 className="font-bold text-3xl">Erleben</h2>
                     <p className="text-md">Events & Angebote</p>
                 </NavLink>
-                <NavLink to="/beratung" className="card beratung">
+                <NavLink
+                    to="/beratung"
+                    className="card beratung active:translate-y-1"
+                >
                     <AiOutlineNotification size={36} />
                     <h2 className=" font-bold text-3xl">Beratung & Hilfe</h2>
                     <p className="text-md">Kostenlos & vertraulich</p>
@@ -121,10 +128,10 @@ const LandingPage = () => {
                 </h3>{' '}
                 <button
                     type="button"
-                    className="btn-cta w-full cursor-pointer sm:w-auto  font-bold text-xl"
+                    className="btn-cta flex w-full cursor-pointer sm:w-auto  font-bold text-xl active:translate-y-1"
                     onClick={() => setChatOpen(true)}
                 >
-                    Frag mich!
+                    <IoChatbubblesOutline size={36} /> Frag mich!
                 </button>
             </div>
 

@@ -10,9 +10,7 @@ interface ChatReply {
 }
 
 /** Ein Beitrag im Verlauf. Bot-Turns tragen die ganze Antwort, nicht nur Text. */
-type Turn =
-    | { role: 'user'; text: string }
-    | { role: 'bot'; reply: ChatReply };
+type Turn = { role: 'user'; text: string } | { role: 'bot'; reply: ChatReply };
 
 interface ChatModalProps {
     open: boolean;
@@ -24,8 +22,6 @@ interface ChatModalProps {
 // Zuordnung zur Person, die wir hier vermeiden.
 const CONSENT_KEY = 'soko:chat-consent';
 
-// ponytail: natives <dialog> statt Overlay-Eigenbau — Fokusfalle, Backdrop und
-// Esc kommen vom Browser.
 const ChatModal = ({ open, onClose }: ChatModalProps) => {
     const ref = useRef<HTMLDialogElement>(null);
     const threadRef = useRef<HTMLDivElement>(null);
@@ -95,11 +91,7 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
         <dialog
             ref={ref}
             onClose={onClose}
-            /* `hidden open:flex`, nicht `flex`: eine display-Utility überschreibt
-               das `display: none`, mit dem der Browser ein geschlossenes
-               <dialog> versteckt — sonst steht das Modal permanent im Layout.
-               Feste Höhe erst im Chat; das Einwilligungs-Panel ist kürzer. */
-            className={`m-auto hidden w-[min(32rem,92vw)] flex-col overflow-hidden rounded-card border border-line bg-surface p-0 text-ink shadow-modal open:flex backdrop:bg-black/40 ${
+            className={`m-auto hidden max-w-3xl flex-col overflow-hidden rounded-card border border-line bg-surface p-0 text-ink shadow-modal open:flex backdrop:bg-black/40 ${
                 consented ? 'h-[min(85dvh,42rem)]' : 'max-h-[85dvh]'
             }`}
         >
@@ -131,9 +123,7 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
                     </p>
                     <p className="text-ink-soft">
                         Bitte schreib deshalb{' '}
-                        <strong>
-                            keine Namen, Adressen oder Aktenzeichen
-                        </strong>{' '}
+                        <strong>keine Namen, Adressen oder Aktenzeichen</strong>{' '}
                         — „Ich habe Mietschulden" reicht völlig.
                     </p>
                     <p className="text-sm text-ink-mute">
@@ -167,7 +157,7 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
                 <>
                     <div
                         ref={threadRef}
-                        className="flex flex-1 flex-col gap-3 overflow-y-auto p-4"
+                        className="flex flex-1 flex-col gap-3 overflow-y-auto p-4 bg-surface"
                     >
                         {turns.length === 0 && (
                             <p className="text-sm text-ink-mute">
@@ -230,7 +220,7 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
                             <div className="mb-3 flex flex-col gap-1">
                                 <NavLink
                                     to="/beratung"
-                                    className="btn-secondary cursor-pointer"
+                                    className="btn-secondary cursor-pointer hover:border-accent hover:text-accent active:translate-y-1 transition-colors duration-300 ease-in"
                                     onClick={onClose}
                                 >
                                     {handoff.label}
@@ -244,12 +234,12 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
                         <form onSubmit={send} className="flex items-end gap-2">
                             <textarea
                                 className="field min-w-0 flex-1 resize-none"
-                                rows={2}
+                                rows={1}
                                 maxLength={500}
                                 placeholder={
                                     turns.length
                                         ? 'Nachfragen…'
-                                        : 'z. B. Ich habe Schulden und weiß nicht weiter'
+                                        : 'z. B. Ich habe Schulden...'
                                 }
                                 value={message}
                                 onChange={(e) => setMessage(e.target.value)}
@@ -263,7 +253,7 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
                             />
                             <button
                                 type="submit"
-                                className="btn-primary shrink-0 cursor-pointer disabled:opacity-50"
+                                className="btn-primary shrink-0 cursor-pointer disabled:opacity-50 hover:brightness-110 active:translate-y-1"
                                 disabled={loading || !message.trim()}
                             >
                                 Senden
@@ -271,8 +261,8 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
                         </form>
 
                         <p className="mt-2 text-xs text-ink-mute">
-                            Geht an Google Gemini — bitte keine Namen oder
-                            Aktenzeichen.{' '}
+                            Google Gemini hat Einblick in diese Daten — bitte
+                            keine Namen oder Aktenzeichen.{' '}
                             <NavLink
                                 to="/datenschutz"
                                 className="underline"

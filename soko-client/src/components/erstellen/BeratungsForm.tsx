@@ -128,10 +128,10 @@ const BeratungsForm = () => {
                     ÖFFNUNGSZEITEN (leer = geschlossen)
                 </legend>
                 {WEEKDAYS.map(({ key, label }) => (
-                    <div key={key} className="flex items-center gap-3">
+                    <div key={key} className="flex items-center gap-2 sm:gap-3">
                         <label
                             htmlFor={`${key}-open`}
-                            className="w-28 shrink-0 text-sm"
+                            className="w-20 shrink-0 text-sm sm:w-28"
                         >
                             {label}
                         </label>
@@ -139,14 +139,14 @@ const BeratungsForm = () => {
                             type="time"
                             id={`${key}-open`}
                             {...register(`openingHours.${key}.open`)}
-                            className="field"
+                            className="field w-full min-w-0 px-2 sm:px-3.5"
                         />
                         <span className="text-ink-mute">–</span>
                         <input
                             type="time"
                             aria-label={`${label} Schließzeit`}
                             {...register(`openingHours.${key}.close`)}
-                            className="field"
+                            className="field w-full min-w-0 px-2 sm:px-3.5"
                         />
                     </div>
                 ))}

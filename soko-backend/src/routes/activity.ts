@@ -4,6 +4,7 @@ import {
     isDocOwner,
     fileUploadHandler,
     canCreate,
+    validateQuery,
 } from '#middlewares';
 import {
     getActivities,
@@ -14,6 +15,7 @@ import {
     deleteActivity,
 } from '#controllers';
 import { Activity } from '#models';
+import { filterQuerySchema } from '#schemas';
 import { isValidObjectId } from 'mongoose';
 
 const isActivityOwner = isDocOwner(Activity, 'Activity');
@@ -30,7 +32,7 @@ const validateId: RequestHandler = (req, res, next) => {
 
 const router = Router();
 
-router.get('/', getActivities);
+router.get('/', validateQuery(filterQuerySchema), getActivities);
 router.get('/:id', validateId, getActivityById);
 
 router.post('/', protect, canCreate, fileUploadHandler, createActivity);

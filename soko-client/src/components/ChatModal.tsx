@@ -2,11 +2,19 @@ import { useEffect, useRef, useState } from 'react';
 import { NavLink } from 'react-router';
 import { api } from '../utils/api';
 
+interface Hotline {
+    label: string;
+    number: string;
+    hint: string;
+}
+
 interface ChatReply {
     text: string;
     matches: { id: string; title: string; category: string }[];
     handoff: { label: string; hint: string };
     disclaimer: string | null;
+    /** Notfallnummern, serverseitig **vor** dem Modell erkannt. */
+    urgent: Hotline[] | null;
 }
 
 /** Ein Beitrag im Verlauf. Bot-Turns tragen die ganze Antwort, nicht nur Text. */
@@ -179,6 +187,23 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
                                     key={i}
                                     className="mr-auto flex max-w-[90%] flex-col gap-2 rounded-card bg-surface-2 px-3.5 py-2.5"
                                 >
+                                    {/* Vor dem Antworttext: in einer Notlage
+                                        zaehlt die Nummer, nicht der Satz. */}
+                                    {turn.reply.urgent?.map((h) => (
+                                        <a
+                                            key={h.number}
+                                            href={`tel:${h.number.replace(/\s/g, '')}`}
+                                            className="flex min-h-11 flex-col justify-center rounded-control border border-error px-3 py-2"
+                                        >
+                                            <span className="font-semibold">
+                                                {h.label}: {h.number}
+                                            </span>
+                                            <span className="text-sm text-ink-soft">
+                                                {h.hint}
+                                            </span>
+                                        </a>
+                                    ))}
+
                                     <p>{turn.reply.text}</p>
 
                                     {turn.reply.matches.map((m) => (

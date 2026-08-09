@@ -3,38 +3,62 @@ import {
     populatedActivitySchema,
     type ActivityCreateBody,
     type ActivityPatchBody,
+    type FilterQuery,
 } from '#schemas';
 import { Activity } from '#models';
-import { assertCategories } from '#utils';
+import {
+    assertCategories,
+    assertAudiences,
+    assertLanguages,
+    buildFilter,
+} from '#utils';
 
 type IdParams = { id: string };
 
-export const getActivities: RequestHandler = async (_req, res, next) => {
+/** Sprachen und Zielgruppe sind Whitelists — 400 statt still speichern. */
+const assertAxes = async (body: ActivityPatchBody) => {
+    if (body.tags) await assertCategories(body.tags);
+    if (body.availableLanguages) assertLanguages(body.availableLanguages);
+    if (body.targetAudience) assertAudiences(body.targetAudience);
+};
+
+export const getActivities: RequestHandler<
+    unknown,
+    unknown,
+    unknown,
+    FilterQuery
+> = async (_req, res, next) => {
     try {
         const { lng, lat, distance = 10, tags } = _req.query;
-        let query: Record<string, unknown> = {};
+        // `true`: Activities sind die einzigen mit `price`, also die einzigen,
+        // auf die `free=1` wirken kann.
+        const query: Record<string, unknown> = {
+            ...buildFilter(_req.query, true),
+        };
 
         if (lng && lat) {
             query.location = {
                 $near: {
                     $geometry: {
                         type: 'Point',
-                        coordinates: [Number(lng), Number(lat)],
+                        coordinates: [lng, lat],
                     },
-                    $maxDistance: Number(distance) * 1000,
+                    $maxDistance: distance * 1000,
                 },
             };
         }
 
         if (tags) {
-            const tagList = (tags as string).split(',').map((t) => t.trim());
+            const tagList = tags.split(',').map((t) => t.trim());
             query.tags = { $in: tagList };
         }
 
         const activites = await Activity.find(query)
             .populate('userId', 'name email')
             .lean();
-        res.json({ data: activites.map((a) => populatedActivitySchema.parse(a)) });
+        res.json({
+            data: activites.map((a) => populatedActivitySchema.parse(a)),
+        });
     } catch (error: unknown) {
         next(error);
     }
@@ -61,7 +85,7 @@ export const createActivity: RequestHandler<
             });
             return;
         }
-        if (req.body.tags) await assertCategories(req.body.tags);
+        await assertAxes(req.body);
 
         const userId = req.userId;
         const activity = await Activity.create({
@@ -73,7 +97,9 @@ export const createActivity: RequestHandler<
             'userId',
             'name email',
         );
-        res.json({ data: populatedActivitySchema.parse(populatedActivity.toObject()) });
+        res.json({
+            data: populatedActivitySchema.parse(populatedActivity.toObject()),
+        });
     } catch (error: unknown) {
         next(error);
     }
@@ -122,7 +148,7 @@ export const updateActivity: RequestHandler<
             return;
         }
 
-        if (req.body.tags) await assertCategories(req.body.tags);
+        await assertAxes(req.body);
 
         const activity = await Activity.findById(id);
         if (!activity) {
@@ -137,7 +163,9 @@ export const updateActivity: RequestHandler<
             'userId',
             'name email',
         );
-        res.json({ data: populatedActivitySchema.parse(populatedActivity.toObject()) });
+        res.json({
+            data: populatedActivitySchema.parse(populatedActivity.toObject()),
+        });
     } catch (error: unknown) {
         next(error);
     }
@@ -152,7 +180,7 @@ export const patchActivity: RequestHandler<
         const { id } = req.params;
         const updates: ActivityPatchBody = req.body;
         delete (updates as Record<string, unknown>)['_id'];
-        if (updates.tags) await assertCategories(updates.tags);
+        await assertAxes(updates);
 
         const activity = await Activity.findByIdAndUpdate(
             id,

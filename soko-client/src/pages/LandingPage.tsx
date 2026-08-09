@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { api } from '../utils/api';
 import { formatDate } from '../utils/formatDate';
 import type { Activity, Beratung, Category, EventsPage } from '../types';
@@ -12,50 +12,64 @@ import { useFavorites } from '../hooks/useFavorites';
 import StatCard from '../components/StatCard';
 import Pagination from '../components/Pagination';
 import SearchFilter from '../components/SearchFilter';
-import { matchesQuery } from '../utils/search';
-import { useDebounced } from '../hooks/useDebounced';
+import { useFilters } from '../hooks/useFilters';
 
 const PAGE_SIZE = 9;
 
 const LandingPage = () => {
     const { user } = useAuth();
     const { isFavorite, toggle, enabled } = useFavorites();
-    const [query, setQuery] = useState('');
+    // `toggleFilter` statt `toggle`: `useFavorites` bringt schon eines mit.
+    const {
+        filters,
+        setFilter,
+        toggle: toggleFilter,
+        reset,
+        activeCount,
+        query,
+    } = useFilters();
     const [data, setData] = useState<EventsPage | null>(null);
     const [activities, setActivities] = useState<Activity[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [beratungCount, setBeratungCount] = useState(0);
-    const [category, setCategory] = useState('');
-    const [from, setFrom] = useState('');
-    const [page, setPage] = useState(1);
     const [activityPage, setActivityPage] = useState(1);
     const [error, setError] = useState(false);
     const [chatOpen, setChatOpen] = useState(false);
-    const search = useDebounced(query);
+
+    // `/activities` kennt `tags` statt `category`, ist unpaginiert und filtert
+    // (noch) nicht nach Datum — das bleibt unten clientseitig.
+    const activityQuery = useMemo(() => {
+        const params = new URLSearchParams(query);
+        const category = params.get('category');
+        params.delete('category');
+        params.delete('page');
+        params.delete('date');
+        if (category) params.set('tags', category);
+        return params.toString();
+    }, [query]);
 
     useEffect(() => {
         api.get<Category[]>('/categories?appliesTo=activity')
             .then(setCategories)
-            .catch(() => setError(true));
-        api.get<Activity[]>('/activities')
-            .then(setActivities)
             .catch(() => setError(true));
         api.get<Beratung[]>('/beratungen')
             .then((b) => setBeratungCount(b.length))
             .catch(() => setError(true));
     }, []);
 
-    // Die Events sind paginiert, also sucht das Backend — clientseitig faende
-    // die Suche nur die gerade sichtbare Seite.
+    // Beide Listen filtert das Backend — clientseitig faende die Suche bei den
+    // paginierten Events nur die gerade sichtbare Seite.
     useEffect(() => {
-        const params = new URLSearchParams({ page: String(page) });
-        if (category) params.set('category', category);
-        if (from) params.set('date', from);
-        if (search) params.set('q', search);
-        api.get<EventsPage>(`/events?${params}`)
+        api.get<EventsPage>(`/events?${query}`)
             .then(setData)
             .catch(() => setError(true));
-    }, [page, category, from, search]);
+    }, [query]);
+
+    useEffect(() => {
+        api.get<Activity[]>(`/activities?${activityQuery}`)
+            .then(setActivities)
+            .catch(() => setError(true));
+    }, [activityQuery]);
 
     const totalPages = data ? Math.ceil(data.total / data.pageSize) : 0;
 
@@ -63,23 +77,20 @@ const LandingPage = () => {
     const labelOf = (key?: string) =>
         categories.find((c) => c.key === key)?.label ?? key;
 
-    // Activities werden clientseitig gefiltert — GET /activities liefert alles
-    // auf einmal, die Suche laeuft also ohnehin ueber den kompletten Bestand.
-    // Mit Datumsauswahl genau dieser Tag, sonst alles ab heute Mitternacht —
-    // dieselbe Logik wie im Backend für die Events.
-    // `from` ist YYYY-MM-DD; ohne Zeitanteil würde Date() das als UTC lesen.
-    const dayStart = from
-        ? new Date(`${from}T00:00`).getTime()
+    // Nur noch das Datum filtert clientseitig: `/activities` kennt keinen
+    // `date`-Parameter. Mit Auswahl genau dieser Tag, sonst alles ab heute
+    // Mitternacht — dieselbe Logik wie im Backend für die Events.
+    // `filters.date` ist YYYY-MM-DD; ohne Zeitanteil läse Date() das als UTC.
+    const dayStart = filters.date
+        ? new Date(`${filters.date}T00:00`).getTime()
         : new Date().setHours(0, 0, 0, 0);
-    const dayEnd = from
+    const dayEnd = filters.date
         ? new Date(dayStart).setDate(new Date(dayStart).getDate() + 1)
         : Infinity;
     const filteredActivities = activities.filter(
         (a) =>
-            (!category || a.tags.includes(category)) &&
             new Date(a.date).getTime() >= dayStart &&
-            new Date(a.date).getTime() < dayEnd &&
-            matchesQuery(query, a.title, a.description, ...a.tags),
+            new Date(a.date).getTime() < dayEnd,
     );
 
     // Clientseitige Pagination: geladen ist ohnehin alles, und die Textsuche
@@ -149,16 +160,13 @@ const LandingPage = () => {
                             Auswahl an Angeboten
                         </p>
                         <SearchFilter
-                            query={query}
-                            onQuery={(value) => {
-                                setQuery(value);
-                                setPage(1);
-                            }}
-                            date={from}
-                            onDate={(value) => {
-                                setFrom(value);
-                                setPage(1);
-                            }}
+                            filters={filters}
+                            setFilter={setFilter}
+                            toggle={toggleFilter}
+                            reset={reset}
+                            activeCount={activeCount}
+                            showEventFilters
+                            categories={categories}
                         />
                     </div>
 
@@ -170,7 +178,7 @@ const LandingPage = () => {
                                 description={
                                     error
                                         ? 'Konnten nicht geladen werden'
-                                        : category || from
+                                        : activeCount > 0 || filters.q
                                           ? 'Passend zu deinem Filter'
                                           : 'in Kassel & Umgebung'
                                 }
@@ -186,37 +194,6 @@ const LandingPage = () => {
                     </div>
                 </div>
             </div>
-            {/* Kategorie-Chips */}
-            <div className="flex flex-wrap gap-2 items-center justify-center md:justify-start">
-                <button
-                    type="button"
-                    className={category ? 'chip' : 'chip-active'}
-                    onClick={() => {
-                        setCategory('');
-                        setPage(1);
-                    }}
-                >
-                    Alle
-                </button>
-                {categories.map((c) => (
-                    <button
-                        key={c.key}
-                        type="button"
-                        className={
-                            category === c.key
-                                ? 'chip-active cursor-pointer'
-                                : 'chip cursor-pointer'
-                        }
-                        onClick={() => {
-                            setCategory(c.key);
-                            setPage(1);
-                        }}
-                    >
-                        {c.label}
-                    </button>
-                ))}
-            </div>
-
             {filteredActivities.length > 0 && (
                 <section className="flex flex-col gap-4">
                     <h2 className="text-2xl">Angebote unserer Partner</h2>
@@ -276,9 +253,9 @@ const LandingPage = () => {
             </div>
             <div className="pb-8">
                 <Pagination
-                    page={page}
+                    page={filters.page}
                     totalPages={totalPages}
-                    onChange={setPage}
+                    onChange={(next) => setFilter('page', next)}
                 />
             </div>
         </div>

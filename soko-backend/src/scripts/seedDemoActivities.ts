@@ -6,6 +6,12 @@ import { Activity, User } from '#models';
  * Demo-Angebote für Präsentationen. Erfundene Nachbarschaftsangebote in Kassel,
  * kein echter Anbieter.
  *
+ * `availableLanguages`/`targetAudience` sind bewusst **gemischt**, inklusive
+ * Leerstellen: der Feierabendmarkt hat weder das eine noch das andere und muss
+ * deshalb bei jedem Sprach- und Zielgruppenfilter sichtbar bleiben („leer =
+ * keine Angabe = matcht immer"). Ohne so einen Fall im Bestand fällt genau
+ * dieser Fehler beim Testen nicht auf.
+ *
  * Die Termine liegen **relativ zu heute** (`inTage`), damit sie im
  * Sammlungs-Kalender immer im aktuellen oder nächsten Monat auftauchen — ein
  * fester Datumsblock wäre nach zwei Wochen wertlos. Ein erneuter Lauf schiebt
@@ -20,6 +26,8 @@ const DEMO = [
         description:
             'Jeden Sonntag bringt jede und jeder etwas mit. Kaffee, Tee und Tische stehen bereit — komm einfach vorbei.',
         tags: ['familie'],
+        availableLanguages: [],
+        targetAudience: ['familien'],
         price: 0,
         inTage: 2,
         stunde: 10,
@@ -30,6 +38,8 @@ const DEMO = [
         description:
             'Lockere fünf Kilometer am Flussufer, in zwei Tempogruppen. Auch für Anfängerinnen und Anfänger geeignet.',
         tags: ['sport'],
+        availableLanguages: ['de'],
+        targetAudience: [],
         price: 0,
         inTage: 4,
         stunde: 18,
@@ -40,6 +50,8 @@ const DEMO = [
         description:
             'Toaster kaputt, Hose gerissen? Wir reparieren gemeinsam statt wegzuwerfen. Werkzeug ist da, Spende freiwillig.',
         tags: ['bildung'],
+        availableLanguages: ['de', 'en'],
+        targetAudience: [],
         price: 0,
         inTage: 6,
         stunde: 15,
@@ -50,6 +62,8 @@ const DEMO = [
         description:
             'Malen, drucken, bauen — Material steht bereit, Eltern können dabeibleiben oder nebenan Kaffee trinken.',
         tags: ['kunst', 'familie'],
+        availableLanguages: ['de'],
+        targetAudience: ['kinder', 'familien'],
         price: 3,
         inTage: 9,
         stunde: 16,
@@ -60,6 +74,8 @@ const DEMO = [
         description:
             'Zwei Stunden durch den Wald: welche Pflanzen essbar sind, welche nicht und was daraus wird.',
         tags: ['natur'],
+        availableLanguages: [],
+        targetAudience: ['senioren'],
         price: 5,
         inTage: 12,
         stunde: 14,
@@ -70,6 +86,8 @@ const DEMO = [
         description:
             'Einfach reden üben, ohne Prüfung und ohne Anmeldung. Muttersprachlerinnen und Lernende an einem Tisch.',
         tags: ['bildung'],
+        availableLanguages: ['de', 'ar'],
+        targetAudience: ['gefluechtete'],
         price: 0,
         inTage: 15,
         stunde: 17,
@@ -80,6 +98,8 @@ const DEMO = [
         description:
             'Regionale Stände, Musik und Essen zum Mitnehmen — der Markt für alle, die tagsüber arbeiten.',
         tags: ['markt'],
+        availableLanguages: [],
+        targetAudience: [],
         price: 0,
         inTage: 18,
         stunde: 17,
@@ -90,6 +110,8 @@ const DEMO = [
         description:
             'Bremsen einstellen, Schlauch flicken, Kette wechseln: wir zeigen es dir, machen tust du es selbst.',
         tags: ['sport', 'bildung'],
+        availableLanguages: ['de', 'uk'],
+        targetAudience: ['jugendliche'],
         price: 0,
         inTage: 21,
         stunde: 16,
@@ -100,6 +122,8 @@ const DEMO = [
         description:
             'Vier Wochen reinschnuppern, ohne Noten lesen zu können. Wir singen quer durch alles von Volkslied bis Pop.',
         tags: ['kunst'],
+        availableLanguages: ['de'],
+        targetAudience: ['senioren'],
         price: 0,
         inTage: 25,
         stunde: 19,
@@ -110,6 +134,8 @@ const DEMO = [
         description:
             'Beete vorbereiten und Setzlinge pflanzen. Handschuhe mitbringen, alles andere ist da.',
         tags: ['natur', 'familie'],
+        availableLanguages: ['de', 'tr'],
+        targetAudience: ['familien', 'kinder'],
         price: 0,
         inTage: 28,
         stunde: 11,

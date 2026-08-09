@@ -3,18 +3,21 @@ import { CATEGORY_KEYS } from '#utils';
 import type { ChatTurn } from '#schemas';
 import { askGemini } from './gemini.ts';
 
+export type Hotline = { label: string; number: string; hint: string };
+
 /**
  * Antwort des Need-Finding-Chats.
  *
- * `handoff` und `disclaimer` sind Pflichtfelder, keine Optionen: die UI kann den
- * menschlichen Ausweg damit nicht versehentlich weglassen. `disclaimer` ist bei
- * unkritischen Themen `null`, aber immer vorhanden.
+ * `handoff`, `disclaimer` und `urgent` sind Pflichtfelder, keine Optionen: die
+ * UI kann den menschlichen Ausweg damit nicht versehentlich weglassen. `null`
+ * bei unkritischen Themen, aber immer vorhanden.
  */
 export type ChatReply = {
     text: string;
     matches: { id: string; title: string; category: string }[];
     handoff: { label: string; hint: string };
     disclaimer: string | null;
+    urgent: Hotline[] | null;
 };
 
 /**
@@ -109,6 +112,87 @@ const HANDOFF = {
 };
 
 /**
+ * `112` und `116117` sind **nicht** dasselbe und werden nie zusammengefasst:
+ * `112` gilt bei Unfall und Lebensgefahr, `116117` ist der ärztliche
+ * Bereitschaftsdienst für akut Kranke außerhalb der Sprechzeiten.
+ */
+const HOTLINES = {
+    notruf: {
+        label: 'Notruf',
+        number: '112',
+        hint: 'Unfall, Feuer, Lebensgefahr — rund um die Uhr, kostenlos.',
+    },
+    bereitschaft: {
+        label: 'Ärztlicher Bereitschaftsdienst',
+        number: '116117',
+        hint: 'Akut krank außerhalb der Sprechzeiten, aber kein Notfall.',
+    },
+    seelsorge: {
+        label: 'Telefonseelsorge',
+        number: '0800 1110111',
+        hint: 'Anonym, rund um die Uhr, kostenlos.',
+    },
+    gewalt: {
+        label: 'Hilfetelefon Gewalt gegen Frauen',
+        number: '116016',
+        hint: 'Rund um die Uhr, 18 Sprachen, kostenlos.',
+    },
+    kummer: {
+        label: 'Nummer gegen Kummer',
+        number: '116111',
+        hint: 'Für Kinder und Jugendliche.',
+    },
+    gift: {
+        label: 'Giftnotruf',
+        number: '0551 19240',
+        hint: 'Vergiftungen, rund um die Uhr.',
+    },
+} satisfies Record<string, Hotline>;
+
+/**
+ * Wortgrenzen statt blankem `includes`: „Gewaltschutzberatung" oder
+ * „Feuerwehrfest" dürfen keinen Notruf auslösen. Der falsch-positive Fall ist
+ * hier der teurere — wer nach einem Antrag fragt, soll keine 112 sehen.
+ */
+const URGENT: { pattern: RegExp; keys: (keyof typeof HOTLINES)[] }[] = [
+    {
+        pattern: /\b(unfall|verletzt|blutet|bewusstlos|feuer)\b/,
+        keys: ['notruf', 'bereitschaft'],
+    },
+    {
+        pattern: /\b(suizid|selbstmord)\b|umbringen|nicht mehr leben/,
+        keys: ['seelsorge', 'notruf', 'kummer'],
+    },
+    {
+        pattern: /schlägt mich|\b(gewalt|missbrauch)\b/,
+        keys: ['gewalt', 'notruf'],
+    },
+    {
+        pattern: /vergiftet|tabletten geschluckt/,
+        keys: ['gift', 'notruf'],
+    },
+];
+
+/**
+ * Notlage im Text? Dann die passenden Nummern, sonst `null`.
+ *
+ * Läuft **vor** dem Gemini-Call und ohne ihn: wer „Unfall" schreibt, braucht
+ * eine Nummer, keinen Modell-Timeout. Deterministisch, damit der Pfad nicht von
+ * fremder Verfügbarkeit abhängt.
+ */
+export const urgentHotlines = (text: string): Hotline[] | null => {
+    const haystack = text.toLowerCase();
+    const keys = URGENT.filter((u) => u.pattern.test(haystack)).flatMap(
+        (u) => u.keys,
+    );
+    // Mehrere Treffer teilen sich `notruf` — Reihenfolge bleibt, Dubletten raus.
+    return keys.length ? [...new Set(keys)].map((k) => HOTLINES[k]) : null;
+};
+
+const URGENT_TEXT =
+    'Das klingt nach einer Notlage. Bitte ruf zuerst hier an — das geht sofort, ist kostenlos und rund um die Uhr erreichbar.';
+
+/**
  * Alle **User**-Turns plus die aktuelle Nachricht als ein Text.
  *
  * Grundlage fürs Keyword-Matching, und das ist Sicherheit, nicht Kosmetik: bei
@@ -118,9 +202,10 @@ const HANDOFF = {
  * darf die Keys nicht steuern.
  */
 export const conversationText = (history: ChatTurn[], message: string) =>
-    [...history.filter((h) => h.role === 'user').map((h) => h.text), message].join(
-        ' ',
-    );
+    [
+        ...history.filter((h) => h.role === 'user').map((h) => h.text),
+        message,
+    ].join(' ');
 
 /** Keys der Kategorien, die zur Nachricht passen — die stärkste Übereinstimmung zuerst. */
 export const matchCategoryKeys = (message: string): string[] => {
@@ -146,17 +231,19 @@ export const buildReply = (
     keys: string[],
     matches: ChatReply['matches'],
     override?: string,
+    urgent: Hotline[] | null = null,
 ): ChatReply => {
-    const disclaimer =
-        keys.map((k) => DISCLAIMERS[k]).find(Boolean) ?? null;
+    const disclaimer = keys.map((k) => DISCLAIMERS[k]).find(Boolean) ?? null;
 
     let text: string;
     if (override?.trim()) {
         text = override.trim();
     } else if (keys.length === 0) {
-        text = 'Ich habe dazu noch keine passende Stelle gefunden. Beschreib gern mit anderen Worten, worum es geht — oder sprich direkt mit jemandem.';
+        text =
+            'Ich habe dazu noch keine passende Stelle gefunden. Beschreib gern mit anderen Worten, worum es geht — oder sprich direkt mit jemandem.';
     } else if (matches.length === 0) {
-        text = 'Ich habe dein Thema erkannt, aber aktuell ist keine passende Stelle eingetragen. Melde dich gern direkt bei einer Beratungsstelle.';
+        text =
+            'Ich habe dein Thema erkannt, aber aktuell ist keine passende Stelle eingetragen. Melde dich gern direkt bei einer Beratungsstelle.';
     } else {
         text =
             matches.length === 1
@@ -164,7 +251,7 @@ export const buildReply = (
                 : 'Das klingt nach einem Thema, bei dem dir diese Stellen weiterhelfen können:';
     }
 
-    return { text, matches, handoff: HANDOFF, disclaimer };
+    return { text, matches, handoff: HANDOFF, disclaimer, urgent };
 };
 
 /**
@@ -200,14 +287,17 @@ export const answer = async (
     message: string,
     history: ChatTurn[] = [],
 ): Promise<ChatReply> => {
+    // Vor allem anderen: kein Datenbank-Treffer, kein Modell-Call, keine
+    // Latenz. Über das ganze Gespräch, wie die Disclaimer-Logik.
+    const urgent = urgentHotlines(conversationText(history, message));
+    if (urgent) return buildReply([], [], URGENT_TEXT, urgent);
+
     const [candidates, categories] = await Promise.all([
         Beratung.find()
             .select('title tags description')
             .limit(MAX_CANDIDATES)
             .lean(),
-        Category.find({ appliesTo: 'beratung' })
-            .select('key label')
-            .lean(),
+        Category.find({ appliesTo: 'beratung' }).select('key label').lean(),
     ]);
 
     const byId = new Map(candidates.map((b) => [String(b._id), b]));

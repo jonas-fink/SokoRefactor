@@ -1,6 +1,6 @@
 # Soko — Social Compass
 
-*A case study of a full-stack MERN (Mongo, Express, React, TypeScript, Node) application, written in the STAR format.*
+_A case study of a full-stack MERN (Mongo, Express, React, TypeScript, Node) application, written in the STAR format._
 
 Soko ("Sozialer Kompass" / social compass) is a web app that gives people in Kassel, Germany a single place to find low-cost events, activities, and counseling services (Beratungsstellen) — and to save what's relevant to them in a personal calendar. The project is built and maintained as a production-oriented MERN application: Express 5 on Node.js, MongoDB via Mongoose 9, and a React 19 + TypeScript client.
 
@@ -179,11 +179,11 @@ erDiagram
 
 A few modeling decisions are worth calling out because they trade off simplicity against future flexibility on purpose:
 
-**`Favorite` is one polymorphic model, not three.** It stores `itemType` (`Activity` / `ScrapedEvent` / `Beratung`) alongside `itemId`, resolved through Mongoose's `refPath`, with a compound unique index on `{ userId, itemType, itemId }`. This means the personal library and calendar (`/library`) don't need a separate `Appointment` model — a saved item with a date *is* the calendar entry. A dedicated `Appointment` model is deferred until users need to create free-standing appointments that aren't tied to a discoverable item.
+**`Favorite` is one polymorphic model, not three.** It stores `itemType` (`Activity` / `ScrapedEvent` / `Beratung`) alongside `itemId`, resolved through Mongoose's `refPath`, with a compound unique index on `{ userId, itemType, itemId }`. This means the personal library and calendar (`/library`) don't need a separate `Appointment` model — a saved item with a date _is_ the calendar entry. A dedicated `Appointment` model is deferred until users need to create free-standing appointments that aren't tied to a discoverable item.
 
 **`Category` is a whitelist, not a foreign key.** `Activity.tags` and `Beratung.tags` remain plain `string[]`, but every value must exist in `Category.key` — checked server-side on every write. This was chosen over `ObjectId` references so that filtering (`?tags=finanzen`) stays a simple `$in` query without `populate()` calls in every controller, while still getting centralized, typo-proof category management. The taxonomy currently has 11 keys (e.g., `familie`, `finanzen`, `gesundheit`, `sport`, `bildung`), each tagged with which content type(s) it applies to (`appliesTo: ["activity", "beratung"]`) and a design-token color for consistent UI treatment.
 
-**Geospatial data is a first-class field, not an afterthought.** `Activity` and `Beratung` both require a GeoJSON `Point` with a `2dsphere` index at creation time. `ScrapedEvent` is the exception: the city's calendar only provides a location *name* as text, so `location` is optional there and gets backfilled asynchronously by a geocoding script against Nominatim (OpenStreetMap), which also stamps `geocodedAt` on every attempt — including failed ones — so repeated runs don't re-query locations that are known to be unresolvable.
+**Geospatial data is a first-class field, not an afterthought.** `Activity` and `Beratung` both require a GeoJSON `Point` with a `2dsphere` index at creation time. `ScrapedEvent` is the exception: the city's calendar only provides a location _name_ as text, so `location` is optional there and gets backfilled asynchronously by a geocoding script against Nominatim (OpenStreetMap), which also stamps `geocodedAt` on every attempt — including failed ones — so repeated runs don't re-query locations that are known to be unresolvable.
 
 **Nested data stays embedded until reuse demands otherwise.** `Beratung.services` is a subdocument array (`{ name, documents: [...] }`) that groups application forms by use case (e.g., Jobcenter → Grundsicherung → application PDF), mirroring the existing `openingHours` embedding pattern. It only gets promoted to its own collection if the same document needs to be referenced from multiple counseling centers (e.g., a nationwide form) — until then, embedding avoids joins for a read-heavy detail page.
 
@@ -224,11 +224,11 @@ Passwords are hashed with bcrypt at cost factor 12. Authorization is role-based 
 
 Three independent pipelines feed the same read surface:
 
-| Pipeline | Source | Mechanism | Frequency |
-|---|---|---|---|
-| Municipal scraper | `kassel.de/veranstaltungskalender.php` | `fetch` + `cheerio`, idempotent upsert on `externalId` | Daily cron |
-| Geocoding backfill | Nominatim (OpenStreetMap) | 1 request/sec, dedup'd by venue name, skips already-attempted venues | Runs after every scrape, plus standalone |
-| Partner import | Counseling-org CSV | Custom parser (no CSV dependency), upsert on `Beratung.externalId` | On demand, per partnership |
+| Pipeline           | Source                                 | Mechanism                                                            | Frequency                                |
+| ------------------ | -------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------- |
+| Municipal scraper  | `kassel.de/veranstaltungskalender.php` | `fetch` + `cheerio`, idempotent upsert on `externalId`               | Daily cron                               |
+| Geocoding backfill | Nominatim (OpenStreetMap)              | 1 request/sec, dedup'd by venue name, skips already-attempted venues | Runs after every scrape, plus standalone |
+| Partner import     | Counseling-org CSV                     | Custom parser (no CSV dependency), upsert on `Beratung.externalId`   | On demand, per partnership               |
 
 The scraper normalizes the city's raw category labels (e.g., "Sport / Freizeit" → `sport`) through a single mapping table (`utils/categoryMapping.ts`) that both the scraper and a one-time migration script share, so there's exactly one place that knows how external vocabulary maps to the internal taxonomy. Unmapped categories fall into a visible `sonstiges` ("other") bucket rather than being silently dropped, and get reported on every run — currently around 174 of roughly 3,180 scraped events. Because everything upserts on `externalId`, adding a new mapping rule retroactively fixes historical data on the next scheduled run, with no backfill script required.
 
@@ -240,16 +240,16 @@ The response contract (`ChatReply`) makes its guardrails structurally mandatory 
 
 ### Tech stack
 
-| Layer | Technology |
-|---|---|
-| Client | React 19, TypeScript, Vite 8, React Router 8, Tailwind CSS v4, React Hook Form + Zod, Mapbox GL |
-| Backend | Node.js, Express 5, TypeScript, Zod 4 |
-| Database | MongoDB, Mongoose 9 (`2dsphere` geo indexes) |
-| Auth | JWT (access + rotating refresh), bcryptjs |
-| Storage | Cloudinary (images), AWS S3 (documents, via presigned URLs) |
-| AI | Google Gemini (`@google/genai`), with deterministic fallback |
-| Data ingestion | Cheerio (scraping), Nominatim/OSM (geocoding) |
-| Testing | Node's built-in test runner (no external framework) |
+| Layer          | Technology                                                                                      |
+| -------------- | ----------------------------------------------------------------------------------------------- |
+| Client         | React 19, TypeScript, Vite 8, React Router 8, Tailwind CSS v4, React Hook Form + Zod, Mapbox GL |
+| Backend        | Node.js, Express 5, TypeScript, Zod 4                                                           |
+| Database       | MongoDB, Mongoose 9 (`2dsphere` geo indexes)                                                    |
+| Auth           | JWT (access + rotating refresh), bcryptjs                                                       |
+| Storage        | Cloudinary (images), AWS S3 (documents, via presigned URLs)                                     |
+| AI             | Google Gemini (`@google/genai`), with deterministic fallback                                    |
+| Data ingestion | Cheerio (scraping), Nominatim/OSM (geocoding)                                                   |
+| Testing        | Node's built-in test runner (no external framework)                                             |
 
 ## Result
 
@@ -269,4 +269,8 @@ soko/
 └── soko-client/      React SPA (Vite)
 ```
 
-Further reading in the repository: `PROJEKT.md` (roadmap and current status), `ARCHITEKTUR.md` (design rationale behind the data model), `KONVENTIONEN.md` (coding conventions), `Design.md` (design system/tokens), and `docs/PARTNER-IMPORT.md` (CSV format for counseling-org partners).
+### Context documents
+
+The project is developed alongside a set of working documents kept **outside this repository**, one directory up, so that planning notes and session logs stay out of the published history: `PROJEKT.md` (roadmap and current status), `ARCHITEKTUR.md` (design rationale behind the data model), `UMSETZUNG.md` (per-phase implementation playbook for open work), `KONVENTIONEN.md` (coding conventions), `SESSIONS.md` (work log), `Design.md` (design system/tokens), and `docs/PARTNER-IMPORT.md` (CSV format for counseling-org partners).
+
+They are referenced throughout this README for provenance; they are not part of the clone.

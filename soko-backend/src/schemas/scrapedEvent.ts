@@ -7,6 +7,11 @@ export const scrapedEventSchema = z.object({
     description: z.string().default(''),
     startDate: z.date().nullable().optional(),
     category: z.string().default(''),
+
+    // Leer = keine Angabe = matcht immer. Alt-Dokumente ohne die Felder laufen
+    // deshalb ueber `default([])` durch, statt beim Lesen in einen 500 zu kippen.
+    availableLanguages: z.array(z.string()).default([]),
+    targetAudience: z.array(z.string()).default([]),
     locationName: z.string().default(''),
     municipality: z.string().default(''),
     sourceUrl: z.url(),

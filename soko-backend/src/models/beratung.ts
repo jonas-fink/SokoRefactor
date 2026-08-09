@@ -82,6 +82,9 @@ const beratungSchema = new Schema(
             type: [String],
             default: [],
         },
+        // Leer = keine Angabe = matcht immer (siehe utils/queryFilters.ts).
+        availableLanguages: { type: [String], default: [] },
+        targetAudience: { type: [String], default: [] },
         // Herkunft aus einem Partner-Import. `sparse`, weil manuell angelegte
         // Beratungen keine externe ID haben — der Upsert-Schlüssel des Imports.
         externalId: { type: String, sparse: true, unique: true },

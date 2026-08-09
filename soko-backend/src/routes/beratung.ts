@@ -5,6 +5,7 @@ import {
     documentUploadHandler,
     adminOnly,
     validateBody,
+    validateQuery,
 } from '#middlewares';
 import {
     getBeratung,
@@ -20,6 +21,7 @@ import {
     beratungCreateBodySchema,
     beratungPatchBodySchema,
     beratungDocumentBodySchema,
+    filterQuerySchema,
 } from '#schemas';
 import { isValidObjectId } from 'mongoose';
 
@@ -35,7 +37,7 @@ const validateId: RequestHandler = (req, res, next) => {
 // damit redundant.
 const router = Router();
 
-router.get('/', getBeratung);
+router.get('/', validateQuery(filterQuerySchema), getBeratung);
 router.get('/:id', validateId, getBeratungById);
 
 router.post(

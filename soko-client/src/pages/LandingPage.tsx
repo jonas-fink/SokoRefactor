@@ -117,7 +117,7 @@ const LandingPage = () => {
             </div>
             <div className="flex flex-col gap-6 items-center pt-6">
                 <h3 className="text-3xl font-bold">
-                    Du bist dir unsicher wonach du suchen sollst?
+                    Du brauchst schnelle Hilfe und willst nicht nur stöbern?
                 </h3>{' '}
                 <button
                     type="button"

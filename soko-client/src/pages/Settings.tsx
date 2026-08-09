@@ -24,7 +24,7 @@ const SettingsPage = () => {
     const isCreator = canCreate(user);
 
     return (
-        <div className="flex flex-col gap-8 md:max-w-6xl p-8 mx-auto">
+        <div className="flex flex-col gap-8 md:max-w-6xl md:p-8 mx-auto">
             <div className="flex items-center gap-3">
                 <button
                     className="card bg-surface p-2 cursor-pointer"

@@ -13,7 +13,7 @@ const Profile = () => {
             .join('') ?? '';
 
     return (
-        <div className="flex flex-col gap-4 mx-auto md:max-w-6xl p-8">
+        <div className="flex flex-col gap-4 mx-auto md:max-w-6xl md:p-8">
             <div className="flex gap-4 items-center">
                 <div className="flex items-center justify-center rounded-full w-20 h-20 text-3xl p-4 bg-primary">
                     <p className="font-bold text-4xl">{initials}</p>

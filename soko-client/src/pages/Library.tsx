@@ -66,7 +66,7 @@ const Library = () => {
     ];
 
     return (
-        <div className="mx-auto md:max-w-6xl md:p-8 flex flex-col gap-6">
+        <div className="mx-auto md:max-w-6xl md:p-8 pb-3 flex flex-col gap-6">
             <div className="flex gap-3 items-center">
                 <button
                     className="card bg-surface p-2 cursor-pointer"

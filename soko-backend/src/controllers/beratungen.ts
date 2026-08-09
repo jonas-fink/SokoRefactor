@@ -4,9 +4,17 @@ import {
     type BeratungCreateBody,
     type BeratungPatchBody,
     type BeratungDocumentBody,
+    type FilterQuery,
 } from '#schemas';
 import { Beratung } from '#models';
-import { assertCategories, s3Keys, orphanedKeys } from '#utils';
+import {
+    assertCategories,
+    assertAudiences,
+    assertLanguages,
+    buildFilter,
+    s3Keys,
+    orphanedKeys,
+} from '#utils';
 import {
     getSignedDocumentUrl,
     uploadDocument,
@@ -16,17 +24,29 @@ import { randomUUID } from 'node:crypto';
 
 type IdParams = { id: string };
 
-// ponytail: dup with activities.ts is fine at N=2 (fields diverge);
+// dup with activities.ts is fine at N=2 (fields diverge);
 // factory only if a 3rd near-identical CRUD resource appears
 
-// ponytail: no geo filter — Beratungen are browsed per-topic by tags, not by distance
-export const getBeratung: RequestHandler = async (_req, res, next) => {
+/** Sprachen und Zielgruppe sind Whitelists — 400 statt still speichern. */
+const assertAxes = async (body: BeratungPatchBody) => {
+    if (body.tags) await assertCategories(body.tags);
+    if (body.availableLanguages) assertLanguages(body.availableLanguages);
+    if (body.targetAudience) assertAudiences(body.targetAudience);
+};
+
+// no geo filter — Beratungen are browsed per-topic by tags, not by distance
+export const getBeratung: RequestHandler<
+    unknown,
+    unknown,
+    unknown,
+    FilterQuery
+> = async (_req, res, next) => {
     try {
         const { tags } = _req.query;
-        let query: Record<string, unknown> = {};
+        const query: Record<string, unknown> = { ...buildFilter(_req.query) };
 
         if (tags) {
-            const tagList = (tags as string).split(',').map((t) => t.trim());
+            const tagList = tags.split(',').map((t) => t.trim());
             query.tags = { $in: tagList };
         }
         const beratung = await Beratung.find(query)
@@ -46,7 +66,7 @@ export const createBeratung: RequestHandler<
     BeratungCreateBody
 > = async (req, res, next) => {
     try {
-        if (req.body.tags) await assertCategories(req.body.tags);
+        await assertAxes(req.body);
 
         const image = req.body.image ?? 'https://placehold.net/600x600.png';
         const userId = req.userId;
@@ -94,7 +114,7 @@ export const updateBeratung: RequestHandler<
             params: { id },
         } = req;
 
-        if (req.body.tags) await assertCategories(req.body.tags);
+        await assertAxes(req.body);
 
         const beratung = await Beratung.findById(id);
         if (!beratung) {
@@ -126,7 +146,7 @@ export const patchBeratung: RequestHandler<
         const { id } = req.params;
         const updates: BeratungPatchBody = req.body;
         delete (updates as Record<string, unknown>)['_id'];
-        if (updates.tags) await assertCategories(updates.tags);
+        await assertAxes(updates);
 
         // nur laden, wenn dieser PATCH `services` ueberhaupt anfasst
         const before = updates.services

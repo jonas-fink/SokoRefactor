@@ -48,6 +48,9 @@ export interface Activity {
     date: string;
     price: number;
     tags: string[];
+    /** Leer = keine Angabe; matcht damit jeden Filter dieser Achse. */
+    availableLanguages: string[];
+    targetAudience: string[];
     location: GeoPoint;
     userId: PopulatedUser;
     createdAt: string;
@@ -86,6 +89,9 @@ export interface Beratung {
     location: GeoPoint;
     tags: string[];
     userId: PopulatedUser;
+    /** Leer = keine Angabe; matcht damit jeden Filter dieser Achse. */
+    availableLanguages: string[];
+    targetAudience: string[];
     createdAt: string;
     updatedAt: string;
 }
@@ -123,6 +129,9 @@ export interface ScrapedEvent {
     municipality: string;
     sourceUrl: string;
     source: string;
+    /** Leer = keine Angabe; matcht damit jeden Filter dieser Achse. */
+    availableLanguages: string[];
+    targetAudience: string[];
     /** Nachtraeglich geokodiert — nicht jeder Veranstaltungsort loest auf. */
     location?: GeoPoint | null;
 }
@@ -133,4 +142,10 @@ export interface EventsPage {
     total: number;
     page: number;
     pageSize: number;
+}
+
+/** Geschlossene Filterlisten aus `GET /vocabulary` (Backend-Konstanten). */
+export interface FilterVocabulary {
+    languages: { key: string; label: string }[];
+    audiences: { key: string; label: string }[];
 }

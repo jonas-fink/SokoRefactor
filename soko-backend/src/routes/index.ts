@@ -6,3 +6,4 @@ export { default as eventRouter } from './event.ts';
 export { default as categoryRouter } from './category.ts';
 export { default as beratungRouter } from './beratung.ts';
 export { default as chatRouter } from './chatbot.ts';
+export { default as vocabularyRouter } from './vocabulary.ts';

@@ -20,6 +20,11 @@ const activitySchema = z.object({
     }),
     userId: objectIdSchema,
     tags: z.array(z.string()).default([]),
+
+    // Leer = keine Angabe = matcht immer. Alt-Dokumente ohne die Felder laufen
+    // deshalb ueber `default([])` durch, statt beim Lesen in einen 500 zu kippen.
+    availableLanguages: z.array(z.string()).default([]),
+    targetAudience: z.array(z.string()).default([]),
 });
 
 export const activityOutputSchema = activitySchema.extend({

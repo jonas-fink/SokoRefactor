@@ -26,6 +26,9 @@ const scrapedEventSchema = new Schema(
             trim: true,
             default: '',
         },
+        // Leer = keine Angabe = matcht immer (siehe utils/queryFilters.ts).
+        availableLanguages: { type: [String], default: [] },
+        targetAudience: { type: [String], default: [] },
         locationName: {
             type: String,
             trim: true,

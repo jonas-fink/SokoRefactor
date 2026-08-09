@@ -6,6 +6,7 @@ import {
     buildReply,
     knownOnly,
     conversationText,
+    urgentHotlines,
 } from './chatbot.ts';
 import { CATEGORY_KEYS } from '#utils';
 
@@ -78,6 +79,44 @@ test('Rückfrage behält den Disclaimer des Themas aus dem Verlauf', () => {
 test('ohne Treffer bleibt der menschliche Ausweg stehen', () => {
     const r = buildReply([], []);
     assert.deepEqual(r.matches, []);
+    assert.ok(r.handoff.label);
+    assert.equal(r.disclaimer, null);
+    assert.equal(r.urgent, null);
+});
+
+test('jede Notfall-Kategorie liefert ihre Nummern', () => {
+    const numbers = (text: string) =>
+        (urgentHotlines(text) ?? []).map((h) => h.number);
+
+    assert.deepEqual(numbers('Ich hatte einen Unfall'), ['112', '116117']);
+    assert.ok(numbers('ich will mich umbringen').includes('0800 1110111'));
+    assert.ok(numbers('Mein Mann schlägt mich').includes('116016'));
+    assert.ok(numbers('Ich habe Tabletten geschluckt').includes('0551 19240'));
+
+    // 112 und 116117 sind zwei Nummern mit zwei Bedeutungen — nie eine davon.
+    const [notruf, bereitschaft] = urgentHotlines('Unfall') ?? [];
+    assert.match(notruf.hint, /Lebensgefahr/);
+    assert.match(bereitschaft.hint, /kein Notfall/);
+});
+
+test('harmlose Anliegen loesen keinen Notruf aus', () => {
+    // Der wichtigere Fall: ein falscher Notrufblock macht die Antwort wertlos.
+    for (const text of [
+        'Ich brauche Hilfe beim Antrag',
+        'Wo ist die Gewaltschutzberatung?',
+        'Gibt es ein Feuerwehrfest für Kinder?',
+        'Ich habe Schulden und weiß nicht weiter',
+        'Wo melde ich mein Kind für die Kita an?',
+    ]) {
+        assert.equal(urgentHotlines(text.toLowerCase()), null, text);
+    }
+});
+
+test('der Notfallblock verdraengt die Beratungssuche nicht', () => {
+    const urgent = urgentHotlines('ich bin bewusstlos geworden');
+    const r = buildReply([], [], 'Bitte ruf an.', urgent);
+    assert.equal(r.urgent?.[0].number, '112');
+    // Handoff bleibt, Disclaimer bleibt null — der Block ist die Aussage.
     assert.ok(r.handoff.label);
     assert.equal(r.disclaimer, null);
 });

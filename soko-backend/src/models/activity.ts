@@ -51,6 +51,9 @@ const activitySchema = new Schema(
             type: [String],
             default: [],
         },
+        // Leer = keine Angabe = matcht immer (siehe utils/queryFilters.ts).
+        availableLanguages: { type: [String], default: [] },
+        targetAudience: { type: [String], default: [] },
     },
     { timestamps: true },
 );

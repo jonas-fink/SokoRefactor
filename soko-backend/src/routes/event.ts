@@ -1,5 +1,7 @@
 import { Router, type RequestHandler } from 'express';
 import { getEvents, getEventById } from '#controllers';
+import { validateQuery } from '#middlewares';
+import { filterQuerySchema } from '#schemas';
 import { isValidObjectId } from 'mongoose';
 
 const validateId: RequestHandler = (req, res, next) => {
@@ -12,7 +14,7 @@ const validateId: RequestHandler = (req, res, next) => {
 
 const router = Router();
 
-router.get('/', getEvents);
+router.get('/', validateQuery(filterQuerySchema), getEvents);
 router.get('/:id', validateId, getEventById);
 
 export default router;

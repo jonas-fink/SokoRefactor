@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { AiOutlineArrowLeft } from 'react-icons/ai';
 import { api } from '../utils/api';
 import { formatDate } from '../utils/formatDate';
 import { CATEGORY_META } from '../categoryMeta';
 import OfferCard from '../components/OfferCard';
+import Pagination from '../components/Pagination';
 import SearchFilter from '../components/SearchFilter';
-import { matchesQuery } from '../utils/search';
-import { useDebounced } from '../hooks/useDebounced';
+import { useFilters } from '../hooks/useFilters';
 import { useFavorites } from '../hooks/useFavorites';
 import type { Activity, Category, EventsPage } from '../types';
 
@@ -15,22 +15,38 @@ const EventKategorie = () => {
     const { key = '' } = useParams();
     const navigate = useNavigate();
     const { isFavorite, toggle, enabled } = useFavorites();
+    const {
+        filters,
+        setFilter,
+        toggle: toggleFilter,
+        reset,
+        activeCount,
+        query,
+    } = useFilters();
     const [data, setData] = useState<EventsPage | null>(null);
     const [activities, setActivities] = useState<Activity[]>([]);
     const [label, setLabel] = useState('Events');
-    const [query, setQuery] = useState('');
-    const [from, setFrom] = useState('');
-    const [page, setPage] = useState(1);
     const [error, setError] = useState('');
-    const search = useDebounced(query);
 
     const meta = CATEGORY_META[key];
 
+    // Die Kategorie steht in der Route, nicht im Panel — sie kommt hier dazu.
+    const eventQuery = useMemo(() => {
+        const params = new URLSearchParams(query);
+        params.set('category', key);
+        return params.toString();
+    }, [query, key]);
+
+    // `/activities` kennt `tags` statt `category` und keinen `date`-Parameter.
+    const activityQuery = useMemo(() => {
+        const params = new URLSearchParams(query);
+        params.delete('page');
+        params.delete('date');
+        params.set('tags', key);
+        return params.toString();
+    }, [query, key]);
+
     useEffect(() => {
-        setPage(1);
-        api.get<Activity[]>(`/activities?tags=${key}`)
-            .then(setActivities)
-            .catch(() => setError('Angebote konnten nicht geladen werden'));
         // Label kommt aus der Taxonomie, nicht aus einer zweiten lokalen Liste.
         api.get<Category[]>('/categories?appliesTo=activity')
             .then((cats) =>
@@ -40,18 +56,17 @@ const EventKategorie = () => {
     }, [key]);
 
     useEffect(() => {
+        api.get<Activity[]>(`/activities?${activityQuery}`)
+            .then(setActivities)
+            .catch(() => setError('Angebote konnten nicht geladen werden'));
+    }, [activityQuery]);
+
+    useEffect(() => {
         // Ein Kategoriewechsel setzt `page` zurueck, also laufen kurz zwei
         // Anfragen. Ohne das Flag koennte die alte als letzte ankommen und die
         // richtige Liste ueberschreiben.
         let cancelled = false;
-        const params = new URLSearchParams({
-            category: key,
-            page: String(page),
-        });
-        if (from) params.set('date', from);
-        // Die Events sind paginiert, also sucht das Backend ueber alle Seiten.
-        if (search) params.set('q', search);
-        api.get<EventsPage>(`/events?${params}`)
+        api.get<EventsPage>(`/events?${eventQuery}`)
             .then((res) => !cancelled && setData(res))
             .catch(
                 () =>
@@ -61,7 +76,7 @@ const EventKategorie = () => {
         return () => {
             cancelled = true;
         };
-    }, [key, page, from, search]);
+    }, [eventQuery]);
 
     const totalPages = data ? Math.ceil(data.total / data.pageSize) : 0;
 
@@ -70,28 +85,22 @@ const EventKategorie = () => {
     // heute Mitternacht, damit ein Angebot von heute Mittag nicht schon
     // vormittags verschwindet. `from` ist YYYY-MM-DD; ohne Zeitanteil würde
     // Date() das als UTC lesen.
-    const dayStart = from
-        ? new Date(`${from}T00:00`).getTime()
+    const dayStart = filters.date
+        ? new Date(`${filters.date}T00:00`).getTime()
         : new Date().setHours(0, 0, 0, 0);
-    const dayEnd = from
+    const dayEnd = filters.date
         ? new Date(dayStart).setDate(new Date(dayStart).getDate() + 1)
         : Infinity;
 
     // Activities sind wenige und unpaginiert, sie erscheinen nur auf
     // Seite 1. Wenn es mehr werden, gehoeren sie in die Events-Aggregation.
     const entries = [
-        ...(page === 1
+        ...(filters.page === 1
             ? activities
                   .filter(
                       (a) =>
                           new Date(a.date).getTime() >= dayStart &&
-                          new Date(a.date).getTime() < dayEnd &&
-                          matchesQuery(
-                              query,
-                              a.title,
-                              a.description,
-                              ...a.tags,
-                          ),
+                          new Date(a.date).getTime() < dayEnd,
                   )
                   .map((a) => ({
                       itemType: 'Activity' as const,
@@ -123,16 +132,12 @@ const EventKategorie = () => {
             {meta && <p className="text-ink-soft">{meta.description}</p>}
 
             <SearchFilter
-                query={query}
-                onQuery={(value) => {
-                    setQuery(value);
-                    setPage(1);
-                }}
-                date={from}
-                onDate={(value) => {
-                    setFrom(value);
-                    setPage(1);
-                }}
+                filters={filters}
+                setFilter={setFilter}
+                toggle={toggleFilter}
+                reset={reset}
+                activeCount={activeCount}
+                showEventFilters
             />
 
             {error && <p className="text-error">{error}</p>}
@@ -194,27 +199,13 @@ const EventKategorie = () => {
                 )}
             </div>
 
-            {totalPages > 1 && (
-                <div className="mt-6 flex items-center justify-center gap-4">
-                    <button
-                        className="btn-secondary disabled:opacity-40 cursor-pointer"
-                        disabled={page <= 1}
-                        onClick={() => setPage((p) => p - 1)}
-                    >
-                        Zurück
-                    </button>
-                    <span className="text-sm text-ink-mute">
-                        Seite {page} von {totalPages}
-                    </span>
-                    <button
-                        className="btn-secondary disabled:opacity-40 cursor-pointer"
-                        disabled={page >= totalPages}
-                        onClick={() => setPage((p) => p + 1)}
-                    >
-                        Weiter
-                    </button>
-                </div>
-            )}
+            <div className="mt-6">
+                <Pagination
+                    page={filters.page}
+                    totalPages={totalPages}
+                    onChange={(next) => setFilter('page', next)}
+                />
+            </div>
         </div>
     );
 };

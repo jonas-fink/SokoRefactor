@@ -1,6 +1,6 @@
 import { Beratung } from '#models';
 import { beratungZodSchema, type BeratungInput } from '#schemas';
-import { CATEGORY_KEYS } from '#utils';
+import { AUDIENCE_KEYS, CATEGORY_KEYS, LANGUAGE_KEYS } from '#utils';
 
 /**
  * Strukturierter Partner-Import statt Scraping fremder Beratungsstellen-Seiten.
@@ -20,10 +20,10 @@ import { CATEGORY_KEYS } from '#utils';
 export const parseCsv = (text: string): Record<string, string>[] => {
     const src = text.replace(/^﻿/, '');
     const header = src.split('\n', 1)[0];
-    const delim = (header.match(/;/g) ?? []).length >
-        (header.match(/,/g) ?? []).length
-        ? ';'
-        : ',';
+    const delim =
+        (header.match(/;/g) ?? []).length > (header.match(/,/g) ?? []).length
+            ? ';'
+            : ',';
 
     const rows: string[][] = [];
     let field = '';
@@ -65,7 +65,9 @@ export const parseCsv = (text: string): Record<string, string>[] => {
     const keys = head.map((h) => h.trim());
     return body
         .filter((r) => r.some((v) => v.trim() !== '')) // Leerzeilen raus
-        .map((r) => Object.fromEntries(keys.map((k, i) => [k, (r[i] ?? '').trim()])));
+        .map((r) =>
+            Object.fromEntries(keys.map((k, i) => [k, (r[i] ?? '').trim()])),
+        );
 };
 
 const DAYS: Record<string, string> = {
@@ -79,7 +81,10 @@ const DAYS: Record<string, string> = {
 };
 
 const EMPTY_HOURS = Object.fromEntries(
-    Object.values(DAYS).map((d) => [d, [] as { open: number; close: number }[]]),
+    Object.values(DAYS).map((d) => [
+        d,
+        [] as { open: number; close: number }[],
+    ]),
 );
 
 /** `"09:30"` → 570. `null` bei allem, was nicht wie eine Uhrzeit aussieht. */
@@ -141,9 +146,7 @@ export const coordsOf = (row: Record<string, string>): Coordinates | null => {
  * 1 Request/Sekunde. Bei Lieferungen über ~500 Zeilen lohnt ein eigener
  * Geocoder (oder eine Batch-Vorabklärung mit dem Träger).
  */
-export const geocode = async (
-    address: string,
-): Promise<Coordinates | null> => {
+export const geocode = async (address: string): Promise<Coordinates | null> => {
     const url = new URL('https://nominatim.openstreetmap.org/search');
     url.searchParams.set('q', address);
     url.searchParams.set('format', 'json');
@@ -160,6 +163,25 @@ export const geocode = async (
     return hit ? { lat: Number(hit.lat), lng: Number(hit.lon) } : null;
 };
 
+/**
+ * `"finanzen|familie"` → geprüfte Key-Liste. Leere Spalte → `[]`, und das heißt
+ * „keine Angabe" — der Datensatz matcht dann jeden Filter dieser Achse.
+ */
+const keysOf = (
+    value: string | undefined,
+    known: ReadonlySet<string>,
+    label: string,
+): string[] => {
+    const keys = (value ?? '')
+        .split('|')
+        .map((t) => t.trim().toLowerCase())
+        .filter(Boolean);
+    const unknown = keys.filter((k) => !known.has(k));
+    if (unknown.length)
+        throw new Error(`Unbekannte ${label}: ${unknown.join(', ')}`);
+    return keys;
+};
+
 /** Eine CSV-Zeile → validierter Beratungs-Datensatz. Wirft mit Klartextgrund. */
 export const toBeratung = (
     row: Record<string, string>,
@@ -167,16 +189,7 @@ export const toBeratung = (
     source: string,
     coords: Coordinates | null = coordsOf(row),
 ): BeratungInput => {
-    const tags = row.kategorie
-        ? row.kategorie
-              .split('|')
-              .map((t) => t.trim().toLowerCase())
-              .filter(Boolean)
-        : [];
-    const unknown = tags.filter((t) => !CATEGORY_KEYS.has(t));
-    if (unknown.length) {
-        throw new Error(`Unbekannte Kategorie: ${unknown.join(', ')}`);
-    }
+    const tags = keysOf(row.kategorie, CATEGORY_KEYS, 'Kategorie');
 
     if (!coords) {
         throw new Error(
@@ -202,6 +215,8 @@ export const toBeratung = (
             .map((name) => ({ name, documents: [] })),
         location: { type: 'Point', coordinates: [coords.lng, coords.lat] },
         tags,
+        availableLanguages: keysOf(row.sprachen, LANGUAGE_KEYS, 'Sprache'),
+        targetAudience: keysOf(row.zielgruppe, AUDIENCE_KEYS, 'Zielgruppe'),
         userId,
     });
 };

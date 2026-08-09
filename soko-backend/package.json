@@ -51,6 +51,8 @@
         "migrate:tags": "node --conditions dev --env-file=.env src/scripts/migrateTags.ts",
         "import:beratungen": "node --conditions dev --env-file=.env src/scripts/importBeratungen.ts",
         "seed:activities": "node --conditions dev --env-file=.env src/scripts/seedDemoActivities.ts",
+        "seed:events": "node --conditions dev --env-file=.env src/scripts/seedDemoEvents.ts",
+        "backfill:audiences": "node --conditions dev --env-file=.env src/scripts/backfillAudiences.ts",
         "prebuild": "rm -rf dist",
         "build": "tsc",
         "prestart": "npm run build",

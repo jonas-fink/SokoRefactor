@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "test": "node --test 'src/**/*.test.ts'",
+    "contrast": "node scripts/contrast.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

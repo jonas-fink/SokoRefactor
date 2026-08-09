@@ -55,7 +55,7 @@ const Login = () => {
                                 id="email"
                                 {...register('email')}
                                 placeholder="you@example.com"
-                                className="border border-line rounded-control p-4 focus:outline-none focus:border-primary bg-transparent"
+                                className="border border-line-strong rounded-control p-4 focus:outline-none focus:border-primary bg-transparent"
                                 required
                             />
                             {errors.email && (
@@ -77,7 +77,7 @@ const Login = () => {
                                 id="password"
                                 {...register('password')}
                                 placeholder="**********"
-                                className="border border-line rounded-control p-4 focus:outline-none focus:border-primary bg-transparent"
+                                className="border border-line-strong rounded-control p-4 focus:outline-none focus:border-primary bg-transparent"
                                 required
                             />
                             {errors.password && (

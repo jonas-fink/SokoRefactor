@@ -11,22 +11,24 @@
     --color-surface-2: #f0ece4; /* subtle fills, inactive chips */
     --color-ink: #1c2620; /* primary text / headings */
     --color-ink-soft: #4a554e; /* body text */
-    --color-ink-mute: #7c857f; /* captions, meta */
-    --color-line: #e4ded4; /* borders, dividers */
+    --color-ink-mute: #656e69; /* captions, meta — 4.5:1 auf bg, nicht nur auf surface */
+    --color-line: #e4ded4; /* dekorative Trenner, Card-Kanten */
+    --color-line-strong: #7f8883; /* Control-Ränder (Inputs) — WCAG 1.4.11, 3:1 */
 
     /* Brand */
     --color-primary: #1f6b4f; /* pine green — actions, brand */
     --color-primary-ink: #ffffff; /* text/icon on primary */
     --color-primary-soft: #e6f0ea; /* tinted backgrounds */
-    --color-accent: #e8a33d; /* honey amber — “Beratung & Hilfe” */
+    --color-accent: #e8a33d; /* honey amber — “Beratung & Hilfe”, nur als Fläche */
     --color-accent-ink: #2a1e06; /* text/icon on accent */
     --color-accent-soft: #fbeed6; /* amber tinted backgrounds */
+    --color-accent-strong: #9a6212; /* dasselbe Amber als Text/Icon auf hellem Grund */
     --color-brand: #378262;
 
     /* Category accents (life areas) */
     --color-cat-behoerden: #3763b0; /* Behörden & Ämter */
     --color-cat-behoerden-soft: #e7eef9;
-    --color-cat-familie: #c9821f; /* Familie & Kinder */
+    --color-cat-familie: #8a5a10; /* Familie & Kinder */
     --color-cat-familie-soft: #fdeede;
     --color-cat-gesundheit: #b0417f; /* Sucht & Gesundheit */
     --color-cat-gesundheit-soft: #f6e7ef;
@@ -34,9 +36,9 @@
     --color-cat-finanzen-soft: #eae7f7;
     --color-cat-asyl: #0e7490; /* Asyl & Migration */
     --color-cat-asyl-soft: #e0f1f5;
-    --color-cat-sport: #c2410c; /* Sport & Bewegung */
+    --color-cat-sport: #b23a09; /* Sport & Bewegung */
     --color-cat-sport-soft: #fbe8de;
-    --color-cat-natur: #3f7a34; /* Natur & Draußen */
+    --color-cat-natur: #386e2e; /* Natur & Draußen */
     --color-cat-natur-soft: #e8f1e4;
     --color-cat-kunst: #8b3a9c; /* Kunst & Kultur */
     --color-cat-kunst-soft: #f3e5f6;
@@ -64,6 +66,14 @@
     --shadow-card: 0 4px 14px rgba(30, 25, 15, 0.05);
     --shadow-float: 0 8px 22px rgba(30, 25, 15, 0.08);
     --shadow-modal: 0 30px 70px rgba(30, 25, 15, 0.22);
+
+    /* Liquid Glass — nur Dekoration (Fläche, Kante, Glanz). Text auf Glas
+       liegt immer auf --color-ink/--color-ink-soft, nie auf einer
+       Transparenz: über backdrop-filter ist der Kontrast nicht berechenbar. */
+    --glass-tint: rgba(255, 255, 255, 0.55);
+    --glass-edge: rgba(28, 38, 32, 0.14);
+    --glass-edge-hover: rgba(28, 38, 32, 0.3);
+    --glass-highlight: rgba(255, 255, 255, 0.75);
 }
 
 /* ---- Dark overrides ---------------------------------------- */
@@ -73,8 +83,9 @@
     --color-surface-2: #262d33;
     --color-ink: #eceae3;
     --color-ink-soft: #a9b0ae;
-    --color-ink-mute: #7a827f;
+    --color-ink-mute: #969e9a;
     --color-line: #2e363b;
+    --color-line-strong: #6a7480;
 
     --color-primary: #4fb98c;
     --color-primary-ink: #06231a;
@@ -82,6 +93,7 @@
     --color-accent: #f0b65a;
     --color-accent-ink: #2a1e06;
     --color-accent-soft: #2a2a1e;
+    --color-accent-strong: #f0b65a; /* dunkel reicht das Basis-Amber als Text */
     --color-brand: #378262;
 
     --color-cat-behoerden: #7ba3e0;
@@ -114,6 +126,11 @@
     --shadow-card: 0 4px 14px rgba(0, 0, 0, 0.3);
     --shadow-float: 0 8px 22px rgba(0, 0, 0, 0.4);
     --shadow-modal: 0 30px 70px rgba(0, 0, 0, 0.5);
+
+    --glass-tint: rgba(255, 255, 255, 0.06);
+    --glass-edge: rgba(255, 255, 255, 0.18);
+    --glass-edge-hover: rgba(255, 255, 255, 0.4);
+    --glass-highlight: rgba(255, 255, 255, 0.22);
 }
 
 /* ---- Expose tokens to Tailwind's utility engine ------------ */
@@ -129,6 +146,7 @@
     --color-ink-soft: var(--color-ink-soft);
     --color-ink-mute: var(--color-ink-mute);
     --color-line: var(--color-line);
+    --color-line-strong: var(--color-line-strong);
 
     --color-primary: var(--color-primary);
     --color-primary-ink: var(--color-primary-ink);
@@ -136,6 +154,7 @@
     --color-accent: var(--color-accent);
     --color-accent-ink: var(--color-accent-ink);
     --color-accent-soft: var(--color-accent-soft);
+    --color-accent-strong: var(--color-accent-strong);
     --color-brand: var(--color-brand);
 
     --color-cat-behoerden: var(--color-cat-behoerden);
@@ -224,9 +243,9 @@
         @apply overflow-hidden rounded-card border border-line bg-surface shadow-card;
     }
     .field {
-        @apply rounded-control border border-line bg-surface px-3.5 py-3 text-ink focus:border-primary 
-         focus:ring-2 
-         focus:ring-primary/20 
+        @apply rounded-control border border-line-strong bg-surface px-3.5 py-3 text-ink focus:border-primary
+         focus:ring-2
+         focus:ring-primary/40
          focus:outline-none;
     }
     .field::-webkit-search-cancel-button {
@@ -238,33 +257,69 @@
     .label {
         @apply text-ink-soft cursor-pointer hover:text-ink;
     }
+    /* Glas-Basis. Vorher steckten hier white/20, white/5 usw. als Literale —
+       im Light Mode auf #f7f4ef praktisch unsichtbar, weil sie für Dark
+       getunt waren. Jetzt kommen Fläche, Kante und Glanz aus Tokens, die
+       .dark überschreibt. Farbe pro Karte liefert der Verlauf darunter. */
+    .events,
+    .beratung,
+    .stat-card,
+    .btn-cta {
+        background-color: var(--glass-tint);
+        border: 1px solid var(--glass-edge);
+        backdrop-filter: blur(24px);
+        box-shadow:
+            inset 0 1px 0 var(--glass-highlight),
+            var(--shadow-card);
+        transition:
+            border-color 0.4s ease-out,
+            box-shadow 0.4s ease-out,
+            transform 0.4s ease-out;
+    }
+    .events:hover,
+    .beratung:hover,
+    .stat-card:hover,
+    .btn-cta:hover {
+        border-color: var(--glass-edge-hover);
+        box-shadow:
+            inset 0 1px 0 var(--glass-highlight),
+            var(--shadow-float);
+    }
+
     .events {
-        @apply bg-linear-to-br from-brand/40 via-brand/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 flex flex-col w-full gap-2 p-4 justify-center items-center shadow-card h-48 transition-all duration-500 ease-out hover:shadow-[0_10px_30px_rgba(0,210,100,0.15)] hover:bg-linear-to-tl hover:from-white/15 hover:via-brand/20 hover:to-brand/50;
-    }
-    .beratung {
-        @apply bg-linear-to-br from-warning/40 via-warning/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 flex flex-col w-full gap-2 p-4 justify-center items-center shadow-card h-48 transition-all duration-500 ease-out hover:shadow-[0_10px_30px_rgba(234,184,104,0.2)] hover:bg-linear-to-tl hover:from-white/15 hover:via-warning/20 hover:to-warning/50;
-    }
-    .stat-card {
-        @apply relative flex h-40 w-full flex-col justify-center gap-1 overflow-hidden rounded-card border border-white/25 p-5 backdrop-blur-xl;
+        @apply flex h-48 w-full flex-col items-center justify-center gap-2 p-4;
         background-image: linear-gradient(
             to bottom right,
-            rgb(255 255 255 / 0.1),
-            rgb(255 255 255 / 0.01)
+            color-mix(in oklab, var(--color-brand) 38%, transparent),
+            color-mix(in oklab, var(--color-brand) 8%, transparent)
         );
-        box-shadow:
-            inset 0 1px 0 rgb(255 255 255 / 0.25),
-            var(--shadow-card);
+    }
+    .beratung {
+        @apply flex h-48 w-full flex-col items-center justify-center gap-2 p-4;
+        background-image: linear-gradient(
+            to bottom right,
+            color-mix(in oklab, var(--color-accent) 38%, transparent),
+            color-mix(in oklab, var(--color-accent) 8%, transparent)
+        );
+    }
+    .stat-card {
+        @apply relative flex h-40 w-full flex-col justify-center gap-1 overflow-hidden rounded-card p-5;
     }
     .stat-value {
         color: var(--stat-accent);
     }
     .stat-events {
-        --stat-accent: var(--color-brand);
+        --stat-accent: var(--color-primary);
     }
     .stat-beratung {
-        --stat-accent: var(--color-warning);
+        --stat-accent: var(--color-accent-strong);
     }
     .btn-cta {
-        @apply bg-linear-to-br rounded-xl from-error/80 via-error/20 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 gap-2 p-4 justify-center items-center shadow-card transition-all duration-500 ease-out hover:shadow-[0_10px_30px_rgba(232,116,110,0.25)] hover:bg-linear-to-tl hover:from-white/15 hover:via-error/20 hover:to-error/50;
+        @apply items-center justify-center gap-2 rounded-xl p-4;
+        background-image: linear-gradient(
+            to bottom right,
+            color-mix(in oklab, var(--color-error) 45%, transparent),
+            color-mix(in oklab, var(--color-error) 10%, transparent)
+        );
     }
 }

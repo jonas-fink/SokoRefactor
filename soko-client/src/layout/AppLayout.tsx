@@ -4,10 +4,17 @@ import SideBar from '../components/layout/SideBar';
 
 const AppLayout = () => {
     useEffect(() => {
+        // Initial gesetzt wird das Theme vom Inline-Script in index.html.
+        // Hier bleibt nur der Live-Wechsel des OS-Themes — und der gilt nicht
+        // mehr, sobald der User in /profile selbst entschieden hat.
+        if (localStorage.getItem('soko:theme')) return;
         const mq = window.matchMedia('(prefers-color-scheme: dark)');
-        const apply = () =>
+        const apply = () => {
             document.documentElement.classList.toggle('dark', mq.matches);
-        apply();
+            document.documentElement.style.colorScheme = mq.matches
+                ? 'dark'
+                : 'light';
+        };
         mq.addEventListener('change', apply);
         return () => mq.removeEventListener('change', apply);
     }, []);

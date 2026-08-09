@@ -1,10 +1,30 @@
-import { AiOutlineLogout, AiOutlineSetting } from 'react-icons/ai';
+import {
+    AiOutlineLogout,
+    AiOutlineMoon,
+    AiOutlineSetting,
+    AiOutlineSun,
+} from 'react-icons/ai';
+import { useState } from 'react';
 import { NavLink } from 'react-router';
 import { useAuth } from '../context/auth-context';
 import { formatDate } from '../utils/formatDate';
 
 const Profile = () => {
     const { user, logout } = useAuth();
+
+    // ponytail: kein ThemeContext — das DOM ist der State, gesetzt vom
+    // Inline-Script in index.html. Nur diese Komponente schreibt ihn.
+    const [dark, setDark] = useState(() =>
+        document.documentElement.classList.contains('dark'),
+    );
+
+    const toggleTheme = () => {
+        const next = !dark;
+        document.documentElement.classList.toggle('dark', next);
+        document.documentElement.style.colorScheme = next ? 'dark' : 'light';
+        localStorage.setItem('soko:theme', next ? 'dark' : 'light');
+        setDark(next);
+    };
 
     const initials =
         user?.name
@@ -33,6 +53,19 @@ const Profile = () => {
                         <AiOutlineSetting size={24} className="text-primary" />
                         Einstellungen
                     </NavLink>
+                    <button
+                        className="flex field gap-3 cursor-pointer items-center"
+                        onClick={toggleTheme}
+                        role="switch"
+                        aria-checked={dark}
+                    >
+                        {dark ? (
+                            <AiOutlineSun size={24} className="text-primary" />
+                        ) : (
+                            <AiOutlineMoon size={24} className="text-primary" />
+                        )}
+                        {dark ? 'Heller Modus' : 'Dunkler Modus'}
+                    </button>
                     <button
                         className="flex field gap-3 cursor-pointer"
                         onClick={logout}

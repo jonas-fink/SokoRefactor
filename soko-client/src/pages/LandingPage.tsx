@@ -11,6 +11,9 @@ import ChatModal from '../components/ChatModal';
 import { useFavorites } from '../hooks/useFavorites';
 import StatCard from '../components/StatCard';
 import Pagination from '../components/Pagination';
+import SearchFilter from '../components/SearchFilter';
+import { matchesQuery } from '../utils/search';
+import { useDebounced } from '../hooks/useDebounced';
 
 const PAGE_SIZE = 9;
 
@@ -28,6 +31,7 @@ const LandingPage = () => {
     const [activityPage, setActivityPage] = useState(1);
     const [error, setError] = useState(false);
     const [chatOpen, setChatOpen] = useState(false);
+    const search = useDebounced(query);
 
     useEffect(() => {
         api.get<Category[]>('/categories?appliesTo=activity')
@@ -41,14 +45,17 @@ const LandingPage = () => {
             .catch(() => setError(true));
     }, []);
 
+    // Die Events sind paginiert, also sucht das Backend — clientseitig faende
+    // die Suche nur die gerade sichtbare Seite.
     useEffect(() => {
         const params = new URLSearchParams({ page: String(page) });
         if (category) params.set('category', category);
         if (from) params.set('date', from);
+        if (search) params.set('q', search);
         api.get<EventsPage>(`/events?${params}`)
             .then(setData)
             .catch(() => setError(true));
-    }, [page, category, from]);
+    }, [page, category, from, search]);
 
     const totalPages = data ? Math.ceil(data.total / data.pageSize) : 0;
 
@@ -56,15 +63,8 @@ const LandingPage = () => {
     const labelOf = (key?: string) =>
         categories.find((c) => c.key === key)?.label ?? key;
 
-    const matchesQuery = (...fields: (string | undefined)[]) =>
-        fields.some((f) => f?.toLowerCase().includes(query.toLowerCase()));
-
-    const filteredData = data?.events.filter((d) =>
-        matchesQuery(d.title, d.description, d.category),
-    );
-
-    // Activities werden clientseitig gefiltert — GET /activities kennt weder
-    // Pagination noch Textsuche, die Liste ist klein.
+    // Activities werden clientseitig gefiltert — GET /activities liefert alles
+    // auf einmal, die Suche laeuft also ohnehin ueber den kompletten Bestand.
     // Mit Datumsauswahl genau dieser Tag, sonst alles ab heute Mitternacht —
     // dieselbe Logik wie im Backend für die Events.
     // `from` ist YYYY-MM-DD; ohne Zeitanteil würde Date() das als UTC lesen.
@@ -79,7 +79,7 @@ const LandingPage = () => {
             (!category || a.tags.includes(category)) &&
             new Date(a.date).getTime() >= dayStart &&
             new Date(a.date).getTime() < dayEnd &&
-            matchesQuery(a.title, a.description, ...a.tags),
+            matchesQuery(query, a.title, a.description, ...a.tags),
     );
 
     // Clientseitige Pagination: geladen ist ohnehin alles, und die Textsuche
@@ -148,52 +148,18 @@ const LandingPage = () => {
                             Finde das passende für dich aus einer breiten
                             Auswahl an Angeboten
                         </p>
-                        <div className="flex md:flex-nowrap md:flex-row md:items-end flex-col gap-3">
-                            <input
-                                type="search"
-                                className="field flex-1 min-w-0"
-                                placeholder="Suche nach Schlagwort..."
-                                value={query}
-                                onChange={(e) => setQuery(e.target.value)}
-                            />
-                            <div className="flex flex-col gap-1 shrink-0">
-                                {/* Sichtbares Label: ein leeres Datumsfeld sagt
-                                    von sich aus nicht, wofür es da ist. */}
-                                <label
-                                    htmlFor="date-filter"
-                                    className="text-sm text-ink-mute"
-                                >
-                                    Datum
-                                </label>
-                                <div className="relative">
-                                    <input
-                                        id="date-filter"
-                                        type="date"
-                                        className="field pr-14 w-full md:min-w-0"
-                                        value={from}
-                                        onChange={(e) => {
-                                            setFrom(e.target.value);
-                                            setPage(1);
-                                        }}
-                                    />
-                                    {from && (
-                                        // right-9: links neben dem nativen
-                                        // Picker-Indikator, nicht darüber.
-                                        <button
-                                            type="button"
-                                            className="text-error absolute right-9 top-1/2 -translate-y-1/2 cursor-pointer text-sm leading-none"
-                                            aria-label="Datum zurücksetzen"
-                                            onClick={() => {
-                                                setFrom('');
-                                                setPage(1);
-                                            }}
-                                        >
-                                            ✕
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
+                        <SearchFilter
+                            query={query}
+                            onQuery={(value) => {
+                                setQuery(value);
+                                setPage(1);
+                            }}
+                            date={from}
+                            onDate={(value) => {
+                                setFrom(value);
+                                setPage(1);
+                            }}
+                        />
                     </div>
 
                     <div className="flex flex-col gap-6">
@@ -288,7 +254,7 @@ const LandingPage = () => {
                 Veranstaltungskalender der Stadt Kassel
             </h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredData?.map((event) => (
+                {data?.events.map((event) => (
                     <OfferCard
                         key={event._id}
                         itemType="ScrapedEvent"

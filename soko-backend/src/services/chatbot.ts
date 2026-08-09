@@ -1,5 +1,6 @@
 import { Beratung, Category } from '#models';
 import { CATEGORY_KEYS } from '#utils';
+import type { ChatTurn } from '#schemas';
 import { askGemini } from './gemini.ts';
 
 /**
@@ -107,6 +108,20 @@ const HANDOFF = {
     hint: 'Alle Beratungsstellen hier sind kostenlos und vertraulich — ein Anruf oder ein Besuch reicht.',
 };
 
+/**
+ * Alle **User**-Turns plus die aktuelle Nachricht als ein Text.
+ *
+ * Grundlage fürs Keyword-Matching, und das ist Sicherheit, nicht Kosmetik: bei
+ * „und was ist mit der Miete?" als Rückfrage steckt das sensible Thema im
+ * vorigen Turn — ohne den Verlauf fiele der Disclaimer weg. Bot-Turns bleiben
+ * bewusst draußen: der Verlauf kommt vom Client, ein manipuliertes „Assistent:"
+ * darf die Keys nicht steuern.
+ */
+export const conversationText = (history: ChatTurn[], message: string) =>
+    [...history.filter((h) => h.role === 'user').map((h) => h.text), message].join(
+        ' ',
+    );
+
 /** Keys der Kategorien, die zur Nachricht passen — die stärkste Übereinstimmung zuerst. */
 export const matchCategoryKeys = (message: string): string[] => {
     const text = message.toLowerCase();
@@ -177,8 +192,14 @@ export const knownOnly = <T>(ids: string[], byId: Map<string, T>): T[] =>
  * Treffer selbst kommen aus der Datenbank und werden gegen die Kandidatenliste
  * geprüft — eine erfundene Beratungsstelle kann so nicht durchrutschen.
  * Ohne Key, ohne Quota oder bei kaputter Antwort greift die Keyword-Tabelle.
+ *
+ * `history` macht Rückfragen möglich: der Server bleibt zustandslos, den
+ * Verlauf schickt der Client mit (validiert und begrenzt in `chatBodySchema`).
  */
-export const answer = async (message: string): Promise<ChatReply> => {
+export const answer = async (
+    message: string,
+    history: ChatTurn[] = [],
+): Promise<ChatReply> => {
     const [candidates, categories] = await Promise.all([
         Beratung.find()
             .select('title tags description')
@@ -199,7 +220,9 @@ export const answer = async (message: string): Promise<ChatReply> => {
     // Der Keyword-Treffer läuft immer mit: er ist Fallback *und* zweite Meinung
     // für den Disclaimer — erkennt eine der beiden Seiten ein sensibles Thema,
     // steht der Hinweis da.
-    const keywordKeys = matchCategoryKeys(message);
+    // Über das ganze Gespräch, nicht nur den letzten Satz — sonst verliert eine
+    // Rückfrage den Disclaimer des eigentlichen Themas.
+    const keywordKeys = matchCategoryKeys(conversationText(history, message));
 
     const ai = await askGemini(
         message,
@@ -210,6 +233,7 @@ export const answer = async (message: string): Promise<ChatReply> => {
             description: b.description ?? '',
         })),
         categories.map((c) => ({ key: c.key, label: c.label })),
+        history,
     );
 
     if (ai) {

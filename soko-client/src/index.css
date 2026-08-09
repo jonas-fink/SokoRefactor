@@ -180,6 +180,14 @@
 @layer base {
     html {
         scroll-behavior: smooth;
+        /* Native Controls (Datumsfeld, Picker, Scrollbars) folgen damit dem
+           OS-Theme — derselben Quelle, aus der AppLayout die .dark-Klasse
+           setzt. Ohne das rendert <input type="date"> im Dark Mode schwarz
+           auf dunkel: Text und Kalender-Icon unsichtbar.
+           ponytail: kein eigenes ::-webkit-calendar-picker-indicator-Masking
+           wie bei .field::-webkit-search-cancel-button — das Icon invertiert
+           der Browser hier selbst. */
+        color-scheme: light dark;
     }
     body {
         background-color: var(--color-bg);

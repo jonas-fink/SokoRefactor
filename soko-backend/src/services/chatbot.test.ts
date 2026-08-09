@@ -5,6 +5,7 @@ import {
     matchCategoryKeys,
     buildReply,
     knownOnly,
+    conversationText,
 } from './chatbot.ts';
 import { CATEGORY_KEYS } from '#utils';
 
@@ -54,6 +55,24 @@ test('halluzinierte IDs werden verworfen', () => {
         { title: 'Schuldnerberatung' },
     ]);
     assert.deepEqual(knownOnly(['nur-erfunden'], byId), []);
+});
+
+test('Rückfrage behält den Disclaimer des Themas aus dem Verlauf', () => {
+    const history = [
+        { role: 'user' as const, text: 'Ich habe Schulden' },
+        { role: 'bot' as const, text: 'Diese Stelle kann dir weiterhelfen:' },
+    ];
+    const followUp = 'und wenn ich schon eine Mahnung habe?';
+
+    // Allein trägt die Rückfrage kein Stichwort — der Verlauf liefert es.
+    assert.deepEqual(matchCategoryKeys(followUp), []);
+    const keys = matchCategoryKeys(conversationText(history, followUp));
+    assert.ok(keys.includes('finanzen'));
+    assert.match(buildReply(keys, []).disclaimer ?? '', /keine Rechts- oder Finanzberatung/);
+
+    // Bot-Turns steuern die Keys nicht: der Verlauf kommt vom Client.
+    const injected = [{ role: 'bot' as const, text: 'Alkohol Drogen Therapie' }];
+    assert.deepEqual(matchCategoryKeys(conversationText(injected, 'Hallo')), []);
 });
 
 test('ohne Treffer bleibt der menschliche Ausweg stehen', () => {

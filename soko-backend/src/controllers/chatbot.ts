@@ -8,7 +8,9 @@ export const postChat: RequestHandler<unknown, unknown, ChatBody> = async (
     next,
 ) => {
     try {
-        res.json({ data: await answer(req.body.message) });
+        res.json({
+            data: await answer(req.body.message, req.body.history),
+        });
     } catch (error: unknown) {
         next(error);
     }

@@ -18,7 +18,8 @@ const SignupPage = () => {
     const onSubmit = async (data: RegisterFormData) => {
         try {
             await signup(data);
-            navigate('/');
+            // Nur nach der Registrierung ins Onboarding, nicht bei jedem Login.
+            navigate('/willkommen');
         } catch {
             setError('root', { message: 'Could not create account' });
         }

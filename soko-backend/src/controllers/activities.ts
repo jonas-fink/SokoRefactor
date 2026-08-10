@@ -185,7 +185,7 @@ export const patchActivity: RequestHandler<
         const activity = await Activity.findByIdAndUpdate(
             id,
             { $set: updates },
-            { new: true, runValidators: true },
+            { returnDocument: 'after', runValidators: true },
         ).populate('userId', 'name email');
 
         if (!activity) {

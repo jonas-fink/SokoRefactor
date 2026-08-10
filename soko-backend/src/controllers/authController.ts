@@ -3,11 +3,13 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { User, RefreshToken } from '#models';
 import type { UserRole } from '#models';
+import { assertCategories } from '#utils';
 import type {
     RegisterInput,
     LoginInput,
     ChangeEmailInput,
     ChangePasswordInput,
+    PreferencesInput,
 } from '#schemas';
 
 const REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -238,6 +240,26 @@ export const changePassword: RequestHandler<
 
 export const me: RequestHandler = async (req, res) => {
     const user = await User.findById(req.userId);
+    if (!user) {
+        res.status(404).json({ message: 'Benutzer nicht gefunden' });
+        return;
+    }
+    res.json({ data: user });
+};
+
+/** Setzt `preferencesSetAt` immer mit — auch beim leeren Body aus dem
+ *  „Überspringen" des Wizards, sonst kehrt der Wizard bei jedem Login wieder. */
+export const updatePreferences: RequestHandler<
+    {},
+    {},
+    PreferencesInput
+> = async (req, res) => {
+    await assertCategories(req.body.categories);
+    const user = await User.findByIdAndUpdate(
+        req.userId,
+        { preferences: req.body, preferencesSetAt: new Date() },
+        { returnDocument: 'after' },
+    );
     if (!user) {
         res.status(404).json({ message: 'Benutzer nicht gefunden' });
         return;

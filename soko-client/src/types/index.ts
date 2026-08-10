@@ -12,12 +12,32 @@ export interface PopulatedUser {
     email?: string;
 }
 
+/** Spiegelt das Filtervokabular (`hooks/useFilters.ts`) — dieselben Keys wie in
+ *  der URL, nur als Startwerte statt als Zustand. */
+export interface Preferences {
+    languages: string[];
+    audiences: string[];
+    /** `Category.key` */
+    categories: string[];
+    freeOnly: boolean;
+}
+
+export const EMPTY_PREFERENCES: Preferences = {
+    languages: [],
+    audiences: [],
+    categories: [],
+    freeOnly: false,
+};
+
 export interface AuthUser {
     id: string;
     name?: string;
     email: string;
     role: 'user' | 'admin' | 'creator';
     createdAt: string;
+    preferences?: Preferences;
+    /** Gesetzt = Onboarding erledigt, auch bei „Überspringen". */
+    preferencesSetAt?: string;
 }
 
 export interface ApiResponse<T> {

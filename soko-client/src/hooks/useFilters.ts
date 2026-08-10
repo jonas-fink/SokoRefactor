@@ -1,5 +1,9 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router';
+// Mit Endung, damit `useFilters.test.ts` das Modul unter `node --test` laden
+// kann — der Node-Resolver ergaenzt kein `.ts`.
+import { useAuth } from '../context/auth-context.ts';
+import type { Preferences } from '../types';
 
 /**
  * Der Filterzustand **ist** die URL. Kein Context, kein Store: damit ist jede
@@ -67,10 +71,40 @@ export const countActive = (filters: Filters) =>
     filters.lang.length +
     filters.for.length;
 
+/**
+ * Praeferenzen → Filter. `category` ist einwertig, `preferences.categories`
+ * nicht: ponytail: bei mehreren Themen bleibt die Kategorie offen, statt eines
+ * davon willkuerlich zu waehlen. Mehrfachauswahl kaeme erst mit einer
+ * mehrwertigen `category`-Achse im Backend.
+ */
+const fromPreferences = (prefs: Preferences): URLSearchParams =>
+    toQuery({
+        q: '',
+        date: '',
+        category: prefs.categories.length === 1 ? prefs.categories[0] : '',
+        lang: prefs.languages,
+        for: prefs.audiences,
+        free: prefs.freeOnly,
+        page: 1,
+    });
+
 export const useFilters = () => {
     const [params, setParams] = useSearchParams();
+    const { user } = useAuth();
     const filters = useMemo(() => parseFilters(params), [params]);
     const query = useMemo(() => toQuery(filters).toString(), [filters]);
+
+    // Praeferenzen sind Startwerte, kein Zustand: sie schreiben die **leere**
+    // URL einmal voll, danach gewinnt immer die URL — sonst liesse sich ein
+    // vorgefilterter Wert nie mehr abwaehlen und „Zuruecksetzen" waere wirkungslos.
+    const seeded = useRef(false);
+    useEffect(() => {
+        if (seeded.current || !user) return;
+        seeded.current = true;
+        if ([...params.keys()].length > 0 || !user.preferences) return;
+        const start = fromPreferences(user.preferences);
+        if (start.toString()) setParams(start, { replace: true });
+    }, [user, params, setParams]);
 
     const write = useCallback(
         (next: Filters) => {

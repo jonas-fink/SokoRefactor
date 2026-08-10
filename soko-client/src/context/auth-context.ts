@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { AuthUser } from '../types';
+import type { AuthUser, Preferences } from '../types';
 
 interface LoginInput {
     email: string;
@@ -18,6 +18,12 @@ export interface AuthContextValue {
     login: (input: LoginInput) => Promise<void>;
     signup: (input: SignupInput) => Promise<void>;
     becomeCreator: () => Promise<void>;
+    savePreferences: (preferences: Preferences) => Promise<void>;
+    changeEmail: (email: string, currentPassword: string) => Promise<void>;
+    changePassword: (
+        currentPassword: string,
+        newPassword: string,
+    ) => Promise<void>;
     logout: () => Promise<void>;
 }
 

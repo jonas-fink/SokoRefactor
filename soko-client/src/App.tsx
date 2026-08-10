@@ -17,6 +17,7 @@ import BeratungDetail from './pages/BeratungDetail';
 import Erstellen from './pages/Erstellen';
 import AngebotDetail from './pages/AngebotDetail';
 import Datenschutz from './pages/Datenschutz';
+import Willkommen from './pages/Willkommen';
 
 const App = () => {
     return (
@@ -24,6 +25,10 @@ const App = () => {
             <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
+                {/* Ohne AppLayout: waehrend des Onboardings keine Sidebar. */}
+                <Route element={<ProtectedRoute />}>
+                    <Route path="/willkommen" element={<Willkommen />} />
+                </Route>
                 <Route path="/" element={<AppLayout />}>
                     <Route index element={<LandingPage />} />
                     <Route

@@ -8,6 +8,7 @@ import {
     becomeCreator,
     changeEmail,
     changePassword,
+    updatePreferences,
 } from '#controllers';
 import {
     validateBody,
@@ -20,6 +21,7 @@ import {
     loginSchema,
     changeEmailSchema,
     changePasswordSchema,
+    preferencesSchema,
 } from '#schemas';
 
 const router = Router();
@@ -31,6 +33,12 @@ router.post('/logout', logout);
 router.get('/me', protect, me);
 router.patch('/become-creator', protect, becomeCreator);
 router.patch('/email', protect, validateBody(changeEmailSchema), changeEmail);
+router.patch(
+    '/preferences',
+    protect,
+    validateBody(preferencesSchema),
+    updatePreferences,
+);
 router.patch(
     '/password',
     protect,

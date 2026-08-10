@@ -156,7 +156,7 @@ export const patchBeratung: RequestHandler<
         const beratung = await Beratung.findByIdAndUpdate(
             id,
             { $set: updates },
-            { new: true, runValidators: true },
+            { returnDocument: 'after', runValidators: true },
         ).populate('userId', 'name');
 
         if (!beratung) {

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { api, setAccessToken, tryRefresh } from '../utils/api';
-import type { AuthUser } from '../types';
+import type { AuthUser, Preferences } from '../types';
 import { AuthContext } from './auth-context';
 
 interface LoginInput {
@@ -41,18 +41,17 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         };
     }, []);
 
-    const login = useCallback(
-        async ({ email, password }: LoginInput) => {
-            const data = await api.post<{
-                accessToken: string;
-                user: AuthUser;
-            }>('/auth/login', { email, password });
-            setAccessToken(data.accessToken);
-            setUser(data.user);
-            navigate('/');
-        },
-        [navigate],
-    );
+    const login = useCallback(async ({ email, password }: LoginInput) => {
+        const data = await api.post<{
+            accessToken: string;
+            user: AuthUser;
+        }>('/auth/login', { email, password });
+        setAccessToken(data.accessToken);
+        setUser(data.user);
+        // Wohin es danach geht, entscheidet die Seite: Login nach `/`,
+        // Signup nach `/willkommen`. Zwei Navigationen auf denselben
+        // Vorgang kollidieren sonst mit dem Onboarding.
+    }, []);
 
     const signup = useCallback(
         async ({ name, email, password }: SignupInput) => {
@@ -62,13 +61,47 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             }>('/auth/register', { name, email, password });
             setAccessToken(data.accessToken);
             setUser(data.user);
-            navigate('/');
         },
-        [navigate],
+        [],
     );
 
     const becomeCreator = useCallback(async () => {
         const user = await api.patch<AuthUser>('/auth/become-creator');
+        setUser(user);
+    }, []);
+
+    const changeEmail = useCallback(
+        async (email: string, currentPassword: string) => {
+            setUser(
+                await api.patch<AuthUser>('/auth/email', {
+                    email,
+                    currentPassword,
+                }),
+            );
+        },
+        [],
+    );
+
+    const changePassword = useCallback(
+        async (currentPassword: string, newPassword: string) => {
+            // Der Server verwirft **alle** Refresh-Tokens und gibt neue aus.
+            // Ohne das neue Access-Token hier fliegt der Nutzer beim naechsten
+            // Request raus — direkt nachdem er sein Passwort geaendert hat.
+            const data = await api.patch<{
+                accessToken: string;
+                user: AuthUser;
+            }>('/auth/password', { currentPassword, newPassword });
+            setAccessToken(data.accessToken);
+            setUser(data.user);
+        },
+        [],
+    );
+
+    const savePreferences = useCallback(async (preferences: Preferences) => {
+        const user = await api.patch<AuthUser>(
+            '/auth/preferences',
+            preferences,
+        );
         setUser(user);
     }, []);
 
@@ -92,7 +125,17 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return (
         <AuthContext.Provider
-            value={{ user, loading, login, signup, becomeCreator, logout }}
+            value={{
+                user,
+                loading,
+                login,
+                signup,
+                becomeCreator,
+                savePreferences,
+                changeEmail,
+                changePassword,
+                logout,
+            }}
         >
             {children}
         </AuthContext.Provider>

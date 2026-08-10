@@ -11,15 +11,18 @@ import {
     AiOutlineCalendar,
 } from 'react-icons/ai';
 import { formatDate } from '../utils/formatDate';
-import type { Activity, Category, ItemType, ScrapedEvent } from '../types';
+import { useCategories } from '../hooks/useCategories';
+import { useVocabulary } from '../hooks/useVocabulary';
+import type { Activity, ItemType, ScrapedEvent } from '../types';
 
 const AngebotDetail = () => {
     const { itemType, id } = useParams<{ itemType: ItemType; id: string }>();
     const { isFavorite, toggle, enabled } = useFavorites();
     const [item, setItem] = useState<Activity | ScrapedEvent | null>(null);
-    const [categories, setCategories] = useState<Category[]>([]);
     const [error, setError] = useState('');
     const navigate = useNavigate();
+    const { labelOf } = useCategories('activity');
+    const { labelOf: axisLabelOf } = useVocabulary();
 
     useEffect(() => {
         if (!itemType || !id) return;
@@ -29,13 +32,6 @@ const AngebotDetail = () => {
             .then(setItem)
             .catch(() => setError('Angebot konnte nicht geladen werden'));
     }, [itemType, id]);
-
-    useEffect(() => {
-        // Gespeichert wird der Category-Key, angezeigt das Label.
-        api.get<Category[]>('/categories?appliesTo=activity')
-            .then(setCategories)
-            .catch(() => setCategories([]));
-    }, []);
 
     if (error) return <p className="py-8 text-error">{error}</p>;
     if (!item || !itemType || !id)
@@ -49,8 +45,11 @@ const AngebotDetail = () => {
     const coordinates =
         activity?.location?.coordinates ?? event?.location?.coordinates;
     const favorite = isFavorite(itemType, id);
-    const labelOf = (key?: string) =>
-        categories.find((c) => c.key === key)?.label ?? key;
+    // Ohne Vokabular faellt die Zeile weg — ein roher Key waere schlechter.
+    const axis = (keys: string[] = []) =>
+        keys.map(axisLabelOf).filter(Boolean).join(', ');
+    const spoken = axis(item.availableLanguages);
+    const audience = axis(item.targetAudience);
 
     return (
         <div className="mx-auto flex md:max-w-6xl flex-col gap-6 md:p-8 pb-3">
@@ -103,6 +102,23 @@ const AngebotDetail = () => {
             </div>
 
             <p className="text-ink-soft">{item.description}</p>
+
+            {(spoken || audience) && (
+                <div className="flex flex-col gap-1">
+                    {spoken && (
+                        <p>
+                            <span className="text-ink-mute">Sprachen: </span>
+                            <span className="text-ink-soft">{spoken}</span>
+                        </p>
+                    )}
+                    {audience && (
+                        <p>
+                            <span className="text-ink-mute">Für: </span>
+                            <span className="text-ink-soft">{audience}</span>
+                        </p>
+                    )}
+                </div>
+            )}
 
             <div className="field flex flex-col md:flex-row items-start gap-3 md:gap-6">
                 <p className="flex gap-3">

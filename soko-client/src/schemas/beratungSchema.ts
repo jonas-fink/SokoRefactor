@@ -38,7 +38,11 @@ export const beratungFormSchema = z.object({
     openingHours: openingHoursSchema,
     lng: z.number().min(-180).max(180),
     lat: z.number().min(-90).max(90),
-    tags: z.string().optional(),
+    // Keys aus geschlossenen Listen (`GET /categories`, `GET /vocabulary`),
+    // kein Freitext — das Backend prueft dieselben Whitelists.
+    tags: z.array(z.string()),
+    availableLanguages: z.array(z.string()),
+    targetAudience: z.array(z.string()),
     phone: z.string().trim().optional(),
     address: z.string().trim().optional(),
     /** komma-getrennte Anwendungsfälle, wie `tags` — Dokumente kommen per Upload dazu. */

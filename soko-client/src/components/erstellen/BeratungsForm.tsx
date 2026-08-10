@@ -12,6 +12,9 @@ import {
 } from '../../schemas/beratungSchema';
 import { api } from '../../utils/api';
 import { geocode } from '../../utils/geocode';
+import { useCategories } from '../../hooks/useCategories';
+import { useVocabulary } from '../../hooks/useVocabulary';
+import ChipGroup from '../ChipGroup';
 
 const BeratungsForm = () => {
     const imageRef = useRef<HTMLInputElement>(null);
@@ -19,6 +22,8 @@ const BeratungsForm = () => {
         register,
         handleSubmit,
         setValue,
+        getValues,
+        watch,
         formState: { errors, isSubmitting },
         setError,
     } = useForm<BeratungFormData>({
@@ -27,9 +32,31 @@ const BeratungsForm = () => {
             lng: 9.4797,
             lat: 51.3127,
             openingHours: emptyOpeningHours,
+            tags: [],
+            availableLanguages: [],
+            targetAudience: [],
         },
     });
     const navigate = useNavigate();
+
+    const { categories } = useCategories('beratung');
+    const { languages, audiences } = useVocabulary();
+    const [tags, availableLanguages, targetAudience] = watch([
+        'tags',
+        'availableLanguages',
+        'targetAudience',
+    ]);
+
+    type ChipField = 'tags' | 'availableLanguages' | 'targetAudience';
+    const toggle = (field: ChipField, key: string) => {
+        const current = getValues(field);
+        setValue(
+            field,
+            current.includes(key)
+                ? current.filter((v) => v !== key)
+                : [...current, key],
+        );
+    };
 
     // Die Adresse wird jetzt gespeichert *und* geokodiert — register liefert das
     // eigene onBlur, das vor der Geocoder-Suche laufen muss.
@@ -70,7 +97,12 @@ const BeratungsForm = () => {
                 coordinates: [data.lng, data.lat],
             }),
         );
-        form.append('tags', JSON.stringify(splitList(data.tags)));
+        form.append('tags', JSON.stringify(data.tags));
+        form.append(
+            'availableLanguages',
+            JSON.stringify(data.availableLanguages),
+        );
+        form.append('targetAudience', JSON.stringify(data.targetAudience));
         if (data.phone) form.append('phone', data.phone);
         if (data.address) form.append('address', data.address);
         form.append(
@@ -229,12 +261,27 @@ const BeratungsForm = () => {
                 </p>
             </div>
 
-            <div className="flex flex-col gap-2">
-                <label htmlFor="tags" className="label">
-                    TAGS (komma-getrennt)
-                </label>
-                <input id="tags" {...register('tags')} className="field" />
-            </div>
+            <ChipGroup
+                legend="THEMEN"
+                options={categories}
+                selected={tags}
+                onToggle={(key) => toggle('tags', key)}
+            />
+
+            <ChipGroup
+                legend="BERATUNG AUF"
+                options={languages}
+                selected={availableLanguages}
+                onToggle={(key) => toggle('availableLanguages', key)}
+                hint="Nichts auswählen = keine Angabe; die Stelle bleibt in jedem Sprachfilter sichtbar."
+            />
+
+            <ChipGroup
+                legend="FÜR WEN"
+                options={audiences}
+                selected={targetAudience}
+                onToggle={(key) => toggle('targetAudience', key)}
+            />
 
             <div className="flex flex-col gap-2">
                 <label htmlFor="image" className="label">

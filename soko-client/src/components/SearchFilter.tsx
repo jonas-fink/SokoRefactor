@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { api } from '../utils/api';
 import { useDebounced } from '../hooks/useDebounced';
+import { useVocabulary } from '../hooks/useVocabulary';
 import type { Filters } from '../hooks/useFilters';
-import type { Category, FilterVocabulary } from '../types';
+import type { Category } from '../types';
 import { AiOutlineFilter } from 'react-icons/ai';
 
 interface SearchFilterProps {
@@ -29,19 +29,13 @@ const SearchFilter = ({
     categories,
 }: SearchFilterProps) => {
     const dialog = useRef<HTMLDialogElement>(null);
-    const [vocabulary, setVocabulary] = useState<FilterVocabulary | null>(null);
+    // Ohne Vokabular fehlen nur die Chips; Suche und Datum stehen weiter.
+    const { languages, audiences } = useVocabulary();
 
     // Das Eingabefeld tippt lokal, die URL bekommt es verzögert — sonst läge
     // pro Tastendruck ein History-Eintrag und ein Request.
     const [text, setText] = useState(filters.q);
     const search = useDebounced(text);
-
-    useEffect(() => {
-        api.get<FilterVocabulary>('/vocabulary')
-            .then(setVocabulary)
-            // Ohne Vokabular fehlen nur die Chips; Suche und Datum stehen weiter.
-            .catch(() => setVocabulary(null));
-    }, []);
 
     useEffect(() => {
         if (search !== filters.q) setFilter('q', search);
@@ -175,25 +169,25 @@ const SearchFilter = ({
                         </div>
                     )}
 
-                    {vocabulary && (
-                        <>
-                            <div className="flex flex-col gap-2">
-                                <span className="text-sm text-ink-mute">
-                                    Sprache
-                                </span>
-                                {chips('lang', vocabulary.languages)}
-                                <p className="text-xs text-ink-mute">
-                                    Angebote ohne Sprachangabe bleiben sichtbar.
-                                </p>
-                            </div>
+                    {languages.length > 0 && (
+                        <div className="flex flex-col gap-2">
+                            <span className="text-sm text-ink-mute">
+                                Sprache
+                            </span>
+                            {chips('lang', languages)}
+                            <p className="text-xs text-ink-mute">
+                                Angebote ohne Sprachangabe bleiben sichtbar.
+                            </p>
+                        </div>
+                    )}
 
-                            <div className="flex flex-col gap-2">
-                                <span className="text-sm text-ink-mute">
-                                    Für wen
-                                </span>
-                                {chips('for', vocabulary.audiences)}
-                            </div>
-                        </>
+                    {audiences.length > 0 && (
+                        <div className="flex flex-col gap-2">
+                            <span className="text-sm text-ink-mute">
+                                Für wen
+                            </span>
+                            {chips('for', audiences)}
+                        </div>
                     )}
 
                     {showEventFilters && (

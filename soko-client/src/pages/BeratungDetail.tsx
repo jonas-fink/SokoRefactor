@@ -10,6 +10,8 @@ import {
 import { api, BASE } from '../utils/api';
 import MapView from '../components/map/MapView';
 import { WEEKDAYS, fromMinutes } from '../schemas/beratungSchema';
+import { useCategories } from '../hooks/useCategories';
+import { useVocabulary } from '../hooks/useVocabulary';
 import type { Beratung } from '../types';
 
 const BeratungDetail = () => {
@@ -17,6 +19,8 @@ const BeratungDetail = () => {
     const navigate = useNavigate();
     const [beratung, setBeratung] = useState<Beratung | null>(null);
     const [error, setError] = useState('');
+    const { labelOf } = useCategories('beratung');
+    const { labelOf: axisLabelOf } = useVocabulary();
 
     useEffect(() => {
         api.get<Beratung>(`/beratungen/${id}`)
@@ -26,6 +30,12 @@ const BeratungDetail = () => {
 
     if (error) return <p className="py-8 text-error">{error}</p>;
     if (!beratung) return <p className="py-8 text-ink-mute">Lädt …</p>;
+
+    // Ohne Vokabular faellt die Zeile weg — ein roher Key waere schlechter.
+    const axis = (keys: string[] = []) =>
+        keys.map(axisLabelOf).filter(Boolean).join(', ');
+    const spoken = axis(beratung.availableLanguages);
+    const audience = axis(beratung.targetAudience);
 
     return (
         <div className="flex flex-col gap-6 max-w-6xl mx-auto md:p-8 pb-3">
@@ -58,10 +68,29 @@ const BeratungDetail = () => {
             <div className="flex flex-wrap gap-2 items-center">
                 {beratung.tags.map((t) => (
                     <span key={t} className="chip">
-                        {t}
+                        {labelOf(t)}
                     </span>
                 ))}
             </div>
+
+            {(spoken || audience) && (
+                <div className="flex flex-col gap-1">
+                    {spoken && (
+                        <p>
+                            <span className="text-ink-mute">
+                                Beratung auf:{' '}
+                            </span>
+                            <span className="text-ink-soft">{spoken}</span>
+                        </p>
+                    )}
+                    {audience && (
+                        <p>
+                            <span className="text-ink-mute">Für: </span>
+                            <span className="text-ink-soft">{audience}</span>
+                        </p>
+                    )}
+                </div>
+            )}
 
             {(beratung.phone || beratung.address) && (
                 <div className="flex md:flex-row flex-col gap-3">

@@ -8,20 +8,51 @@ import {
 } from '../../schemas/activitySchema';
 import { api } from '../../utils/api';
 import { geocode } from '../../utils/geocode';
+import { useCategories } from '../../hooks/useCategories';
+import { useVocabulary } from '../../hooks/useVocabulary';
+import ChipGroup from '../ChipGroup';
 
 const ActivityForm = () => {
     const {
         register,
         handleSubmit,
         setValue,
+        getValues,
+        watch,
         formState: { errors, isSubmitting },
         setError,
     } = useForm<ActivityFormData>({
         resolver: zodResolver(activityFormSchema),
-        defaultValues: { price: 0, lng: 9.4797, lat: 51.3127 },
+        defaultValues: {
+            price: 0,
+            lng: 9.4797,
+            lat: 51.3127,
+            tags: [],
+            availableLanguages: [],
+            targetAudience: [],
+        },
     });
     const imageRef = useRef<HTMLInputElement>(null);
     const navigate = useNavigate();
+
+    const { categories } = useCategories('activity');
+    const { languages, audiences } = useVocabulary();
+    const [tags, availableLanguages, targetAudience] = watch([
+        'tags',
+        'availableLanguages',
+        'targetAudience',
+    ]);
+
+    type ChipField = 'tags' | 'availableLanguages' | 'targetAudience';
+    const toggle = (field: ChipField, key: string) => {
+        const current = getValues(field);
+        setValue(
+            field,
+            current.includes(key)
+                ? current.filter((v) => v !== key)
+                : [...current, key],
+        );
+    };
 
     const [geo, setGeo] = useState<{
         status: 'idle' | 'loading' | 'ok' | 'notfound' | 'error';
@@ -56,17 +87,12 @@ const ActivityForm = () => {
                 coordinates: [data.lng, data.lat],
             }),
         );
+        form.append('tags', JSON.stringify(data.tags));
         form.append(
-            'tags',
-            JSON.stringify(
-                data.tags
-                    ? data.tags
-                          .split(',')
-                          .map((t) => t.trim())
-                          .filter(Boolean)
-                    : [],
-            ),
+            'availableLanguages',
+            JSON.stringify(data.availableLanguages),
         );
+        form.append('targetAudience', JSON.stringify(data.targetAudience));
         const image = imageRef.current?.files?.[0];
         if (image) form.append('image', image);
 
@@ -181,12 +207,27 @@ const ActivityForm = () => {
                 />
             </div>
 
-            <div className="flex flex-col gap-2">
-                <label htmlFor="tags" className="label">
-                    TAGS (komma-getrennt)
-                </label>
-                <input id="tags" {...register('tags')} className="field" />
-            </div>
+            <ChipGroup
+                legend="THEMEN"
+                options={categories}
+                selected={tags}
+                onToggle={(key) => toggle('tags', key)}
+            />
+
+            <ChipGroup
+                legend="SPRACHEN"
+                options={languages}
+                selected={availableLanguages}
+                onToggle={(key) => toggle('availableLanguages', key)}
+                hint="Nichts auswählen = keine Angabe; das Angebot bleibt in jedem Sprachfilter sichtbar."
+            />
+
+            <ChipGroup
+                legend="FÜR WEN"
+                options={audiences}
+                selected={targetAudience}
+                onToggle={(key) => toggle('targetAudience', key)}
+            />
 
             <div className="flex flex-col gap-2">
                 <label htmlFor="image" className="label">

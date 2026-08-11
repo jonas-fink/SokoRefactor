@@ -1,12 +1,28 @@
 import { Router } from 'express';
-import { validateBody, chatRateLimiter } from '#middlewares';
-import { postChat } from '#controllers';
+import {
+    validateBody,
+    chatRateLimiter,
+    optionalAuth,
+    protect,
+} from '#middlewares';
+import { postChat, getChatHistory, deleteChatHistory } from '#controllers';
 import { chatBodySchema } from '#schemas';
 
 const router = Router();
 
-// Ohne `protect`: Need-Finding funktioniert für Gäste. Favoriten/Sammlung
-// bleiben geschützt.
-router.post('/', chatRateLimiter, validateBody(chatBodySchema), postChat);
+// `optionalAuth` statt `protect`: Need-Finding funktioniert für Gäste, nur der
+// Verlauf braucht ein Konto. Favoriten/Sammlung bleiben geschützt.
+router.post(
+    '/',
+    chatRateLimiter,
+    optionalAuth,
+    validateBody(chatBodySchema),
+    postChat,
+);
+
+router
+    .route('/history')
+    .get(protect, getChatHistory)
+    .delete(protect, deleteChatHistory);
 
 export default router;

@@ -18,7 +18,7 @@ export type FilterQueryInput = {
 // Substring statt $text-Index: gesucht wird tippend, und ein Text-Index findet
 // nur ganze Woerter ("kaff" faende "Kaffeetrinken" nicht). Regex-Sonderzeichen
 // werden escaped, sonst wird die Eingabe zum Suchmuster.
-// ponytail: Collection-Scan. Ab ~zehntausenden Datensaetzen auf Atlas Search
+// Collection-Scan. Ab ~zehntausenden Datensaetzen auf Atlas Search
 // bzw. einen $text-Index mit Prefix-Handling wechseln.
 export const searchFilter = (q: string) => {
     const rx = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
@@ -55,8 +55,8 @@ const known = (values: string[] | undefined, allowed: ReadonlySet<string>) =>
  *
  * `hasPrice` nur fuer Activities: Beratungen sind kostenlos und kassel.de
  * liefert keine Preise.
- * ponytail: `free=1` ist damit ein Activity-Filter. Bekommen Events irgendwann
- * echte Preise, gehoert `price` in deren Modell — nicht vorher auf Verdacht.
+ * `free=1` ist damit ein Activity-Filter. Bekommen Events irgendwann
+ * echte Preise, gehoert `price` in deren Modell.
  */
 export const buildFilter = (
     query: FilterQueryInput,

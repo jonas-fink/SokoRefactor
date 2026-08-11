@@ -143,7 +143,7 @@ export const FALLBACK_CATEGORY = 'sonstiges';
  */
 export const toCategoryKey = (
     raw: string | undefined | null,
-    knownKeys?: Set<string>,
+    knownKeys?: ReadonlySet<string>,
 ): string => {
     const value = raw?.trim();
     if (!value) return FALLBACK_CATEGORY;
@@ -154,7 +154,7 @@ export const toCategoryKey = (
 /** Rohwerte ohne eigene Mapping-Zeile — für Warnungen im Scraper/Migration. */
 export const unmappedCategories = (
     raws: Iterable<string>,
-    knownKeys?: Set<string>,
+    knownKeys?: ReadonlySet<string>,
 ): string[] => {
     const missing = new Set<string>();
     for (const raw of raws) {

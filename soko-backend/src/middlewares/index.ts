@@ -9,6 +9,7 @@ export {
     chatRateLimiter,
 } from './rateLimiter.ts';
 export { default as protect } from './protect.ts';
+export { default as optionalAuth } from './optionalAuth.ts';
 export { default as isDocOwner } from './isDocOwner.ts';
 export { default as fileUploadHandler } from './fileUploadHandler.ts';
 export { default as documentUploadHandler } from './documentUploadHandler.ts';

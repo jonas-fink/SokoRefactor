@@ -169,3 +169,26 @@ export interface FilterVocabulary {
     languages: { key: string; label: string }[];
     audiences: { key: string; label: string }[];
 }
+
+/** Notfallnummer, serverseitig **vor** dem Modell erkannt. */
+export interface Hotline {
+    label: string;
+    number: string;
+    hint: string;
+}
+
+/** Antwort von `POST /chat`. `handoff`, `disclaimer` und `urgent` sind Pflicht —
+ *  die UI kann den menschlichen Ausweg damit nicht versehentlich weglassen. */
+export interface ChatReply {
+    text: string;
+    matches: { id: string; title: string; category: string }[];
+    handoff: { label: string; hint: string };
+    disclaimer: string | null;
+    urgent: Hotline[] | null;
+}
+
+/** Ein Beitrag im Verlauf. Bot-Turns tragen die ganze Antwort, nicht nur Text.
+ *  Dieselbe Form liefert `GET /chat/history` (nur eingeloggt). */
+export type ChatTurn =
+    | { role: 'user'; text: string }
+    | { role: 'bot'; reply: ChatReply };

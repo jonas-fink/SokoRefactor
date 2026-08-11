@@ -54,7 +54,7 @@
         "seed:events": "node --conditions dev --env-file=.env src/scripts/seedDemoEvents.ts",
         "backfill:audiences": "node --conditions dev --env-file=.env src/scripts/backfillAudiences.ts",
         "prebuild": "rm -rf dist",
-        "build": "tsc",
+        "build": "tsc -p tsconfig.build.json",
         "prestart": "npm run build",
         "start": "node dist/app.js"
     },

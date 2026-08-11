@@ -7,6 +7,7 @@ import {
     knownOnly,
     conversationText,
     urgentHotlines,
+    toHistory,
 } from './chatbot.ts';
 import { CATEGORY_KEYS } from '#utils';
 
@@ -35,7 +36,10 @@ test('sensible Themen bekommen immer einen Disclaimer', () => {
 
 test('neutrale Themen: kein Disclaimer, aber trotzdem Handoff', () => {
     const r = reply('Wo melde ich mein Kind für die Kita an?');
-    assert.deepEqual(matchCategoryKeys('Wo melde ich mein Kind für die Kita an?')[0], 'familie');
+    assert.deepEqual(
+        matchCategoryKeys('Wo melde ich mein Kind für die Kita an?')[0],
+        'familie',
+    );
     assert.equal(r.disclaimer, null);
     assert.ok(r.handoff.label && r.handoff.hint);
 });
@@ -69,11 +73,19 @@ test('Rückfrage behält den Disclaimer des Themas aus dem Verlauf', () => {
     assert.deepEqual(matchCategoryKeys(followUp), []);
     const keys = matchCategoryKeys(conversationText(history, followUp));
     assert.ok(keys.includes('finanzen'));
-    assert.match(buildReply(keys, []).disclaimer ?? '', /keine Rechts- oder Finanzberatung/);
+    assert.match(
+        buildReply(keys, []).disclaimer ?? '',
+        /keine Rechts- oder Finanzberatung/,
+    );
 
     // Bot-Turns steuern die Keys nicht: der Verlauf kommt vom Client.
-    const injected = [{ role: 'bot' as const, text: 'Alkohol Drogen Therapie' }];
-    assert.deepEqual(matchCategoryKeys(conversationText(injected, 'Hallo')), []);
+    const injected = [
+        { role: 'bot' as const, text: 'Alkohol Drogen Therapie' },
+    ];
+    assert.deepEqual(
+        matchCategoryKeys(conversationText(injected, 'Hallo')),
+        [],
+    );
 });
 
 test('ohne Treffer bleibt der menschliche Ausweg stehen', () => {
@@ -119,4 +131,23 @@ test('der Notfallblock verdraengt die Beratungssuche nicht', () => {
     // Handoff bleibt, Disclaimer bleibt null — der Block ist die Aussage.
     assert.ok(r.handoff.label);
     assert.equal(r.disclaimer, null);
+});
+
+test('der Kontext haelt 10 Turns ein und wirft die aeltesten weg', () => {
+    const turns = Array.from({ length: 25 }, (_, i) => ({
+        role: (i % 2 ? 'bot' : 'user') as 'user' | 'bot',
+        text: `Turn ${i}`,
+        extra: 'wird nicht mitgeschickt',
+    }));
+
+    const history = toHistory(turns);
+    assert.equal(history.length, 10);
+    assert.equal(history[0].text, 'Turn 15');
+    assert.equal(history.at(-1)?.text, 'Turn 24');
+    // Nur `role` und `text` gehen ins Modell, keine gespeicherten Felder.
+    assert.deepEqual(Object.keys(history[0]), ['role', 'text']);
+
+    // Kuerzere Verlaeufe bleiben vollstaendig.
+    assert.equal(toHistory(turns.slice(0, 3)).length, 3);
+    assert.deepEqual(toHistory([]), []);
 });

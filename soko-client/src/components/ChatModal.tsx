@@ -1,24 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { NavLink } from 'react-router';
 import { api } from '../utils/api';
-
-interface Hotline {
-    label: string;
-    number: string;
-    hint: string;
-}
-
-interface ChatReply {
-    text: string;
-    matches: { id: string; title: string; category: string }[];
-    handoff: { label: string; hint: string };
-    disclaimer: string | null;
-    /** Notfallnummern, serverseitig **vor** dem Modell erkannt. */
-    urgent: Hotline[] | null;
-}
-
-/** Ein Beitrag im Verlauf. Bot-Turns tragen die ganze Antwort, nicht nur Text. */
-type Turn = { role: 'user'; text: string } | { role: 'bot'; reply: ChatReply };
+import { useAuth } from '../context/auth-context';
+import type { ChatReply, ChatTurn as Turn } from '../types';
 
 interface ChatModalProps {
     open: boolean;
@@ -31,6 +15,7 @@ interface ChatModalProps {
 const CONSENT_KEY = 'soko:chat-consent';
 
 const ChatModal = ({ open, onClose }: ChatModalProps) => {
+    const { user } = useAuth();
     const ref = useRef<HTMLDialogElement>(null);
     const threadRef = useRef<HTMLDivElement>(null);
     const [message, setMessage] = useState('');
@@ -56,6 +41,25 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
         if (open && !dialog.open) dialog.showModal();
         if (!open && dialog.open) dialog.close();
     }, [open]);
+
+    // Verlauf beim Öffnen nachladen — nur eingeloggt, nur serverseitig
+    // gespeichert. Gäste starten jedes Mal leer, das ist die Zusage.
+    useEffect(() => {
+        if (!open || !user) return;
+        api.get<Turn[]>('/chat/history')
+            .then(setTurns)
+            .catch(() => {}); // Kein Verlauf ist kein Fehler, der Chat läuft.
+    }, [open, user]);
+
+    const clearHistory = async () => {
+        setTurns([]);
+        setError('');
+        try {
+            await api.delete('/chat/history');
+        } catch {
+            setError('Der Verlauf konnte nicht gelöscht werden.');
+        }
+    };
 
     // Neue Beiträge sollen sichtbar sein, ohne dass jemand scrollt.
     useEffect(() => {
@@ -83,7 +87,9 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
         try {
             const reply = await api.post<ChatReply>('/chat', {
                 message: text,
-                history: history.slice(-10), // Backend nimmt maximal 10
+                // Eingeloggt lädt der Server den Verlauf selbst und ignoriert
+                // diesen hier — dann gar nicht erst schicken.
+                history: user ? [] : history.slice(-10),
             });
             setTurns((prev) => [...prev, { role: 'bot', reply }]);
         } catch (err) {
@@ -110,14 +116,27 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
                         Beschreib deine Situation in eigenen Worten.
                     </p>
                 </div>
-                <button
-                    type="button"
-                    className="label"
-                    onClick={onClose}
-                    aria-label="Schließen"
-                >
-                    ✕
-                </button>
+                <div className="flex shrink-0 items-center gap-3">
+                    {/* Eingeloggt wird der Verlauf gespeichert — dann muss er
+                        sich auch löschen lassen (Art. 17 DSGVO). */}
+                    {user && turns.length > 0 && (
+                        <button
+                            type="button"
+                            className="cursor-pointer text-sm text-ink-mute underline hover:text-error"
+                            onClick={clearHistory}
+                        >
+                            Verlauf löschen
+                        </button>
+                    )}
+                    <button
+                        type="button"
+                        className="label"
+                        onClick={onClose}
+                        aria-label="Schließen"
+                    >
+                        ✕
+                    </button>
+                </div>
             </div>
 
             {!consented ? (
@@ -127,7 +146,10 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
                     <p className="text-ink-soft">
                         Für den Vorschlag wird dein Text an{' '}
                         <strong>Google Gemini</strong> übermittelt und dort auch
-                        außerhalb der EU verarbeitet. Wir speichern ihn nicht.
+                        außerhalb der EU verarbeitet.{' '}
+                        {user
+                            ? 'Weil du eingeloggt bist, speichern wir den Verlauf zu deinem Konto — du kannst ihn jederzeit oben löschen, sonst verfällt er nach 90 Tagen.'
+                            : 'Wir speichern ihn nicht.'}
                     </p>
                     <p className="text-ink-soft">
                         Bitte schreib deshalb{' '}

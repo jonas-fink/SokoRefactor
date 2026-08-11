@@ -106,10 +106,26 @@ const DISCLAIMERS: Record<string, string> = {
         'Das ist keine medizinische Beratung. In einer akuten Notlage: Notruf 112, Telefonseelsorge 0800 1110111 (kostenlos, rund um die Uhr).',
 };
 
-const HANDOFF = {
+export const HANDOFF = {
     label: 'Mit einem Menschen sprechen',
     hint: 'Alle Beratungsstellen hier sind kostenlos und vertraulich — ein Anruf oder ein Besuch reicht.',
 };
+
+/** So viele Turns gehen als Kontext an `answer()` — dieselbe Grenze wie `chatBodySchema`. */
+const HISTORY_TURNS = 10;
+
+/**
+ * Gespeicherte Turns → Kontext für `answer()`: die **letzten** zehn, ältere
+ * fallen weg. Bei eingeloggten Nutzern ersetzt das den mitgeschickten Verlauf
+ * komplett — ein manipuliertes `history` kann das Keyword-Matching damit nicht
+ * mehr steuern.
+ */
+export const toHistory = (
+    turns: { role: 'user' | 'bot'; text: string }[],
+): ChatTurn[] =>
+    turns
+        .slice(-HISTORY_TURNS)
+        .map(({ role, text }) => ({ role, text }));
 
 /**
  * `112` und `116117` sind **nicht** dasselbe und werden nie zusammengefasst:

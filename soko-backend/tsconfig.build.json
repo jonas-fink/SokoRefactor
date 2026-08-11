@@ -1,0 +1,8 @@
+{
+    // Nur fuers Emit: Tests sollen nicht nach `dist/`. Der Ausschluss darf
+    // *nicht* in die tsconfig.json — sonst gehoeren die Testdateien zu keinem
+    // Projekt, der Editor faellt auf Default-Optionen ohne `paths` zurueck und
+    // meldet `Cannot find module '#utils'`.
+    "extends": "./tsconfig.json",
+    "exclude": ["node_modules", "**/*.test.ts"]
+}

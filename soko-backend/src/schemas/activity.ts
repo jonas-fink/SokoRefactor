@@ -1,8 +1,6 @@
 import { z } from 'zod';
 import { objectIdSchema } from './shared.ts';
 
-// Activities kommen als multipart/form-data rein (ActivityForm.tsx), d.h.
-// `date` und `price` sind Strings — deshalb `coerce` statt `z.date()`/`z.number()`.
 const activitySchema = z.object({
     title: z.string().trim().min(5, 'Title is required'),
     image: z.preprocess(
@@ -22,9 +20,6 @@ const activitySchema = z.object({
     }),
     userId: objectIdSchema,
     tags: z.array(z.string().trim()).default([]),
-
-    // Leer = keine Angabe = matcht immer. Alt-Dokumente ohne die Felder laufen
-    // deshalb ueber `default([])` durch, statt beim Lesen in einen 500 zu kippen.
     availableLanguages: z.array(z.string().trim()).default([]),
     targetAudience: z.array(z.string().trim()).default([]),
 });
@@ -43,9 +38,6 @@ export const populatedActivitySchema = activityOutputSchema.extend({
     }),
 });
 
-// Laengenlimits nur auf dem Eingang: `activityOutputSchema` parst auch
-// Bestandsdokumente, ein nachtraegliches `.max()` dort wuerde alte Eintraege
-// beim Lesen in einen 500 kippen.
 const bodyLimits = {
     title: z
         .string()

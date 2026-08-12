@@ -1,5 +1,3 @@
-// exportiert, weil Dokument-Downloads als normaler <a href> laufen (Redirect
-// auf eine presigned S3-URL) und nicht durch `request` gehen.
 export const BASE = `${import.meta.env.VITE_API_URL ?? ''}/api/v1`;
 
 let accessToken: string | null = null;
@@ -60,8 +58,6 @@ async function request<T>(
 
     if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        // Aeltere Controller antworten mit `{ error }`, neuere mit `{ message }` —
-        // ohne beide Keys sieht der Nutzer nur "HTTP 400".
         throw new Error(body?.message ?? body?.error ?? `HTTP ${res.status}`);
     }
 

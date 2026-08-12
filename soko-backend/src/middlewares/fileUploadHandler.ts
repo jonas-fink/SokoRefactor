@@ -10,8 +10,6 @@ cloudinary.config({
 });
 
 const fileUploadHandler: RequestHandler = (req, res, next) => {
-    // `express.json()` hat den Body bei nicht-multipart-Requests bereits gelesen —
-    // formidable wuerde auf einen Stream warten, der nie mehr kommt (Request haengt).
     if (!req.is('multipart/form-data')) {
         next();
         return;
@@ -77,9 +75,6 @@ const fileUploadHandler: RequestHandler = (req, res, next) => {
             } catch (uploadError) {
                 res.status(500).json({ error: 'Cloudinary Upload failed' });
             } finally {
-                // formidable raeumt sein Tempdir nie selbst auf — ohne das
-                // bleibt nach jedem Upload eine Datei liegen. Ein Fehler beim
-                // Loeschen darf den Request nicht kippen.
                 await unlink(upFile.filepath).catch(() => {});
             }
         } else {

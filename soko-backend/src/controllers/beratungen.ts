@@ -175,9 +175,6 @@ export const patchBeratung: RequestHandler<
     }
 };
 
-// `documentUploadHandler` hat die Datei nur geparst — hochgeladen wird erst,
-// wenn Beratung und Service wirklich existieren. Andernfalls wuerde jeder 404
-// eine Datei im Bucket zuruecklassen, auf die nie wieder jemand zeigt.
 export const addServiceDocument: RequestHandler<
     { id: string; serviceId: string },
     unknown,
@@ -214,8 +211,6 @@ export const addServiceDocument: RequestHandler<
         try {
             await beratung.save();
         } catch (saveError: unknown) {
-            // Datei liegt schon in S3, das Subdokument nicht in der DB —
-            // zuruecknehmen, sonst ist genau das ein verwaistes Objekt.
             await deleteDocuments([s3Key]);
             throw saveError;
         }
@@ -227,8 +222,6 @@ export const addServiceDocument: RequestHandler<
     } catch (error: unknown) {
         next(error);
     } finally {
-        // formidable raeumt sein Tempdir nie selbst auf. Das `finally` deckt
-        // alle Ausstiege ab: 404 Beratung, 404 Service, S3-Fehler, Erfolg.
         if (req.uploadedDocument) {
             await unlink(req.uploadedDocument.filepath).catch(() => {});
         }

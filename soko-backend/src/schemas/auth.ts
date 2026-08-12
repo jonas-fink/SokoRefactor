@@ -22,8 +22,6 @@ export const changePasswordSchema = z.object({
     newPassword: z.string().min(8, 'Mindestens 8 Zeichen'),
 });
 
-/** Unbekannter Key → 400, nicht stilles Speichern: eine Praeferenz, die das
- *  Filter-Vokabular nicht kennt, filtert spaeter still alles weg. */
 const keysOf = (allowed: ReadonlySet<string>, label: string) =>
     z
         .array(z.string())
@@ -35,8 +33,6 @@ const keysOf = (allowed: ReadonlySet<string>, label: string) =>
 export const preferencesSchema = z.object({
     languages: keysOf(LANGUAGE_KEYS, 'languages'),
     audiences: keysOf(AUDIENCE_KEYS, 'audiences'),
-    // Kategorien stehen in der Collection, nicht in einer Konstante —
-    // `assertCategories` prueft sie im Controller.
     categories: z.array(z.string()).default([]),
     freeOnly: z.boolean().default(false),
 });

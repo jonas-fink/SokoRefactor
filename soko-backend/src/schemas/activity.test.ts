@@ -2,8 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert';
 import { activityCreateBodySchema } from './activity.ts';
 
-// Exakt das Shape, das ActivityForm.tsx per FormData schickt: `price` und
-// `date` sind Strings. Ohne `z.coerce` scheitert hier jeder echte Request.
 const formDataBody = {
     title: 'Yoga im Park',
     description: 'Offener Kurs für alle',

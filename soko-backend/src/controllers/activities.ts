@@ -70,21 +70,8 @@ export const createActivity: RequestHandler<
     ActivityCreateBody
 > = async (req, res, next) => {
     try {
-        const { title, description, date, price, location } = req.body;
+        // Pflichtfelder, Laengen und Typen pruefen `validateBody` in der Route.
         const image = req.body.image ?? 'https://placehold.net/600x600.png';
-        // price darf 0 sein (kostenlose Angebote), deshalb kein !price
-        if (
-            !title ||
-            !description ||
-            !date ||
-            price === undefined ||
-            !location
-        ) {
-            res.status(400).json({
-                error: 'title, description, date, price and location are required',
-            });
-            return;
-        }
         await assertAxes(req.body);
 
         const userId = req.userId;
@@ -133,21 +120,7 @@ export const updateActivity: RequestHandler<
         const {
             params: { id },
         } = req;
-        const { title, description, date, price, location } = req.body;
-        // price darf 0 sein (kostenlose Angebote), deshalb kein !price
-        if (
-            !title ||
-            !description ||
-            !date ||
-            price === undefined ||
-            !location
-        ) {
-            res.status(400).json({
-                error: 'title, description, date and location are required',
-            });
-            return;
-        }
-
+        // Pflichtfelder, Laengen und Typen pruefen `validateBody` in der Route.
         await assertAxes(req.body);
 
         const activity = await Activity.findById(id);

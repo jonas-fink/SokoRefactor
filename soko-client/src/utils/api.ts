@@ -60,7 +60,9 @@ async function request<T>(
 
     if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body?.message ?? `HTTP ${res.status}`);
+        // Aeltere Controller antworten mit `{ error }`, neuere mit `{ message }` —
+        // ohne beide Keys sieht der Nutzer nur "HTTP 400".
+        throw new Error(body?.message ?? body?.error ?? `HTTP ${res.status}`);
     }
 
     if (res.status === 204) return undefined as T;

@@ -14,7 +14,8 @@ const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     const statusCode =
         err.status ||
         err.cause?.status ||
-        (err.name === 'ValidationError' ? 400 : 500);
+        // CastError = ungueltige ObjectId in der Query. Client-Fehler, kein 500.
+        (err.name === 'ValidationError' || err.name === 'CastError' ? 400 : 500);
 
     res.status(statusCode).json({
         message: err.message || 'Internal Server error',

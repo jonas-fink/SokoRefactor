@@ -22,15 +22,17 @@ export const useCountUp = (targetValue: number, duration: number = 1500) => {
             setCount(Math.floor(easeOutQuad * targetValue));
 
             if (progress < 1) {
-                window.requestAnimationFrame(step);
+                // Handle nachziehen, sonst cancelt das Cleanup nur den ersten
+                // Frame und die Rekursion laeuft nach Unmount weiter.
+                frame = window.requestAnimationFrame(step);
             } else {
                 setCount(targetValue);
             }
         };
 
-        const animationFrame = window.requestAnimationFrame(step);
+        let frame = window.requestAnimationFrame(step);
 
-        return () => window.cancelAnimationFrame(animationFrame);
+        return () => window.cancelAnimationFrame(frame);
     }, [targetValue, duration]);
 
     return count;

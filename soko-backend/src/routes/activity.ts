@@ -5,6 +5,7 @@ import {
     fileUploadHandler,
     canCreate,
     validateQuery,
+    validateBody,
 } from '#middlewares';
 import {
     getActivities,
@@ -15,7 +16,11 @@ import {
     deleteActivity,
 } from '#controllers';
 import { Activity } from '#models';
-import { filterQuerySchema } from '#schemas';
+import {
+    filterQuerySchema,
+    activityCreateBodySchema,
+    activityPatchBodySchema,
+} from '#schemas';
 import { isValidObjectId } from 'mongoose';
 
 const isActivityOwner = isDocOwner(Activity, 'Activity');
@@ -35,7 +40,16 @@ const router = Router();
 router.get('/', validateQuery(filterQuerySchema), getActivities);
 router.get('/:id', validateId, getActivityById);
 
-router.post('/', protect, canCreate, fileUploadHandler, createActivity);
+// `validateBody` erst nach `fileUploadHandler` — vorher steht bei
+// multipart-Requests noch gar kein Body da.
+router.post(
+    '/',
+    protect,
+    canCreate,
+    fileUploadHandler,
+    validateBody(activityCreateBodySchema),
+    createActivity,
+);
 
 router.put(
     '/:id',
@@ -43,6 +57,7 @@ router.put(
     isActivityOwner,
     validateId,
     fileUploadHandler,
+    validateBody(activityCreateBodySchema),
     updateActivity,
 );
 router.patch(
@@ -51,6 +66,7 @@ router.patch(
     isActivityOwner,
     validateId,
     fileUploadHandler,
+    validateBody(activityPatchBodySchema),
     patchActivity,
 );
 router.delete('/:id', protect, isActivityOwner, validateId, deleteActivity);

@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { AUDIENCE_KEYS, LANGUAGE_KEYS } from '#utils';
 
 export const signupSchema = z.object({
-    name: z.string().optional(),
-    email: z.email('Invalid E-Mail'),
+    name: z.string().trim().max(100).optional(),
+    email: z.email('Invalid E-Mail').max(254),
     password: z.string().min(8, 'At least 8 characters'),
 });
 

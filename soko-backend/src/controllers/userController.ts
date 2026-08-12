@@ -3,10 +3,7 @@ import { User, RefreshToken } from '#models';
 import type { UpdateUserInput } from '#schemas';
 
 export const getUsers: RequestHandler = async (_req, res) => {
-    const users = await User.find({ role: 'user' }).sort({
-        lastName: 1,
-        firstName: 1,
-    });
+    const users = await User.find({ role: 'user' }).sort({ name: 1 });
     res.json({ data: users });
 };
 
@@ -44,7 +41,7 @@ export const updateUser: RequestHandler<
 export const deleteUser: RequestHandler<{ id: string }> = async (req, res) => {
     const user = await User.findById(req.params.id);
     if (!user) {
-        res.status(400).json({
+        res.status(404).json({
             message: 'Benutzer nicht gefunden',
         });
         return;

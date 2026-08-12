@@ -1,4 +1,5 @@
 import type { RequestHandler } from 'express';
+import { unlink } from 'node:fs/promises';
 import {
     populatedBeratungSchema,
     type BeratungCreateBody,
@@ -225,6 +226,12 @@ export const addServiceDocument: RequestHandler<
         });
     } catch (error: unknown) {
         next(error);
+    } finally {
+        // formidable raeumt sein Tempdir nie selbst auf. Das `finally` deckt
+        // alle Ausstiege ab: 404 Beratung, 404 Service, S3-Fehler, Erfolg.
+        if (req.uploadedDocument) {
+            await unlink(req.uploadedDocument.filepath).catch(() => {});
+        }
     }
 };
 

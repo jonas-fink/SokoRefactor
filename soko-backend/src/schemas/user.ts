@@ -2,8 +2,8 @@ import { z } from 'zod';
 
 export const updateUserSchema = z
     .object({
-        name: z.string().min(1).optional(),
-        email: z.email('Invalid email').optional(),
+        name: z.string().trim().min(1).max(100).optional(),
+        email: z.email('Invalid email').max(254).optional(),
         password: z.string().min(8, 'At least 8 characters').optional(),
         role: z.enum(['user', 'admin', 'creator']).optional(),
     })

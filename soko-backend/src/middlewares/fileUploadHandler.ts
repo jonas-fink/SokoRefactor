@@ -1,4 +1,5 @@
 import type { RequestHandler } from 'express';
+import { unlink } from 'node:fs/promises';
 import formidable from 'formidable';
 import { v2 as cloudinary } from 'cloudinary';
 
@@ -74,10 +75,12 @@ const fileUploadHandler: RequestHandler = (req, res, next) => {
                 };
                 next();
             } catch (uploadError) {
-                {
-                    res.status(500).json({ error: 'Cloudinary Upload failed' });
-                    return;
-                }
+                res.status(500).json({ error: 'Cloudinary Upload failed' });
+            } finally {
+                // formidable raeumt sein Tempdir nie selbst auf — ohne das
+                // bleibt nach jedem Upload eine Datei liegen. Ein Fehler beim
+                // Loeschen darf den Request nicht kippen.
+                await unlink(upFile.filepath).catch(() => {});
             }
         } else {
             req.body = { ...parseJsonFields(flatFields) };

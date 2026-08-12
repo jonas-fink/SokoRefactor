@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="KSoKo">
-  <rect width="120" height="120" rx="34" fill="#14181A"></rect>
+  <rect width="120" height="120" rx="34" fill="#F7F4EF"></rect>
   <g transform="translate(24 24) scale(1.24)">
-    <circle cx="29" cy="29" r="24" fill="none" stroke="#4FB98C" stroke-width="10"></circle>
+    <circle cx="29" cy="29" r="24" fill="none" stroke="#1f6b4f" stroke-width="10"></circle>
       <path d="M29 10 L36 29 L29 33 L22 29 Z" fill="#e8a33d"></path>
-      <path d="M29 33 L36 29 L29 48 L22 29 Z" fill="#4FB98C"></path>
+      <path d="M29 33 L36 29 L29 48 L22 29 Z" fill="#1f6b4f"></path>
   </g>
 </svg>

@@ -10,6 +10,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Settings from './pages/Settings';
+import Preferences from './pages/Preferences';
 import LayoutSkeleton from './components/skeletons/LayoutSkeleton';
 import Profile from './pages/Profile';
 import BeratungKategorie from './pages/BeratungKategorie';
@@ -51,6 +52,7 @@ const App = () => {
                     <Route element={<ProtectedRoute />}>
                         <Route path="/library" element={<Library />} />
                         <Route path="/settings" element={<Settings />} />
+                        <Route path="/preferences" element={<Preferences />} />
                         <Route path="/profile" element={<Profile />} />
                     </Route>
                     <Route element={<ProtectedRoute requireCreator />}>

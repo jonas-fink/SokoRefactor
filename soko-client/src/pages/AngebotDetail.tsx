@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router';
+import { useParams } from 'react-router';
 import { api } from '../utils/api';
+import PageHeader from '../components/PageHeader';
 import MapView from '../components/map/MapView';
 import { useFavorites } from '../hooks/useFavorites';
 import {
     AiFillHeart,
     AiOutlineHeart,
-    AiOutlineArrowLeft,
     AiOutlineEnvironment,
     AiOutlineCalendar,
 } from 'react-icons/ai';
@@ -20,7 +20,6 @@ const AngebotDetail = () => {
     const { isFavorite, toggle, enabled } = useFavorites();
     const [item, setItem] = useState<Activity | ScrapedEvent | null>(null);
     const [error, setError] = useState('');
-    const navigate = useNavigate();
     const { labelOf } = useCategories('activity');
     const { labelOf: axisLabelOf } = useVocabulary();
 
@@ -53,34 +52,30 @@ const AngebotDetail = () => {
 
     return (
         <div className="mx-auto flex md:max-w-6xl flex-col gap-6 md:p-8 pb-3">
-            <div className="flex justify-between gap-3">
-                <div className="flex gap-3 items-center">
-                    <button
-                        className="card bg-surface p-2 cursor-pointer"
-                        onClick={() => navigate(-1)}
-                    >
-                        <AiOutlineArrowLeft size={24} />
-                    </button>
-                    <h1 className="text-2xl font-bold">{item.title}</h1>
-                </div>
-                {enabled && (
-                    <button
-                        type="button"
-                        aria-label={
-                            favorite ? 'Aus Sammlung entfernen' : 'Zur Sammlung'
-                        }
-                        aria-pressed={favorite}
-                        className="btn-secondary text-error cursor-pointer"
-                        onClick={() => toggle(itemType, id)}
-                    >
-                        {favorite ? (
-                            <AiFillHeart size={20} />
-                        ) : (
-                            <AiOutlineHeart size={20} />
-                        )}
-                    </button>
-                )}
-            </div>
+            <PageHeader
+                title={item.title}
+                action={
+                    enabled && (
+                        <button
+                            type="button"
+                            aria-label={
+                                favorite
+                                    ? 'Aus Sammlung entfernen'
+                                    : 'Zur Sammlung'
+                            }
+                            aria-pressed={favorite}
+                            className="btn-secondary text-error cursor-pointer shrink-0"
+                            onClick={() => toggle(itemType, id)}
+                        >
+                            {favorite ? (
+                                <AiFillHeart size={20} />
+                            ) : (
+                                <AiOutlineHeart size={20} />
+                            )}
+                        </button>
+                    )
+                }
+            />
 
             {activity?.image && (
                 <img

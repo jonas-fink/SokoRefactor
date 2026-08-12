@@ -1,13 +1,49 @@
 import { useState } from 'react';
 import { useAuth, canCreate } from '../context/auth-context';
-import { AiOutlineArrowLeft } from 'react-icons/ai';
-import { useNavigate } from 'react-router';
+import PageHeader from '../components/PageHeader';
 
 const SettingsPage = () => {
-    const { user, becomeCreator } = useAuth();
+    const { user, becomeCreator, changeEmail, changePassword } = useAuth();
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const navigate = useNavigate();
+
+    // unkontrollierte Formulare mit FormData statt react-hook-form —
+    // zwei Felder, keine Live-Validierung, die Fehlermeldung kommt ohnehin vom
+    // Server (falsches Passwort, E-Mail vergeben).
+    const [credMessage, setCredMessage] = useState<string | null>(null);
+
+    const submit =
+        (action: (form: FormData) => Promise<void>, done: string) =>
+        async (event: React.FormEvent<HTMLFormElement>) => {
+            event.preventDefault();
+            const form = event.currentTarget;
+            setCredMessage(null);
+            try {
+                await action(new FormData(form));
+                form.reset();
+                setCredMessage(done);
+            } catch (error) {
+                setCredMessage((error as Error).message);
+            }
+        };
+
+    const onEmail = submit(
+        (f) =>
+            changeEmail(
+                String(f.get('email')),
+                String(f.get('currentPassword')),
+            ),
+        'E-Mail geändert.',
+    );
+
+    const onPassword = submit(
+        (f) =>
+            changePassword(
+                String(f.get('currentPassword')),
+                String(f.get('newPassword')),
+            ),
+        'Passwort geändert. Andere Geräte müssen sich neu anmelden.',
+    );
 
     const onBecomeCreator = async () => {
         setBusy(true);
@@ -25,23 +61,10 @@ const SettingsPage = () => {
 
     return (
         <div className="flex flex-col gap-8 md:max-w-6xl md:p-8 mx-auto">
-            <div className="flex items-center gap-3">
-                <button
-                    className="card bg-surface p-2 cursor-pointer"
-                    onClick={() => navigate(-1)}
-                >
-                    <AiOutlineArrowLeft size={24} />
-                </button>
-                <div>
-                    {' '}
-                    <h1 className="font-display text-2xl text-ink">
-                        Einstellungen
-                    </h1>
-                    <p className="font-sans text-ink-mute">
-                        Verwalte deinen Account
-                    </p>
-                </div>
-            </div>
+            <PageHeader
+                title="Einstellungen"
+                subtitle="Verwalte deinen Account"
+            />
             <div className="bg-surface w-full p-8 rounded-card flex flex-col gap-4 items-center shadow-card">
                 <h2 className="font-display text-2xl text-primary">
                     Creator-Account
@@ -72,6 +95,73 @@ const SettingsPage = () => {
                     </>
                 )}
             </div>
+
+            <section className="flex flex-col gap-6 rounded-card border border-line bg-surface p-6">
+                <h2 className="font-display text-2xl text-ink">Anmeldedaten</h2>
+
+                <form onSubmit={onEmail} className="flex flex-col gap-3">
+                    <label htmlFor="new-email" className="label">
+                        Neue E-Mail
+                    </label>
+                    <input
+                        id="new-email"
+                        name="email"
+                        type="email"
+                        required
+                        defaultValue=""
+                        placeholder={user?.email}
+                        className="field"
+                    />
+                    <input
+                        name="currentPassword"
+                        type="password"
+                        required
+                        autoComplete="current-password"
+                        placeholder="Aktuelles Passwort"
+                        className="field"
+                    />
+                    <button
+                        type="submit"
+                        className="btn-secondary self-start cursor-pointer"
+                    >
+                        E-Mail ändern
+                    </button>
+                </form>
+
+                <form onSubmit={onPassword} className="flex flex-col gap-3">
+                    <label htmlFor="new-password" className="label">
+                        Neues Passwort
+                    </label>
+                    <input
+                        name="currentPassword"
+                        type="password"
+                        required
+                        autoComplete="current-password"
+                        placeholder="Aktuelles Passwort"
+                        className="field"
+                    />
+                    <input
+                        id="new-password"
+                        name="newPassword"
+                        type="password"
+                        required
+                        minLength={8}
+                        autoComplete="new-password"
+                        placeholder="Mindestens 8 Zeichen"
+                        className="field"
+                    />
+                    <button
+                        type="submit"
+                        className="btn-secondary self-start cursor-pointer"
+                    >
+                        Passwort ändern
+                    </button>
+                </form>
+
+                {credMessage && (
+                    <p className="text-sm text-ink-mute">{credMessage}</p>
+                )}
+            </section>
         </div>
     );
 };

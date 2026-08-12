@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { NavLink, useNavigate } from 'react-router';
+import { NavLink } from 'react-router';
 import { api } from '../utils/api';
+import PageHeader from '../components/PageHeader';
 import OfferCard from '../components/OfferCard';
 import {
     WEEKDAY_LABELS,
@@ -9,7 +10,6 @@ import {
     monthLabel,
 } from '../utils/calendar';
 import type { Favorite } from '../types';
-import { AiOutlineArrowLeft } from 'react-icons/ai';
 
 /** Activity hat `date`, ScrapedEvent `startDate`, Beratung keins. */
 const itemDate = (fav: Favorite) => fav.itemId.date ?? fav.itemId.startDate;
@@ -26,7 +26,6 @@ const Library = () => {
     const [tab, setTab] = useState<'liste' | 'monat'>('liste');
     const [cursor, setCursor] = useState(() => new Date());
     const [error, setError] = useState(false);
-    const navigate = useNavigate();
 
     useEffect(() => {
         api.get<Favorite[]>('/favorites')
@@ -67,15 +66,7 @@ const Library = () => {
 
     return (
         <div className="mx-auto md:max-w-6xl md:p-8 pb-3 flex flex-col gap-6">
-            <div className="flex gap-3 items-center">
-                <button
-                    className="card bg-surface p-2 cursor-pointer"
-                    onClick={() => navigate(-1)}
-                >
-                    <AiOutlineArrowLeft size={24} />
-                </button>
-                <h1 className="text-2xl font-bold">Deine Sammlung</h1>
-            </div>
+            <PageHeader title="Deine Sammlung" />
 
             <div className="flex gap-2">
                 {(['liste', 'monat'] as const).map((t) => (

@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useParams } from 'react-router';
 import {
-    AiOutlineArrowLeft,
     AiOutlineLock,
     AiOutlinePhone,
     AiOutlineEnvironment,
     AiOutlineFileText,
 } from 'react-icons/ai';
 import { api, BASE } from '../utils/api';
+import PageHeader from '../components/PageHeader';
 import MapView from '../components/map/MapView';
 import { WEEKDAYS, fromMinutes } from '../schemas/beratungSchema';
 import { useCategories } from '../hooks/useCategories';
@@ -16,7 +16,6 @@ import type { Beratung } from '../types';
 
 const BeratungDetail = () => {
     const { id } = useParams();
-    const navigate = useNavigate();
     const [beratung, setBeratung] = useState<Beratung | null>(null);
     const [error, setError] = useState('');
     const { labelOf } = useCategories('beratung');
@@ -39,15 +38,7 @@ const BeratungDetail = () => {
 
     return (
         <div className="flex flex-col gap-6 max-w-6xl mx-auto md:p-8 pb-3">
-            <div className="flex gap-3 items-center">
-                <button
-                    className="card bg-surface p-2 cursor-pointer"
-                    onClick={() => navigate(-1)}
-                >
-                    <AiOutlineArrowLeft size={24} />
-                </button>
-                <h2 className="text-2xl font-bold">{beratung.title}</h2>
-            </div>
+            <PageHeader title={beratung.title} />
 
             <img
                 src={beratung.image}

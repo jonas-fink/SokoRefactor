@@ -18,7 +18,12 @@ const toClientTurn = (t: StoredTurn) =>
               role: 'bot' as const,
               reply: {
                   text: t.text,
-                  matches: t.matches ?? [],
+                  // Turns von vor Phase 16b haben kein `itemType` — die kannten
+                  // nur Beratungsstellen, sonst zeigt der Link ins Leere.
+                  matches: (t.matches ?? []).map((m) => ({
+                      ...m,
+                      itemType: m.itemType ?? 'Beratung',
+                  })),
                   handoff: HANDOFF,
                   disclaimer: t.disclaimer ?? null,
                   urgent: null,
@@ -47,6 +52,7 @@ export const postChat: RequestHandler<unknown, unknown, ChatBody> = async (
         const reply = await answer(
             req.body.message,
             toHistory(stored?.turns ?? []),
+            userId,
         );
 
         await Conversation.updateOne(

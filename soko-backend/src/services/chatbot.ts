@@ -1,9 +1,13 @@
-import { Beratung, Category } from '#models';
-import { CATEGORY_KEYS } from '#utils';
+import { Beratung, Category, ScrapedEvent, User } from '#models';
+import type { UserPreferences } from '#models';
+import { AUDIENCES, CATEGORY_KEYS, LANGUAGES, buildFilter } from '#utils';
 import type { ChatTurn } from '#schemas';
-import { askGemini } from './gemini.ts';
+import { askGemini, type Candidate } from './gemini.ts';
 
 export type Hotline = { label: string; number: string; hint: string };
+
+/** Beide Kandidaten-Pools des Chats. Bestimmt auch das Ziel des Links im Client. */
+export type ChatItemType = 'Beratung' | 'ScrapedEvent';
 
 /**
  * Antwort des Need-Finding-Chats.
@@ -14,19 +18,26 @@ export type Hotline = { label: string; number: string; hint: string };
  */
 export type ChatReply = {
     text: string;
-    matches: { id: string; title: string; category: string }[];
+    matches: {
+        id: string;
+        title: string;
+        category: string;
+        itemType: ChatItemType;
+    }[];
     handoff: { label: string; hint: string };
     disclaimer: string | null;
     urgent: Hotline[] | null;
 };
 
 /**
- * Stichworte → `Category.key`. Bewusst nur die Beratungs-Keys: der Chat findet
- * Hilfsangebote, keine Freizeitevents.
+ * Stichworte → `Category.key`. Bewusst nur die Beratungs-Keys.
  *
- * ponytail: naives `includes`-Matching ohne Stemming/Fuzzy. Diese Tabelle ist
- * der Platzhalter, den ein LLM-Call später ersetzt — die Naht ist `answer()`,
- * Controller und Client bleiben unverändert.
+ * der Keyword-Fallback deckt **nur Beratungen** ab, auch seit der Chat
+ * Veranstaltungen kennt. Fällt Gemini aus, ist die Beratungsvermittlung die
+ * Funktion, die zählt — Events kämen ohne Modell nur über eine zweite
+ * Stichworttabelle.
+ *
+ * naives `includes`-Matching ohne Stemming/Fuzzy.
  */
 export const KEYWORDS: Record<string, string[]> = {
     behoerden: [
@@ -123,15 +134,8 @@ const HISTORY_TURNS = 10;
 export const toHistory = (
     turns: { role: 'user' | 'bot'; text: string }[],
 ): ChatTurn[] =>
-    turns
-        .slice(-HISTORY_TURNS)
-        .map(({ role, text }) => ({ role, text }));
+    turns.slice(-HISTORY_TURNS).map(({ role, text }) => ({ role, text }));
 
-/**
- * `112` und `116117` sind **nicht** dasselbe und werden nie zusammengefasst:
- * `112` gilt bei Unfall und Lebensgefahr, `116117` ist der ärztliche
- * Bereitschaftsdienst für akut Kranke außerhalb der Sprechzeiten.
- */
 const HOTLINES = {
     notruf: {
         label: 'Notruf',
@@ -271,22 +275,97 @@ export const buildReply = (
 };
 
 /**
- * So viele Stellen gehen als Auswahlliste an das Modell. Der gesamte Bestand
- * passt bequem in einen Prompt, deshalb genügt **ein** API-Call statt
- * Klassifizieren + Nachschlagen + Formulieren.
+ * So viele Einträge je Pool gehen als Auswahlliste an das Modell — ein Call für
+ * beide, statt Klassifizieren + Nachschlagen + Formulieren.
  *
- * ponytail: ab ~200 Beratungsstellen vorher per Keyword vorfiltern
- * (`matchCategoryKeys` liegt direkt daneben), statt alles mitzuschicken.
+ * Der Deckel ist seit den Präferenzen die zweite Verteidigungslinie: den
+ * eigentlichen Zuschnitt macht `prefFilter`.
  */
-const MAX_CANDIDATES = 60;
+const MAX_BERATUNGEN = 40;
+const MAX_EVENTS = 30;
+
+const startOfToday = () => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+};
+
+/**
+ * Präferenzen → Mongo-Fragment je Pool. Sprache und Zielgruppe laufen über
+ * dasselbe `buildFilter` wie die Listenrouten (leer = keine Angabe = matcht
+ * immer), die Kategorien liegen in verschiedenen Feldern: `tags` bei Beratung,
+ * `category` bei Events.
+ *
+ * `freeOnly` bleibt außen vor: Beratungen sind kostenlos und kassel.de liefert
+ * keine Preise — der Filter hätte nichts zu filtern.
+ */
+export const prefFilters = (prefs?: UserPreferences) => {
+    const base = buildFilter({ lang: prefs?.languages, for: prefs?.audiences });
+    const cats = (prefs?.categories ?? []).filter((k) => CATEGORY_KEYS.has(k));
+    return {
+        beratung: cats.length ? { ...base, tags: { $in: cats } } : base,
+        event: cats.length ? { ...base, category: { $in: cats } } : base,
+    };
+};
+
+/**
+ * Präferenzen → eine Zeile Kontext für den Prompt. Nichts Identifizierendes:
+ * kein Name, keine Mail, keine ID — nur Sprache und Zielgruppe.
+ */
+export const preferenceLine = (prefs?: UserPreferences): string | undefined => {
+    const labels = (
+        list: readonly { key: string; label: string }[],
+        keys: string[] = [],
+    ) => list.filter((e) => keys.includes(e.key)).map((e) => e.label);
+
+    const langs = labels(LANGUAGES, prefs?.languages);
+    const auds = labels(AUDIENCES, prefs?.audiences);
+    if (!langs.length && !auds.length) return undefined;
+
+    return `Der Nutzer sucht Angebote${langs.length ? ` auf ${langs.join(', ')}` : ''}${auds.length ? ` für ${auds.join(', ')}` : ''}.`;
+};
+
+/**
+ * Präferenzen des Nutzers — direkt aus dem Modell, kein interner Endpoint und
+ * kein HTTP-Hop (`ARCHITEKTUR.md` § 2.9). `email`/`password` werden gar nicht
+ * erst geladen.
+ *
+ * Fällt die Abfrage aus, läuft der Chat wie für einen Gast weiter: die
+ * Präferenzen schärfen die Auswahl, sie tragen sie nicht.
+ */
+const loadPreferences = async (
+    userId?: string,
+): Promise<UserPreferences | undefined> => {
+    if (!userId) return undefined;
+    try {
+        const user = await User.findById(userId).select('preferences').lean();
+        return user?.preferences;
+    } catch (err) {
+        console.warn(
+            'Präferenzen nicht ladbar, Chat läuft ungefiltert:',
+            err instanceof Error ? err.message : err,
+        );
+        return undefined;
+    }
+};
 
 /**
  * Behält nur IDs, die wir dem Modell selbst gegeben haben. Das ist die Stelle,
  * an der eine halluzinierte Beratungsstelle hängen bleibt — sie darf nie
  * stillschweigend durchrutschen.
+ *
+ * Unverändert seit dem zweiten Pool: der Schlüssel ist `poolKey()`, nicht die
+ * blanke ID. Das Gate wird nicht aufgeweicht.
  */
 export const knownOnly = <T>(ids: string[], byId: Map<string, T>): T[] =>
     ids.map((id) => byId.get(id)).filter((b) => b !== undefined);
+
+/**
+ * Schlüssel über beide Pools. Typ **vor** der ID: eine Beratung und ein Event
+ * mit derselben ObjectId sind zwei verschiedene Einträge, und ein Modell, das
+ * `type` rät, darf so nicht den falschen Treffer aufsammeln.
+ */
+export const poolKey = (itemType: string, id: string) => `${itemType}:${id}`;
 
 /**
  * Ein Anliegen → Antwort mit passenden Stellen.
@@ -298,29 +377,68 @@ export const knownOnly = <T>(ids: string[], byId: Map<string, T>): T[] =>
  *
  * `history` macht Rückfragen möglich: der Server bleibt zustandslos, den
  * Verlauf schickt der Client mit (validiert und begrenzt in `chatBodySchema`).
+ *
+ * Zwei Pools in **einem** Call: Beratungsstellen und kommende Veranstaltungen.
+ * `userId` (optional, Gäste haben keine) schneidet beide über die Präferenzen
+ * zu und ergänzt eine Kontextzeile im Prompt — beides optional, ohne sie
+ * antwortet der Chat wie vorher.
  */
 export const answer = async (
     message: string,
     history: ChatTurn[] = [],
+    userId?: string,
 ): Promise<ChatReply> => {
     // Vor allem anderen: kein Datenbank-Treffer, kein Modell-Call, keine
     // Latenz. Über das ganze Gespräch, wie die Disclaimer-Logik.
     const urgent = urgentHotlines(conversationText(history, message));
     if (urgent) return buildReply([], [], URGENT_TEXT, urgent);
 
-    const [candidates, categories] = await Promise.all([
-        Beratung.find()
+    const prefs = await loadPreferences(userId);
+    const prefFilter = prefFilters(prefs);
+
+    const [beratungen, events, categories] = await Promise.all([
+        Beratung.find(prefFilter.beratung)
             .select('title tags description')
-            .limit(MAX_CANDIDATES)
+            .limit(MAX_BERATUNGEN)
             .lean(),
-        Category.find({ appliesTo: 'beratung' }).select('key label').lean(),
+        // Vergangenes hilft niemandem: der Chat schlägt nur vor, was noch kommt.
+        ScrapedEvent.find({
+            startDate: { $gte: startOfToday() },
+            ...prefFilter.event,
+        })
+            .select('title category description startDate')
+            .sort({ startDate: 1 })
+            .limit(MAX_EVENTS)
+            .lean(),
+        Category.find().select('key label appliesTo').lean(),
     ]);
 
-    const byId = new Map(candidates.map((b) => [String(b._id), b]));
-    const toMatch = (b: (typeof candidates)[number], keys: string[]) => ({
-        id: String(b._id),
-        title: b.title,
-        category: b.tags?.find((t) => keys.includes(t)) ?? b.tags?.[0] ?? '',
+    // Ein Pool für das Modell: Events tragen genau eine Kategorie, Beratungen
+    // mehrere Tags — beides sind `Category.key`s, also dasselbe Feld.
+    const candidates: Candidate[] = [
+        ...beratungen.map((b) => ({
+            id: String(b._id),
+            itemType: 'Beratung' as const,
+            title: b.title,
+            tags: b.tags ?? [],
+            description: b.description ?? '',
+        })),
+        ...events.map((e) => ({
+            id: String(e._id),
+            itemType: 'ScrapedEvent' as const,
+            title: e.title,
+            tags: e.category ? [e.category] : [],
+            description: e.description ?? '',
+            when: e.startDate?.toLocaleDateString('de-DE'),
+        })),
+    ];
+
+    const byId = new Map(candidates.map((c) => [poolKey(c.itemType, c.id), c]));
+    const toMatch = (c: Candidate, keys: string[]) => ({
+        id: c.id,
+        title: c.title,
+        category: c.tags.find((t) => keys.includes(t)) ?? c.tags[0] ?? '',
+        itemType: c.itemType,
     });
 
     // Der Keyword-Treffer läuft immer mit: er ist Fallback *und* zweite Meinung
@@ -332,14 +450,14 @@ export const answer = async (
 
     const ai = await askGemini(
         message,
-        candidates.map((b) => ({
-            id: String(b._id),
-            title: b.title,
-            tags: b.tags ?? [],
-            description: b.description ?? '',
+        candidates,
+        categories.map((c) => ({
+            key: c.key,
+            label: c.label,
+            appliesTo: c.appliesTo,
         })),
-        categories.map((c) => ({ key: c.key, label: c.label })),
         history,
+        preferenceLine(prefs),
     );
 
     if (ai) {
@@ -349,15 +467,23 @@ export const answer = async (
                 ...keywordKeys,
             ]),
         ];
-        const matches = knownOnly(ai.ids, byId).map((b) => toMatch(b, keys));
+        const matches = knownOnly(
+            ai.ids.map((i) => poolKey(i.type, i.id)),
+            byId,
+        ).map((c) => toMatch(c, keys));
 
         return buildReply(keys, matches, ai.text);
     }
 
+    // Ohne Modell nur Beratungen — siehe der ponytail-Hinweis an `KEYWORDS`.
     const matches = candidates
-        .filter((b) => b.tags?.some((t) => keywordKeys.includes(t)))
+        .filter(
+            (c) =>
+                c.itemType === 'Beratung' &&
+                c.tags.some((t) => keywordKeys.includes(t)),
+        )
         .slice(0, 5)
-        .map((b) => toMatch(b, keywordKeys));
+        .map((c) => toMatch(c, keywordKeys));
 
     return buildReply(keywordKeys, matches);
 };

@@ -5,6 +5,9 @@ import {
     matchCategoryKeys,
     buildReply,
     knownOnly,
+    poolKey,
+    prefFilters,
+    preferenceLine,
     conversationText,
     urgentHotlines,
     toHistory,
@@ -13,7 +16,12 @@ import { CATEGORY_KEYS } from '#utils';
 
 const reply = (message: string) =>
     buildReply(matchCategoryKeys(message), [
-        { id: '1', title: 'Beratungsstelle', category: 'behoerden' },
+        {
+            id: '1',
+            title: 'Beratungsstelle',
+            category: 'behoerden',
+            itemType: 'Beratung',
+        },
     ]);
 
 test('jeder Keyword-Bucket zeigt auf einen existierenden Category-Key', () => {
@@ -60,6 +68,64 @@ test('halluzinierte IDs werden verworfen', () => {
         { title: 'Schuldnerberatung' },
     ]);
     assert.deepEqual(knownOnly(['nur-erfunden'], byId), []);
+});
+
+test('der gemischte Pool trennt gleiche IDs nach Typ', () => {
+    // Derselbe ObjectId-String in beiden Collections ist erlaubt — der
+    // Schluessel muss den Typ tragen, sonst liefert ein geratenes `type` den
+    // Eintrag der anderen Collection aus.
+    const byId = new Map([
+        [poolKey('Beratung', 'abc'), { title: 'Schuldnerberatung' }],
+        [poolKey('ScrapedEvent', 'abc'), { title: 'Stadtfest' }],
+    ]);
+
+    assert.deepEqual(knownOnly([poolKey('ScrapedEvent', 'abc')], byId), [
+        { title: 'Stadtfest' },
+    ]);
+    // Unbekannter Typ, bekannte ID: kein Treffer.
+    assert.deepEqual(knownOnly([poolKey('Activity', 'abc'), 'abc'], byId), []);
+});
+
+test('Praeferenzen filtern beide Pools, ohne Angabe filtern sie nichts', () => {
+    assert.deepEqual(prefFilters(undefined), { beratung: {}, event: {} });
+
+    const f = prefFilters({
+        languages: ['ar'],
+        audiences: ['familien'],
+        categories: ['familie', 'erfunden'],
+        freeOnly: true,
+    });
+
+    // Kategorien liegen in verschiedenen Feldern — unbekannte Keys fliegen raus.
+    assert.deepEqual(f.beratung.tags, { $in: ['familie'] });
+    assert.deepEqual(f.event.category, { $in: ['familie'] });
+    // Sprache/Zielgruppe kommen aus `buildFilter`: leer heisst „matcht immer".
+    assert.equal((f.beratung.$and as unknown[]).length, 2);
+    // `freeOnly` hat hier nichts zu filtern und taucht nicht auf.
+    assert.ok(!JSON.stringify(f).includes('price'));
+});
+
+test('die Kontextzeile traegt Praeferenzen, aber nichts Identifizierendes', () => {
+    const line = preferenceLine({
+        languages: ['ar'],
+        audiences: ['familien'],
+        categories: [],
+        freeOnly: false,
+    });
+    assert.match(line ?? '', /Arabisch/);
+    assert.match(line ?? '', /Familien/);
+
+    // Ohne Sprache und Zielgruppe gibt es keine Zeile — kein leerer Satz im Prompt.
+    assert.equal(
+        preferenceLine({
+            languages: [],
+            audiences: [],
+            categories: ['familie'],
+            freeOnly: true,
+        }),
+        undefined,
+    );
+    assert.equal(preferenceLine(undefined), undefined);
 });
 
 test('Rückfrage behält den Disclaimer des Themas aus dem Verlauf', () => {

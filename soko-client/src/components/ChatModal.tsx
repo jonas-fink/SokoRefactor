@@ -230,8 +230,12 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
 
                                     {turn.reply.matches.map((m) => (
                                         <NavLink
-                                            key={m.id}
-                                            to={`/beratung/detail/${m.id}`}
+                                            key={`${m.itemType}:${m.id}`}
+                                            to={
+                                                m.itemType === 'Beratung'
+                                                    ? `/beratung/detail/${m.id}`
+                                                    : `/angebot/${m.itemType}/${m.id}`
+                                            }
                                             className="card block p-3 hover:-translate-y-0.5"
                                             onClick={onClose}
                                         >

@@ -68,7 +68,6 @@ export interface Activity {
     date: string;
     price: number;
     tags: string[];
-    /** Leer = keine Angabe; matcht damit jeden Filter dieser Achse. */
     availableLanguages: string[];
     targetAudience: string[];
     location: GeoPoint;
@@ -109,7 +108,6 @@ export interface Beratung {
     location: GeoPoint;
     tags: string[];
     userId: PopulatedUser;
-    /** Leer = keine Angabe; matcht damit jeden Filter dieser Achse. */
     availableLanguages: string[];
     targetAudience: string[];
     createdAt: string;
@@ -149,7 +147,6 @@ export interface ScrapedEvent {
     municipality: string;
     sourceUrl: string;
     source: string;
-    /** Leer = keine Angabe; matcht damit jeden Filter dieser Achse. */
     availableLanguages: string[];
     targetAudience: string[];
     /** Nachtraeglich geokodiert — nicht jeder Veranstaltungsort loest auf. */
@@ -181,7 +178,13 @@ export interface Hotline {
  *  die UI kann den menschlichen Ausweg damit nicht versehentlich weglassen. */
 export interface ChatReply {
     text: string;
-    matches: { id: string; title: string; category: string }[];
+    /** `itemType` bestimmt das Linkziel: Beratung → Detailseite, Event → Angebot. */
+    matches: {
+        id: string;
+        title: string;
+        category: string;
+        itemType: 'Beratung' | 'ScrapedEvent';
+    }[];
     handoff: { label: string; hint: string };
     disclaimer: string | null;
     urgent: Hotline[] | null;

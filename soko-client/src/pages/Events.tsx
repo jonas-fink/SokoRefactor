@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
-import { AiOutlineArrowLeft, AiOutlineArrowRight } from 'react-icons/ai';
-import { Link, useNavigate } from 'react-router';
+import { AiOutlineArrowRight } from 'react-icons/ai';
+import { Link } from 'react-router';
 import { api } from '../utils/api';
+import PageHeader from '../components/PageHeader';
 import { CATEGORY_META } from '../categoryMeta';
 
 import type { Category } from '../types';
 
 const Events = () => {
-    const navigate = useNavigate();
     const [categories, setCategories] = useState<Category[]>([]);
     const [error, setError] = useState('');
 
@@ -19,15 +19,7 @@ const Events = () => {
 
     return (
         <div className="flex flex-col gap-6 md:max-w-6xl mx-auto md:p-8 pb-3">
-            <div className="flex gap-3 items-center">
-                <button
-                    className="card bg-surface p-2 cursor-pointer"
-                    onClick={() => navigate(-1)}
-                >
-                    <AiOutlineArrowLeft size={24} />
-                </button>
-                <h2 className="text-2xl font-bold">Events & Angebote</h2>
-            </div>
+            <PageHeader title="Events & Angebote" />
             <div className="flex flex-col gap-3">
                 <h3 className="text-xl">Kategorien</h3>
                 {error && <p className="text-error">{error}</p>}

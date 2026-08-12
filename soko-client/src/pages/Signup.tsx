@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router';
 import { signupSchema, type RegisterFormData } from '../schemas/authSchemas';
 import { useAuth } from '../context/auth-context';
+import Logo from '../components/Logo';
 
 const SignupPage = () => {
     const { signup } = useAuth();
@@ -25,12 +26,10 @@ const SignupPage = () => {
         }
     };
     return (
-        <div className="flex flex-col gap-8 w-full max-w-2xl px-4 min-h-screen mx-auto mt-16">
+        <div className="flex flex-col gap-8 w-full max-w-2xl p-4 min-h-screen mx-auto">
             <div className="flex flex-col items-center gap-2">
-                <h1 className="font-display text-5xl text-ink">
-                    Erstelle deinen Account
-                </h1>
-                <p className="font-sans text-ink-mute">
+                <Logo width={280} />
+                <p className="font-sans text-ink-mute text-center">
                     Tritt bei und Speichere deine Lieblinsevents oder plane
                     Termine bei Beratungsstellen
                 </p>

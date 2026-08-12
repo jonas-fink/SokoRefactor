@@ -1,18 +1,13 @@
 import { useEffect, useState } from 'react';
-import {
-    AiOutlineArrowLeft,
-    AiOutlineArrowRight,
-    AiOutlineLock,
-} from 'react-icons/ai';
-import { useNavigate } from 'react-router';
+import { AiOutlineArrowRight, AiOutlineLock } from 'react-icons/ai';
 import { Link } from 'react-router';
 import { api } from '../utils/api';
+import PageHeader from '../components/PageHeader';
 import { CATEGORY_META } from '../categoryMeta';
 
 import type { Category } from '../types';
 
 const Beratung = () => {
-    const navigate = useNavigate();
     const [categories, setCategories] = useState<Category[]>([]);
     const [error, setError] = useState('');
 
@@ -26,15 +21,7 @@ const Beratung = () => {
 
     return (
         <div className="flex flex-col gap-6 md:max-w-6xl mx-auto md:p-8 pb-3">
-            <div className="flex gap-4 items-center">
-                <button
-                    className="card bg-surface p-2 cursor-pointer"
-                    onClick={() => navigate(-1)}
-                >
-                    <AiOutlineArrowLeft size={24} />
-                </button>
-                <h2 className="text-2xl font-bold">Beratung & Hilfe</h2>
-            </div>
+            <PageHeader title="Beratung & Hilfe" />
             <div className="field flex gap-3 bg-ink text-primary-ink items-center p-3">
                 <AiOutlineLock size={24} />
                 <p>

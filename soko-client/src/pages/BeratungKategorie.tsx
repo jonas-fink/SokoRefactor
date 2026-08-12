@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router';
-import { AiOutlineArrowLeft, AiOutlineArrowRight } from 'react-icons/ai';
+import { Link, useParams } from 'react-router';
+import { AiOutlineArrowRight } from 'react-icons/ai';
 import { api } from '../utils/api';
+import PageHeader from '../components/PageHeader';
 import { CATEGORY_META } from '../categoryMeta';
 import SearchFilter from '../components/SearchFilter';
 import { useFilters } from '../hooks/useFilters';
@@ -9,7 +10,6 @@ import type { Beratung, Category } from '../types';
 
 const BeratungKategorie = () => {
     const { key = '' } = useParams();
-    const navigate = useNavigate();
     const { filters, setFilter, toggle, reset, activeCount, query } =
         useFilters();
     const [beratungen, setBeratungen] = useState<Beratung[]>([]);
@@ -48,16 +48,10 @@ const BeratungKategorie = () => {
 
     return (
         <div className="flex flex-col gap-6 md:max-w-6xl md:p-8 pb-3 mx-auto">
-            <div className="flex gap-4 items-center">
-                <button
-                    className="card bg-surface p-2 cursor-pointer"
-                    onClick={() => navigate(-1)}
-                >
-                    <AiOutlineArrowLeft size={24} />
-                </button>
-                <span className={meta?.accent}>{meta?.icon}</span>
-                <h2 className="text-2xl font-bold">{label}</h2>
-            </div>
+            <PageHeader
+                title={label}
+                icon={<span className={meta?.accent}>{meta?.icon}</span>}
+            />
             {meta && <p className="text-ink-soft">{meta.description}</p>}
 
             <SearchFilter

@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router';
 import { loginSchema, type LoginFormData } from '../schemas/authSchemas';
 import { useAuth } from '../context/auth-context';
-import Logo from '../assets/logo.png';
+import Logo from '../components/Logo';
 
 const Login = () => {
     const { login } = useAuth();
@@ -26,13 +26,10 @@ const Login = () => {
     };
 
     return (
-        <div className="flex flex-col gap-8 w-full max-w-2xl px-4 justify-center items-center min-h-screen mx-auto">
+        <div className="flex flex-col gap-8 w-full max-w-2xl p-4 justify-center items-center min-h-screen mx-auto">
             <div className="flex flex-col justify-center items-center gap-2">
-                <img src={Logo} width={300} height={300} />
-                <h1 className="font-display text-5xl text-ink">
-                    Willkommen bei Soko
-                </h1>
-                <p className="font-sans text-ink-mute">
+                <Logo width={280} />
+                <p className="font-sans text-ink-mute text-center">
                     Dein sozialer Kompass für Angebote, Veranstaltungen und
                     Beratung in deiner Nähe.
                 </p>

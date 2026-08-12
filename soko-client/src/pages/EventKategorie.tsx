@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
-import { AiOutlineArrowLeft } from 'react-icons/ai';
+import { useParams } from 'react-router';
 import { api } from '../utils/api';
+import PageHeader from '../components/PageHeader';
 import { formatDate } from '../utils/formatDate';
 import { CATEGORY_META } from '../categoryMeta';
 import OfferCard from '../components/OfferCard';
@@ -13,7 +13,6 @@ import type { Activity, Category, EventsPage } from '../types';
 
 const EventKategorie = () => {
     const { key = '' } = useParams();
-    const navigate = useNavigate();
     const { isFavorite, toggle, enabled } = useFavorites();
     const {
         filters,
@@ -119,16 +118,10 @@ const EventKategorie = () => {
 
     return (
         <div className="flex flex-col gap-6 md:max-w-6xl mx-auto md:p-8 pb-3">
-            <div className="flex gap-4 items-center">
-                <button
-                    className="card bg-surface p-2 cursor-pointer"
-                    onClick={() => navigate(-1)}
-                >
-                    <AiOutlineArrowLeft size={24} />
-                </button>
-                <span className={meta?.accent}>{meta?.icon}</span>
-                <h2 className="text-2xl font-bold">{label}</h2>
-            </div>
+            <PageHeader
+                title={label}
+                icon={<span className={meta?.accent}>{meta?.icon}</span>}
+            />
             {meta && <p className="text-ink-soft">{meta.description}</p>}
 
             <SearchFilter

@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router';
-import mainLogo from '../../assets/logo.png';
+import Logo from '../Logo';
 import { AiOutlineCompass, AiOutlineNotification } from 'react-icons/ai';
 import { MdOutlineMap, MdOutlineBookmark } from 'react-icons/md';
 import { useAuth, canCreate } from '../../context/auth-context';
@@ -22,8 +22,7 @@ const SideBar = () => {
     return (
         <div className="flex flex-row justify-around gap-2 border-t border-line bg-linear-to-br from-surface/85 via-surface/60 to-surface/30 backdrop-blur-xl p-3 h-full md:flex-col md:justify-start md:gap-8 md:border-t-0 md:p-8 z-10">
             <div className="hidden items-center md:flex">
-                <img src={mainLogo} width={88} height={88} />
-                <h1 className="text-3xl">SoKo</h1>
+                <Logo width={140} />
             </div>
             <nav className="flex flex-row justify-around gap-2 w-full md:flex-col md:justify-start">
                 <NavLink to="/" className={navClass}>

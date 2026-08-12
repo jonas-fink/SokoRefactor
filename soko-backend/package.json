@@ -56,7 +56,7 @@
         "prebuild": "rm -rf dist",
         "build": "tsc -p tsconfig.build.json",
         "prestart": "npm run build",
-        "start": "node dist/app.js"
+        "start": "node dist/server.js"
     },
     "keywords": [],
     "author": "",

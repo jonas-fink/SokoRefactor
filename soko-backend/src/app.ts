@@ -16,6 +16,14 @@ import {
 
 const app = express();
 
+// Genau ein Proxy steht davor (nginx im Compose-Stack, spaeter der TLS-Proxy).
+// Ohne das sieht `express-rate-limit` fuer jeden Nutzer die Proxy-IP und
+// limitiert damit alle gemeinsam statt einzeln — ein Unbeteiligter kann so
+// jeden aussperren, und `authRateLimiter` (10/15 min) waere wertlos.
+// `1` statt `true`: `true` glaubt jedem selbstgesetzten `X-Forwarded-For` und
+// macht den Limiter auf die andere Art kaputt.
+app.set('trust proxy', 1);
+
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());

@@ -12,16 +12,11 @@ import {
     beratungRouter,
     chatRouter,
     vocabularyRouter,
+    feedbackRouter,
 } from '#routes';
 
 const app = express();
 
-// Genau ein Proxy steht davor (nginx im Compose-Stack, spaeter der TLS-Proxy).
-// Ohne das sieht `express-rate-limit` fuer jeden Nutzer die Proxy-IP und
-// limitiert damit alle gemeinsam statt einzeln — ein Unbeteiligter kann so
-// jeden aussperren, und `authRateLimiter` (10/15 min) waere wertlos.
-// `1` statt `true`: `true` glaubt jedem selbstgesetzten `X-Forwarded-For` und
-// macht den Limiter auf die andere Art kaputt.
 app.set('trust proxy', 1);
 
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
@@ -38,6 +33,7 @@ app.use('/api/v1/categories', categoryRouter);
 app.use('/api/v1/beratungen', beratungRouter);
 app.use('/api/v1/chat', chatRouter);
 app.use('/api/v1/vocabulary', vocabularyRouter);
+app.use('/api/v1/feedback', feedbackRouter);
 
 app.use('*splat', (req, res) => res.status(404).json({ message: 'Not Found' }));
 app.use(errorHandler);

@@ -8,3 +8,4 @@ export * from './beratung.ts';
 export * from './category.ts';
 export * from './chat.ts';
 export * from './filters.ts';
+export * from './feedback.ts';

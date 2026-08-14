@@ -19,6 +19,7 @@ import Erstellen from './pages/Erstellen';
 import AngebotDetail from './pages/AngebotDetail';
 import Datenschutz from './pages/Datenschutz';
 import Impressum from './pages/Impressum';
+import Kontakt from './pages/Kontakt';
 import Willkommen from './pages/Willkommen';
 
 const App = () => {
@@ -51,6 +52,7 @@ const App = () => {
 
                     <Route path="/datenschutz" element={<Datenschutz />} />
                     <Route path="/impressum" element={<Impressum />} />
+                    <Route path="/kontakt" element={<Kontakt />} />
                     <Route element={<ProtectedRoute />}>
                         <Route path="/library" element={<Library />} />
                         <Route path="/settings" element={<Settings />} />

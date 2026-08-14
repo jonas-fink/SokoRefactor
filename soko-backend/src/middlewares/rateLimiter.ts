@@ -29,6 +29,16 @@ export const globalRateLimiter = rateLimit({
     message: { message: 'Zu viele Anfragen - bitte kurz warten' },
 });
 
+// Schreibt in die Datenbank, ohne Login erreichbar — also spamanfaellig. 5 pro
+// Viertelstunde reichen fuer echtes Feedback und machen ein Zumuellen laestig.
+export const feedbackRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 5,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    message: { message: 'Zu viele Anfragen - bitte kurz warten' },
+});
+
 // Strenger als das globale Limit: hinter dem Chat stehen Kosten pro Call
 // (GenAI), und ein Need-Finding-Dialog braucht keine 300 Requests. 40 statt 20,
 // seit Rückfragen möglich sind: ein Gespräch kostet mehrere Calls, und hinter

@@ -7,3 +7,4 @@ export * from './categories.ts';
 export * from './beratungen.ts';
 export * from './chatbot.ts';
 export * from './vocabulary.ts';
+export * from './feedback.ts';

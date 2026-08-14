@@ -7,6 +7,7 @@ export {
     refreshRateLimiter,
     globalRateLimiter,
     chatRateLimiter,
+    feedbackRateLimiter,
 } from './rateLimiter.ts';
 export { default as protect } from './protect.ts';
 export { default as optionalAuth } from './optionalAuth.ts';

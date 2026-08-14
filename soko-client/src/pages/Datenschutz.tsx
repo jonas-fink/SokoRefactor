@@ -143,13 +143,23 @@ const Datenschutz = () => (
                                 automatisch weg
                             </td>
                         </tr>
-                        <tr>
+                        <tr className="border-b border-line">
                             <td className="py-2 pr-4">
                                 Anmelde-Tokens — nur als Prüfsumme, nie im
                                 Klartext
                             </td>
                             <td className="py-2">
                                 7 Tage, danach automatisch weg
+                            </td>
+                        </tr>
+                        <tr>
+                            <td className="py-2 pr-4">
+                                Rückmeldungen über „Kontakt“: dein Text, die
+                                Seite, von der du geschrieben hast, und deine
+                                E-Mail — die nur, wenn du sie freiwillig angibst
+                            </td>
+                            <td className="py-2">
+                                bis das Anliegen erledigt ist
                             </td>
                         </tr>
                     </tbody>

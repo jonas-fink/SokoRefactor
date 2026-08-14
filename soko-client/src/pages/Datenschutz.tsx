@@ -106,6 +106,63 @@ const Datenschutz = () => (
         </section>
 
         <section className="flex flex-col gap-2">
+            <h2 className="text-2xl">Welche Daten wir speichern</h2>
+            {/* Aus den Modellen hergeleitet, nicht geraten. Aendert sich ein
+                Modell oder ein TTL-Index, aendert sich diese Tabelle mit. */}
+            <div className="overflow-x-auto">
+                <table className="w-full min-w-md text-left text-ink-soft">
+                    <thead>
+                        <tr className="border-b border-line">
+                            <th className="py-2 pr-4 font-medium">Was</th>
+                            <th className="py-2 font-medium">Wie lange</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr className="border-b border-line">
+                            <td className="py-2 pr-4">
+                                Konto: Name, E-Mail, Passwort-Hash
+                            </td>
+                            <td className="py-2">bis du es löschst</td>
+                        </tr>
+                        <tr className="border-b border-line">
+                            <td className="py-2 pr-4">
+                                Präferenzen: Sprachen, Zielgruppen, Themen
+                            </td>
+                            <td className="py-2">bis du sie löschst</td>
+                        </tr>
+                        <tr className="border-b border-line">
+                            <td className="py-2 pr-4">Gemerkte Angebote</td>
+                            <td className="py-2">bis du sie löschst</td>
+                        </tr>
+                        <tr className="border-b border-line">
+                            <td className="py-2 pr-4">
+                                Chat-Verlauf — nur wenn du eingeloggt bist
+                            </td>
+                            <td className="py-2">
+                                90 Tage ab dem letzten Beitrag, danach
+                                automatisch weg
+                            </td>
+                        </tr>
+                        <tr>
+                            <td className="py-2 pr-4">
+                                Anmelde-Tokens — nur als Prüfsumme, nie im
+                                Klartext
+                            </td>
+                            <td className="py-2">
+                                7 Tage, danach automatisch weg
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p className="text-ink-soft">
+                Nicht gespeichert werden: Chats ohne Konto, die Notfallnummern
+                aus einem Verlauf, dein Passwort im Klartext und der
+                Anmelde-Token im Klartext.
+            </p>
+        </section>
+
+        <section className="flex flex-col gap-2">
             <h2 className="text-2xl">Deine Rechte</h2>
             <p className="text-ink-soft">
                 Du hast das Recht auf Auskunft, Berichtigung, Löschung,

@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router';
 import { signupSchema, type RegisterFormData } from '../schemas/authSchemas';
 import { useAuth } from '../context/auth-context';
 import Logo from '../components/Logo';
+import PasswordField from '../components/PasswordField';
 
 const SignupPage = () => {
     const { signup } = useAuth();
@@ -41,18 +42,16 @@ const SignupPage = () => {
                         className="flex flex-col gap-4 w-full p-8"
                     >
                         <div className="flex flex-col gap-2">
-                            <label
-                                htmlFor="name"
-                                className="text-md text-ink-soft cursor-pointer hover:text-ink"
-                            >
+                            <label htmlFor="name" className="label text-md">
                                 NAME
                             </label>
                             <input
                                 type="text"
                                 id="name"
+                                autoComplete="name"
                                 {...register('name')}
                                 placeholder="Jane Doe"
-                                className="border border-line-strong rounded-control p-4 focus:outline-none focus:border-primary bg-transparent"
+                                className="field"
                             />
                             {errors.name && (
                                 <p className="text-error text-xs">
@@ -62,18 +61,18 @@ const SignupPage = () => {
                         </div>
 
                         <div className="flex flex-col gap-2">
-                            <label
-                                htmlFor="email"
-                                className="text-md text-ink-soft cursor-pointer hover:text-ink"
-                            >
+                            <label htmlFor="email" className="label text-md">
                                 E-MAIL
                             </label>
                             <input
                                 type="email"
                                 id="email"
+                                // Ohne autocomplete bieten Schluesselbund und
+                                // Google-Manager nichts an — WCAG 2.2 SC 3.3.8.
+                                autoComplete="email"
                                 {...register('email')}
                                 placeholder="you@example.com"
-                                className="border border-line-strong rounded-control p-4 focus:outline-none focus:border-primary bg-transparent"
+                                className="field"
                                 required
                             />
                             {errors.email && (
@@ -84,18 +83,12 @@ const SignupPage = () => {
                         </div>
 
                         <div className="flex flex-col gap-2">
-                            <label
-                                htmlFor="password"
-                                className="text-md text-ink-soft cursor-pointer hover:text-ink"
-                            >
-                                PASSWORD
-                            </label>
-                            <input
-                                type="password"
+                            <PasswordField
+                                label="PASSWORT"
                                 id="password"
+                                autoComplete="new-password"
                                 {...register('password')}
                                 placeholder="**********"
-                                className="border border-line-strong rounded-control p-4 focus:outline-none focus:border-primary bg-transparent"
                                 required
                             />
                             {errors.password && (

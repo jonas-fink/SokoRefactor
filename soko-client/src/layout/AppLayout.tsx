@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router';
 import { useEffect } from 'react';
 import SideBar from '../components/layout/SideBar';
+import Footer from '../components/layout/Footer';
 
 const AppLayout = () => {
     useEffect(() => {
@@ -26,6 +27,7 @@ const AppLayout = () => {
             </div>
             <div className="order-1 flex-1 min-w-0 px-4 pt-8 md:order-2 md:px-8">
                 <Outlet />
+                <Footer />
             </div>
         </div>
     );

@@ -114,7 +114,7 @@ const LandingPage = () => {
                         Kassel Sozial Kompass
                     </span>
                     <h1 className="text-4xl font-bold text-balance lg:text-5xl">
-                        Neu in Kassel?
+                        Lost in Kassel?
                     </h1>
                     <p className="max-w-prose text-lg text-pretty text-ink-soft">
                         <span className="font-semibold text-primary">

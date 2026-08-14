@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router';
 import { loginSchema, type LoginFormData } from '../schemas/authSchemas';
 import { useAuth } from '../context/auth-context';
 import Logo from '../components/Logo';
+import PasswordField from '../components/PasswordField';
 
 const Login = () => {
     const { login } = useAuth();
@@ -41,18 +42,18 @@ const Login = () => {
                         className="flex flex-col gap-4 w-full p-8"
                     >
                         <div className="flex flex-col gap-2">
-                            <label
-                                htmlFor="email"
-                                className="text-md text-ink-soft cursor-pointer hover:text-ink"
-                            >
+                            <label htmlFor="email" className="label text-md">
                                 E-MAIL
                             </label>
                             <input
                                 type="email"
                                 id="email"
+                                // Ohne autocomplete bieten Schluesselbund und
+                                // Google-Manager nichts an — WCAG 2.2 SC 3.3.8.
+                                autoComplete="email"
                                 {...register('email')}
                                 placeholder="you@example.com"
-                                className="border border-line-strong rounded-control p-4 focus:outline-none focus:border-primary bg-transparent"
+                                className="field"
                                 required
                             />
                             {errors.email && (
@@ -63,18 +64,12 @@ const Login = () => {
                         </div>
 
                         <div className="flex flex-col gap-2">
-                            <label
-                                htmlFor="password"
-                                className="text-md text-ink-soft cursor-pointer hover:text-ink"
-                            >
-                                PASSWORT
-                            </label>
-                            <input
-                                type="password"
+                            <PasswordField
+                                label="PASSWORT"
                                 id="password"
+                                autoComplete="current-password"
                                 {...register('password')}
                                 placeholder="**********"
-                                className="border border-line-strong rounded-control p-4 focus:outline-none focus:border-primary bg-transparent"
                                 required
                             />
                             {errors.password && (

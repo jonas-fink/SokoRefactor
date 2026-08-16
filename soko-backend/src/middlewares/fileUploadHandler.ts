@@ -75,6 +75,9 @@ const fileUploadHandler: RequestHandler = (req, res, next) => {
                 };
                 next();
             } catch (uploadError) {
+                // Ohne Log ist ein 401 von Cloudinary (falsche/veraltete Keys)
+                // vom Client aus nicht von einem echten Serverfehler zu unterscheiden.
+                console.error('Cloudinary upload failed:', uploadError);
                 res.status(500).json({ error: 'Cloudinary Upload failed' });
             } finally {
                 // formidable raeumt sein Tempdir nie selbst auf — ohne das

@@ -177,6 +177,29 @@ test('jede Notfall-Kategorie liefert ihre Nummern', () => {
     assert.match(bereitschaft.hint, /kein Notfall/);
 });
 
+// Seit der Spracheingabe kommt die Nachricht nicht mehr zwingend auf Deutsch.
+// Der Notfallpfad ist der eine, der das nicht verpassen darf.
+test('Notlagen greifen auch in den anderen Sprachen', () => {
+    const numbers = (text: string) =>
+        (urgentHotlines(text) ?? []).map((h) => h.number);
+
+    assert.ok(numbers('كان لدي حادث').includes('112'), 'Arabisch: Unfall');
+    assert.ok(numbers('у мене аварія').includes('112'), 'Ukrainisch: Unfall');
+    assert.ok(numbers('bir kaza geçirdim').includes('112'), 'Türkisch: Unfall');
+    assert.ok(
+        numbers('I think about suicide').includes('0800 1110111'),
+        'Englisch: Suizid',
+    );
+    assert.ok(numbers('domowa przemoc').includes('116016'), 'Polnisch: Gewalt');
+});
+
+// Der teure Fehlalarm: wer nach Beratung sucht, soll keine 112 sehen.
+test('Themenbegriffe loesen weiterhin keinen Notruf aus', () => {
+    assert.equal(urgentHotlines('Ich suche eine Gewaltschutzberatung'), null);
+    assert.equal(urgentHotlines('Wann ist das Feuerwehrfest?'), null);
+    assert.equal(urgentHotlines('Ich brauche Hilfe beim Wohngeld'), null);
+});
+
 test('harmlose Anliegen loesen keinen Notruf aus', () => {
     // Der wichtigere Fall: ein falscher Notrufblock macht die Antwort wertlos.
     for (const text of [

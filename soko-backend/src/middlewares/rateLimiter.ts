@@ -50,3 +50,14 @@ export const chatRateLimiter = rateLimit({
     legacyHeaders: false,
     message: { message: 'Zu viele Anfragen - bitte kurz warten' },
 });
+
+// Strenger als der Chat selbst: eine Transkription schickt Audio an das Modell
+// und kostet ein Vielfaches eines Textcalls. 20 Aufnahmen pro Viertelstunde
+// decken ein Gespraech ab, in dem jede Nachricht gesprochen wird.
+export const transcribeRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 20,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    message: { message: 'Zu viele Aufnahmen - bitte kurz warten' },
+});

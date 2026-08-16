@@ -13,6 +13,9 @@ export const chatBodySchema = z.object({
         )
         .max(10)
         .default([]),
+    // Von `POST /chat/transcribe` erkannt und durchgereicht, damit die Antwort
+    // in der Sprache der Frage kommt. Optional: getippt wird ohne.
+    lang: z.string().trim().max(10).optional(),
 });
 
 export type ChatBody = z.infer<typeof chatBodySchema>;

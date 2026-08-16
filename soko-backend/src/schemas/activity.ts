@@ -1,5 +1,12 @@
 import { z } from 'zod';
-import { objectIdSchema } from './shared.ts';
+import {
+    hasContactForPreferred,
+    objectIdSchema,
+    optionalEmail,
+    optionalText,
+    preferredContactError,
+    preferredContactSchema,
+} from './shared.ts';
 
 // Activities kommen als multipart/form-data rein (ActivityForm.tsx), d.h.
 // `date` und `price` sind Strings — deshalb `coerce` statt `z.date()`/`z.number()`.
@@ -14,6 +21,12 @@ const activitySchema = z.object({
     description: z.string().trim().min(1, 'Description is required'),
     date: z.coerce.date(),
     price: z.coerce.number().min(0).default(0),
+
+    email: optionalEmail,
+    phone: optionalText(50),
+    address: optionalText(200),
+    preferredContact: preferredContactSchema,
+
     location: z.object({
         type: z.literal('Point').default('Point'),
         coordinates: z
@@ -22,9 +35,6 @@ const activitySchema = z.object({
     }),
     userId: objectIdSchema,
     tags: z.array(z.string().trim()).default([]),
-
-    // Leer = keine Angabe = matcht immer. Alt-Dokumente ohne die Felder laufen
-    // deshalb ueber `default([])` durch, statt beim Lesen in einen 500 zu kippen.
     availableLanguages: z.array(z.string().trim()).default([]),
     targetAudience: z.array(z.string().trim()).default([]),
 });
@@ -61,7 +71,9 @@ const bodyLimits = {
 
 export const activityCreateBodySchema = activitySchema
     .omit({ userId: true })
-    .extend(bodyLimits);
+    .extend(bodyLimits)
+    .refine(hasContactForPreferred, preferredContactError);
+// Kein Kontakt-Refine hier — Begruendung an `hasContactForPreferred`.
 export const activityPatchBodySchema = activitySchema
     .omit({ userId: true })
     .extend(bodyLimits)

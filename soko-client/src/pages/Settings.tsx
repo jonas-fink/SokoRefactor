@@ -14,7 +14,7 @@ const SettingsPage = () => {
 
     const submit =
         (action: (form: FormData) => Promise<void>, done: string) =>
-        async (event: React.FormEvent<HTMLFormElement>) => {
+        async (event: React.SubmitEvent<HTMLFormElement>) => {
             event.preventDefault();
             const form = event.currentTarget;
             setCredMessage(null);

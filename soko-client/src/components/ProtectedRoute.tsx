@@ -1,7 +1,7 @@
 import { Navigate, Outlet } from 'react-router';
 import { useAuth, canCreate } from '../context/auth-context';
 
-const ProtectedRoute = ({ requireCreator = false }) => {
+const ProtectedRoute = ({ requireCreator = false, requireAdmin = false }) => {
     const { user, loading } = useAuth();
 
     if (loading) {
@@ -15,6 +15,10 @@ const ProtectedRoute = ({ requireCreator = false }) => {
         return <Navigate to="/login" replace />;
     }
     if (requireCreator && !canCreate(user)) {
+        return <Navigate to="/settings" replace />;
+    }
+    // Beratungsangebote pflegt ausschliesslich `admin` (ARCHITEKTUR.md § 2.6).
+    if (requireAdmin && user.role !== 'admin') {
         return <Navigate to="/settings" replace />;
     }
     return <Outlet />;

@@ -90,7 +90,9 @@ export const api = {
     put<T>(path: string, body?: unknown) {
         return request<T>(path, { method: 'PUT', body: JSON.stringify(body) });
     },
-    upload<T>(path: string, form: FormData) {
-        return request<T>(path, { method: 'POST', body: form });
+    // PUT fuer den Bearbeiten-Pfad: derselbe multipart-Body, nur ein anderes
+    // Verb — `request` laesst den Content-Type bei FormData ohnehin weg.
+    upload<T>(path: string, form: FormData, method: 'POST' | 'PUT' = 'POST') {
+        return request<T>(path, { method, body: form });
     },
 };

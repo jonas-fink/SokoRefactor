@@ -1,5 +1,12 @@
 import { z } from 'zod';
-import { objectIdSchema } from './shared.ts';
+import {
+    hasContactForPreferred,
+    objectIdSchema,
+    optionalEmail,
+    optionalText,
+    preferredContactError,
+    preferredContactSchema,
+} from './shared.ts';
 
 // 1. TimeSlot Schema
 const timeSlotUserSchema = z.object({
@@ -53,8 +60,11 @@ export const beratungZodSchema = z.object({
     // und darf beim Lesen nicht in einen 500 laufen (trifft spaeter den Import).
     openingHours: businessHoursUserSchema.optional(),
 
-    phone: z.string().trim().optional(),
-    address: z.string().trim().optional(),
+    phone: optionalText(50),
+    email: optionalEmail,
+    address: optionalText(200),
+    preferredContact: preferredContactSchema,
+
     services: z.array(serviceUserSchema).default([]),
 
     location: z.object({
@@ -97,7 +107,9 @@ export const populatedBeratungSchema = beratungOutputSchema.extend({
 // image is optional on input: fileUploadHandler / controller supply a fallback
 export const beratungCreateBodySchema = beratungZodSchema
     .omit({ userId: true })
-    .extend({ image: z.string().optional() });
+    .extend({ image: z.string().optional() })
+    .refine(hasContactForPreferred, preferredContactError);
+// Kein Kontakt-Refine hier — Begruendung an `hasContactForPreferred`.
 export const beratungPatchBodySchema = beratungZodSchema
     .partial()
     .omit({ userId: true });

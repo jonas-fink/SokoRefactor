@@ -3,7 +3,10 @@ import { useParams } from 'react-router';
 import { api } from '../utils/api';
 import PageHeader from '../components/PageHeader';
 import MapView from '../components/map/MapView';
+import ContactBlock from '../components/ContactBlock';
+import OwnerActions from '../components/OwnerActions';
 import { useFavorites } from '../hooks/useFavorites';
+import { useAuth } from '../context/auth-context';
 import {
     AiFillHeart,
     AiOutlineHeart,
@@ -22,6 +25,7 @@ const AngebotDetail = () => {
     const [error, setError] = useState('');
     const { labelOf } = useCategories('activity');
     const { labelOf: axisLabelOf } = useVocabulary();
+    const { user } = useAuth();
 
     useEffect(() => {
         if (!itemType || !id) return;
@@ -44,6 +48,12 @@ const AngebotDetail = () => {
     const coordinates =
         activity?.location?.coordinates ?? event?.location?.coordinates;
     const favorite = isFavorite(itemType, id);
+    // Nur eigene Activities — ScrapedEvents gehoeren dem Scraper, nicht uns.
+    // Dieselbe Regel wie `isDocOwner` im Backend: Owner **oder** Admin.
+    const canManage =
+        !!activity &&
+        !!user &&
+        (user.role === 'admin' || activity.userId?._id === user.id);
     // Ohne Vokabular faellt die Zeile weg — ein roher Key waere schlechter.
     const axis = (keys: string[] = []) =>
         keys.map(axisLabelOf).filter(Boolean).join(', ');
@@ -55,25 +65,34 @@ const AngebotDetail = () => {
             <PageHeader
                 title={item.title}
                 action={
-                    enabled && (
-                        <button
-                            type="button"
-                            aria-label={
-                                favorite
-                                    ? 'Aus Sammlung entfernen'
-                                    : 'Zur Sammlung'
-                            }
-                            aria-pressed={favorite}
-                            className="btn-secondary text-error cursor-pointer shrink-0"
-                            onClick={() => toggle(itemType, id)}
-                        >
-                            {favorite ? (
-                                <AiFillHeart size={20} />
-                            ) : (
-                                <AiOutlineHeart size={20} />
-                            )}
-                        </button>
-                    )
+                    <div className="flex shrink-0 gap-2">
+                        {enabled && (
+                            <button
+                                type="button"
+                                aria-label={
+                                    favorite
+                                        ? 'Aus Sammlung entfernen'
+                                        : 'Zur Sammlung'
+                                }
+                                aria-pressed={favorite}
+                                className="btn-secondary text-error cursor-pointer shrink-0"
+                                onClick={() => toggle(itemType, id)}
+                            >
+                                {favorite ? (
+                                    <AiFillHeart size={20} />
+                                ) : (
+                                    <AiOutlineHeart size={20} />
+                                )}
+                            </button>
+                        )}
+                        {canManage && (
+                            <OwnerActions
+                                editTo={`/erstellen/aktivitaet/${id}`}
+                                deletePath={`/activities/${id}`}
+                                redirectTo="/events"
+                            />
+                        )}
+                    </div>
                 }
             />
 
@@ -134,6 +153,8 @@ const AngebotDetail = () => {
                     </p>
                 )}
             </div>
+
+            {activity && <ContactBlock contact={activity} />}
 
             {coordinates && (
                 <div className="h-72 overflow-hidden rounded-card">

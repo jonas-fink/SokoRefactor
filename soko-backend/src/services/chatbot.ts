@@ -174,7 +174,9 @@ const HOTLINES = {
  * „Feuerwehrfest" dürfen keinen Notruf auslösen. Der falsch-positive Fall ist
  * hier der teurere — wer nach einem Antrag fragt, soll keine 112 sehen.
  */
-const URGENT: { pattern: RegExp; keys: (keyof typeof HOTLINES)[] }[] = [
+type HotlineKey = keyof typeof HOTLINES;
+
+const URGENT: { pattern: RegExp; keys: HotlineKey[] }[] = [
     {
         pattern: /\b(unfall|verletzt|blutet|bewusstlos|feuer)\b/,
         keys: ['notruf', 'bereitschaft'],
@@ -194,6 +196,91 @@ const URGENT: { pattern: RegExp; keys: (keyof typeof HOTLINES)[] }[] = [
 ];
 
 /**
+ * Dieselben Notlagen in den Sprachen aus `LANGUAGES`.
+ *
+ * Nötig, seit die Spracheingabe fremdsprachig sein darf: bis dahin kam jede
+ * Nachricht auf Deutsch herein, und die Muster oben reichten. Wer „Unfall" auf
+ * Arabisch sagt, braucht dieselbe Nummer.
+ *
+ * **Bewusst `includes` statt Wortgrenzen.** `\b` ist in JavaScript
+ * ASCII-basiert und greift bei Arabisch, Farsi und Kyrillisch schlicht nicht.
+ * Der Grund für `\b` oben war die deutsche Komposition
+ * („Gewaltschutzberatung" darf keinen Notruf auslösen) — ein Problem, das
+ * diese Sprachen so nicht haben.
+ */
+const URGENT_TRANSLATIONS: { words: string[]; keys: HotlineKey[] }[] = [
+    {
+        // Unfall / verletzt / Feuer
+        words: [
+            'accident',
+            'injured',
+            'bleeding',
+            'unconscious',
+            'حادث',
+            'إصابة',
+            'kaza',
+            'yaralı',
+            'аварія',
+            'нещасний випадок',
+            'авария',
+            'без свідомості',
+            'تصادف',
+            'wypadek',
+            'accident de',
+            'rănit',
+        ],
+        keys: ['notruf', 'bereitschaft'],
+    },
+    {
+        // Suizid
+        words: [
+            'suicide',
+            'kill myself',
+            'انتحار',
+            'intihar',
+            'самогубство',
+            'самоубийство',
+            'خودکشی',
+            'samobójstwo',
+            'sinucidere',
+        ],
+        keys: ['seelsorge', 'notruf', 'kummer'],
+    },
+    {
+        // Gewalt / Missbrauch
+        words: [
+            'violence',
+            'beats me',
+            'abuse',
+            'عنف',
+            'اعتداء',
+            'şiddet',
+            'насильство',
+            'насилие',
+            'خشونت',
+            'przemoc',
+            'violență',
+        ],
+        keys: ['gewalt', 'notruf'],
+    },
+    {
+        // Vergiftung
+        words: [
+            'poison',
+            'overdose',
+            'تسمم',
+            'zehirlenme',
+            'отруєння',
+            'отравление',
+            'مسمومیت',
+            'zatrucie',
+            'otrăvire',
+        ],
+        keys: ['gift', 'notruf'],
+    },
+];
+
+/**
  * Notlage im Text? Dann die passenden Nummern, sonst `null`.
  *
  * Läuft **vor** dem Gemini-Call und ohne ihn: wer „Unfall" schreibt, braucht
@@ -202,9 +289,12 @@ const URGENT: { pattern: RegExp; keys: (keyof typeof HOTLINES)[] }[] = [
  */
 export const urgentHotlines = (text: string): Hotline[] | null => {
     const haystack = text.toLowerCase();
-    const keys = URGENT.filter((u) => u.pattern.test(haystack)).flatMap(
-        (u) => u.keys,
-    );
+    const keys = [
+        ...URGENT.filter((u) => u.pattern.test(haystack)),
+        ...URGENT_TRANSLATIONS.filter((u) =>
+            u.words.some((w) => haystack.includes(w)),
+        ),
+    ].flatMap((u) => u.keys);
     // Mehrere Treffer teilen sich `notruf` — Reihenfolge bleibt, Dubletten raus.
     return keys.length ? [...new Set(keys)].map((k) => HOTLINES[k]) : null;
 };
@@ -387,6 +477,8 @@ export const answer = async (
     message: string,
     history: ChatTurn[] = [],
     userId?: string,
+    /** Von der Spracheingabe erkannt (`POST /chat/transcribe`). */
+    lang?: string,
 ): Promise<ChatReply> => {
     // Vor allem anderen: kein Datenbank-Treffer, kein Modell-Call, keine
     // Latenz. Über das ganze Gespräch, wie die Disclaimer-Logik.
@@ -458,6 +550,7 @@ export const answer = async (
         })),
         history,
         preferenceLine(prefs),
+        lang,
     );
 
     if (ai) {

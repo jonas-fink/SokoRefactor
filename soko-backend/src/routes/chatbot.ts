@@ -2,10 +2,17 @@ import { Router } from 'express';
 import {
     validateBody,
     chatRateLimiter,
+    transcribeRateLimiter,
+    audioUploadHandler,
     optionalAuth,
     protect,
 } from '#middlewares';
-import { postChat, getChatHistory, deleteChatHistory } from '#controllers';
+import {
+    postChat,
+    postTranscribe,
+    getChatHistory,
+    deleteChatHistory,
+} from '#controllers';
 import { chatBodySchema } from '#schemas';
 
 const router = Router();
@@ -18,6 +25,16 @@ router.post(
     optionalAuth,
     validateBody(chatBodySchema),
     postChat,
+);
+
+// Wer den Chat benutzen darf, darf ihn auch besprechen — also `optionalAuth`
+// wie oben. Eigener, strengerer Limiter: Audio kostet mehr als Text.
+router.post(
+    '/transcribe',
+    transcribeRateLimiter,
+    optionalAuth,
+    audioUploadHandler,
+    postTranscribe,
 );
 
 router

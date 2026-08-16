@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { NavLink } from 'react-router';
+import { AiOutlineAudio, AiOutlineAudioMuted } from 'react-icons/ai';
 import { api } from '../utils/api';
 import { useAuth } from '../context/auth-context';
+import { useVoiceInput } from '../hooks/useVoiceInput';
 import type { ChatReply, ChatTurn as Turn } from '../types';
 
 interface ChatModalProps {
@@ -25,6 +27,14 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
     const [consented, setConsented] = useState(
         () => localStorage.getItem(CONSENT_KEY) === 'ja',
     );
+    // Von der Spracheingabe erkannt — sorgt dafuer, dass die Antwort in
+    // derselben Sprache kommt. Beim Tippen bleibt es leer.
+    const [lang, setLang] = useState('');
+
+    const voice = useVoiceInput((text, detected) => {
+        setMessage((m) => (m ? `${m} ${text}` : text));
+        setLang(detected);
+    });
 
     // Der Handoff ist serverseitig konstant — einmal unten anheften statt in
     // jeder Bubble wiederholen. Der menschliche Ausweg steht damit dauerhaft da.
@@ -67,7 +77,7 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
         if (thread) thread.scrollTop = thread.scrollHeight;
     }, [turns.length, loading]);
 
-    const send = async (e: React.FormEvent) => {
+    const send = async (e: React.SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
         const text = message.trim();
         if (!text || loading) return;
@@ -90,6 +100,7 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
                 // Eingeloggt lädt der Server den Verlauf selbst und ignoriert
                 // diesen hier — dann gar nicht erst schicken.
                 history: user ? [] : history.slice(-10),
+                ...(lang ? { lang } : {}),
             });
             setTurns((prev) => [...prev, { role: 'bot', reply }]);
         } catch (err) {
@@ -152,7 +163,14 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
                             : 'Wir speichern ihn nicht.'}
                     </p>
                     <p className="text-ink-soft">
-                        Bitte schreib deshalb{' '}
+                        Du kannst auch <strong>sprechen</strong> statt tippen —
+                        in deiner Sprache. Die Aufnahme geht dafür ebenfalls an
+                        Google Gemini, wird dort in Text umgewandelt und bei uns
+                        nicht gespeichert. Den Text siehst du vorher und kannst
+                        ihn ändern.
+                    </p>
+                    <p className="text-ink-soft">
+                        Bitte sag oder schreib deshalb{' '}
                         <strong>keine Namen, Adressen oder Aktenzeichen</strong>{' '}
                         — „Ich habe Mietschulden" reicht völlig.
                     </p>
@@ -287,6 +305,9 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
                                 className="field min-w-0 flex-1 resize-none"
                                 rows={1}
                                 maxLength={500}
+                                // Ohne das laeuft ein arabisches oder farsi
+                                // Transkript in der falschen Leserichtung.
+                                dir="auto"
                                 placeholder={
                                     turns.length
                                         ? 'Nachfragen…'
@@ -302,6 +323,33 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
                                     }
                                 }}
                             />
+                            {/* Faellt weg, wo der Browser nicht aufnehmen kann. */}
+                            {voice.supported && (
+                                <button
+                                    type="button"
+                                    aria-label={
+                                        voice.recording
+                                            ? 'Aufnahme beenden'
+                                            : 'Nachricht sprechen'
+                                    }
+                                    aria-pressed={voice.recording}
+                                    disabled={voice.busy}
+                                    onClick={
+                                        voice.recording
+                                            ? voice.stop
+                                            : voice.start
+                                    }
+                                    className={`btn-secondary shrink-0 cursor-pointer disabled:opacity-50 ${
+                                        voice.recording ? 'text-error' : ''
+                                    }`}
+                                >
+                                    {voice.recording ? (
+                                        <AiOutlineAudioMuted size={20} />
+                                    ) : (
+                                        <AiOutlineAudio size={20} />
+                                    )}
+                                </button>
+                            )}
                             <button
                                 type="submit"
                                 className="btn-primary shrink-0 cursor-pointer disabled:opacity-50 hover:brightness-110 active:translate-y-1"
@@ -310,6 +358,23 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
                                 Senden
                             </button>
                         </form>
+
+                        {voice.recording && (
+                            <p className="mt-2 text-xs text-ink-soft">
+                                Aufnahme läuft — sprich, und tippe dann auf das
+                                Symbol.
+                            </p>
+                        )}
+                        {voice.busy && (
+                            <p className="mt-2 text-xs text-ink-mute">
+                                Wird in Text umgewandelt …
+                            </p>
+                        )}
+                        {voice.error && (
+                            <p className="text-error mt-2 text-xs">
+                                {voice.error}
+                            </p>
+                        )}
 
                         <p className="mt-2 text-xs text-ink-mute">
                             Google Gemini hat Einblick in diese Daten — bitte

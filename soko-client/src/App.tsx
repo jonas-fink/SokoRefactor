@@ -16,6 +16,7 @@ import Profile from './pages/Profile';
 import BeratungKategorie from './pages/BeratungKategorie';
 import BeratungDetail from './pages/BeratungDetail';
 import Erstellen from './pages/Erstellen';
+import Bearbeiten from './pages/Bearbeiten';
 import AngebotDetail from './pages/AngebotDetail';
 import Datenschutz from './pages/Datenschutz';
 import Impressum from './pages/Impressum';
@@ -61,6 +62,16 @@ const App = () => {
                     </Route>
                     <Route element={<ProtectedRoute requireCreator />}>
                         <Route path="/erstellen" element={<Erstellen />} />
+                        <Route
+                            path="/erstellen/aktivitaet/:id"
+                            element={<Bearbeiten art="aktivitaet" />}
+                        />
+                    </Route>
+                    <Route element={<ProtectedRoute requireAdmin />}>
+                        <Route
+                            path="/erstellen/beratung/:id"
+                            element={<Bearbeiten art="beratung" />}
+                        />
                     </Route>
                 </Route>
             </Routes>

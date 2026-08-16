@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
-import {
-    AiOutlineLock,
-    AiOutlinePhone,
-    AiOutlineEnvironment,
-    AiOutlineFileText,
-} from 'react-icons/ai';
+import { AiOutlineLock, AiOutlineFileText } from 'react-icons/ai';
 import { api, BASE } from '../utils/api';
 import PageHeader from '../components/PageHeader';
+import ContactBlock from '../components/ContactBlock';
+import OwnerActions from '../components/OwnerActions';
+import { useAuth } from '../context/auth-context';
 import MapView from '../components/map/MapView';
 import { WEEKDAYS, fromMinutes } from '../schemas/beratungSchema';
 import { useCategories } from '../hooks/useCategories';
@@ -20,6 +18,7 @@ const BeratungDetail = () => {
     const [error, setError] = useState('');
     const { labelOf } = useCategories('beratung');
     const { labelOf: axisLabelOf } = useVocabulary();
+    const { user } = useAuth();
 
     useEffect(() => {
         api.get<Beratung>(`/beratungen/${id}`)
@@ -38,7 +37,19 @@ const BeratungDetail = () => {
 
     return (
         <div className="flex flex-col gap-6 max-w-6xl mx-auto md:p-8 pb-3">
-            <PageHeader title={beratung.title} />
+            <PageHeader
+                title={beratung.title}
+                // Beratungen pflegt ausschliesslich `admin` (ARCHITEKTUR.md § 2.6).
+                action={
+                    user?.role === 'admin' && (
+                        <OwnerActions
+                            editTo={`/erstellen/beratung/${beratung._id}`}
+                            deletePath={`/beratungen/${beratung._id}`}
+                            redirectTo="/beratung"
+                        />
+                    )
+                }
+            />
 
             <img
                 src={beratung.image}
@@ -83,28 +94,7 @@ const BeratungDetail = () => {
                 </div>
             )}
 
-            {(beratung.phone || beratung.address) && (
-                <div className="flex md:flex-row flex-col gap-3">
-                    {' '}
-                    {beratung.address && (
-                        <p className="flex items-center gap-3">
-                            <AiOutlineEnvironment size={20} />
-                            <span className="text-ink-soft">
-                                {beratung.address}
-                            </span>
-                        </p>
-                    )}
-                    {beratung.phone && (
-                        <a
-                            href={`tel:${beratung.phone}`}
-                            className="flex items-center gap-3"
-                        >
-                            <AiOutlinePhone size={20} />
-                            <span>{beratung.phone}</span>
-                        </a>
-                    )}
-                </div>
-            )}
+            <ContactBlock contact={beratung} />
 
             {beratung.services && beratung.services.length > 0 && (
                 <div className="card flex flex-col gap-4 p-4">

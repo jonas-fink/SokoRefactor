@@ -60,7 +60,18 @@ export interface GeoPoint {
     coordinates: [number, number];
 }
 
-export interface Activity {
+/** Welcher der hinterlegten Wege der gewünschte ist — bestimmt die Reihenfolge
+ *  im Kontaktblock der Detailseite. */
+export type PreferredContact = 'phone' | 'email' | 'address';
+
+export interface Contactable {
+    phone?: string;
+    email?: string;
+    address?: string;
+    preferredContact?: PreferredContact;
+}
+
+export interface Activity extends Contactable {
     _id: string;
     title: string;
     description: string;
@@ -84,6 +95,11 @@ export interface TimeSlot {
 export interface BeratungDocument {
     _id: string;
     title: string;
+    /** Kein Zugriffstoken — der Bucket ist privat, geladen wird über den
+     *  Redirect auf eine presigned URL. Steht hier, weil der Bearbeiten-Pfad
+     *  die Dokumente unverändert zurückschicken muss (sonst gelten sie beim
+     *  PUT als verwaist und werden aus S3 gelöscht). */
+    s3Key: string;
     mimeType: string;
     uploadedAt?: string;
 }
@@ -95,15 +111,13 @@ export interface BeratungService {
     documents: BeratungDocument[];
 }
 
-export interface Beratung {
+export interface Beratung extends Contactable {
     _id: string;
     title: string;
     description: string;
     image: string;
     /** Wochentag → Zeitfenster in Minuten seit Mitternacht; leer = geschlossen. */
     openingHours?: Record<string, TimeSlot[]>;
-    phone?: string;
-    address?: string;
     services?: BeratungService[];
     location: GeoPoint;
     tags: string[];

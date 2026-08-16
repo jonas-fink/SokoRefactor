@@ -51,11 +51,14 @@ router.post(
     createActivity,
 );
 
+// `validateId` **vor** `isActivityOwner`: die Owner-Pruefung laedt das Dokument
+// per `findById`, eine kaputte ID liefe dort in einen CastError (500) statt in
+// den 400, den die Route dafuer vorsieht.
 router.put(
     '/:id',
     protect,
-    isActivityOwner,
     validateId,
+    isActivityOwner,
     fileUploadHandler,
     validateBody(activityCreateBodySchema),
     updateActivity,
@@ -63,12 +66,12 @@ router.put(
 router.patch(
     '/:id',
     protect,
-    isActivityOwner,
     validateId,
+    isActivityOwner,
     fileUploadHandler,
     validateBody(activityPatchBodySchema),
     patchActivity,
 );
-router.delete('/:id', protect, isActivityOwner, validateId, deleteActivity);
+router.delete('/:id', protect, validateId, isActivityOwner, deleteActivity);
 
 export default router;

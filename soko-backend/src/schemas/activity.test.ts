@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert';
-import { activityCreateBodySchema } from './activity.ts';
+import {
+    activityCreateBodySchema,
+    activityPatchBodySchema,
+} from './activity.ts';
 
 // Exakt das Shape, das ActivityForm.tsx per FormData schickt: `price` und
 // `date` sind Strings. Ohne `z.coerce` scheitert hier jeder echte Request.
@@ -41,4 +44,49 @@ test('Fehlende Pflichtfelder werden abgelehnt', () => {
         activityCreateBodySchema.safeParse(ohneBeschreibung).success,
         false,
     );
+});
+
+// --- Kontaktangaben ---------------------------------------------------------
+
+test('Leere Kontaktfelder werden zu undefined, nicht zu ""', () => {
+    // Genau das schickt ein Formular, in dem niemand etwas eingetragen hat.
+    const parsed = activityCreateBodySchema.parse({
+        ...formDataBody,
+        email: '',
+        phone: '',
+        address: '',
+    });
+
+    assert.strictEqual(parsed.email, undefined);
+    assert.strictEqual(parsed.phone, undefined);
+    assert.strictEqual(parsed.address, undefined);
+});
+
+test('preferredContact ohne die zugehoerige Angabe wird abgelehnt', () => {
+    const result = activityCreateBodySchema.safeParse({
+        ...formDataBody,
+        email: '',
+        preferredContact: 'email',
+    });
+
+    assert.equal(result.success, false);
+});
+
+test('preferredContact mit zugehoeriger Angabe geht durch', () => {
+    const parsed = activityCreateBodySchema.parse({
+        ...formDataBody,
+        email: 'kontakt@example.org',
+        preferredContact: 'email',
+    });
+
+    assert.equal(parsed.preferredContact, 'email');
+    assert.equal(parsed.email, 'kontakt@example.org');
+});
+
+test('Patch-Schema prueft den Kontaktweg nicht — das Feld kann im Dokument stehen', () => {
+    const result = activityPatchBodySchema.safeParse({
+        preferredContact: 'phone',
+    });
+
+    assert.equal(result.success, true);
 });

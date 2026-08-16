@@ -35,6 +35,16 @@ const Datenschutz = () => (
                 Konto.
             </p>
             <p className="text-ink-soft">
+                Statt zu tippen kannst du deine Nachricht auch{' '}
+                <strong>sprechen</strong>. Die Aufnahme geht dann an unseren
+                Server und von dort an Google Gemini, das daraus Text macht —
+                wortgetreu und in der Sprache, die du sprichst. Die Audiodatei
+                wird bei uns <strong>nicht gespeichert</strong>: sie liegt nur
+                für die Dauer der Umwandlung auf dem Server und wird danach
+                sofort gelöscht. Den erkannten Text siehst du im Eingabefeld und
+                kannst ihn korrigieren, bevor du ihn abschickst.
+            </p>
+            <p className="text-ink-soft">
                 Deine IP-Adresse verarbeiten wir kurzzeitig, um die Zahl der
                 Anfragen pro Person zu begrenzen (Schutz vor Missbrauch). Dieser
                 Zähler liegt nur im Arbeitsspeicher und ist nach 15 Minuten weg.

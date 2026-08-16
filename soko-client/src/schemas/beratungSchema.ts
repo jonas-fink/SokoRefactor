@@ -1,4 +1,9 @@
 import { z } from 'zod';
+import {
+    contactFields,
+    hasContactForPreferred,
+    preferredContactError,
+} from './contactSchema.ts';
 
 const toMinutes = (t: string) => {
     const [h, m] = t.split(':').map(Number);
@@ -28,33 +33,28 @@ const openingHoursSchema = z.object({
     sunday: dayHoursSchema,
 });
 
-export const beratungFormSchema = z.object({
-    title: z
-        .string()
-        .trim()
-        .min(1, 'Titel wird benötigt')
-        .max(100, 'Titel kann nicht länger als 100 Zeichen lang sein.'),
-    description: z.string().trim().min(1, 'Beschreibung wird benötigt'),
-    openingHours: openingHoursSchema,
-    lng: z.number().min(-180).max(180),
-    lat: z.number().min(-90).max(90),
-    // Keys aus geschlossenen Listen (`GET /categories`, `GET /vocabulary`),
-    // kein Freitext — das Backend prueft dieselben Whitelists.
-    tags: z.array(z.string()),
-    availableLanguages: z.array(z.string()),
-    targetAudience: z.array(z.string()),
-    phone: z.string().trim().optional(),
-    address: z.string().trim().optional(),
-    /** komma-getrennte Anwendungsfälle, wie `tags` — Dokumente kommen per Upload dazu. */
-    services: z.string().optional(),
-});
-
-// "a, b, ,c" -> ['a','b','c']
-export const splitList = (value?: string) =>
-    value
-        ?.split(',')
-        .map((v) => v.trim())
-        .filter(Boolean) ?? [];
+export const beratungFormSchema = z
+    .object({
+        title: z
+            .string()
+            .trim()
+            .min(1, 'Titel wird benötigt')
+            .max(100, 'Titel kann nicht länger als 100 Zeichen lang sein.'),
+        description: z.string().trim().min(1, 'Beschreibung wird benötigt'),
+        openingHours: openingHoursSchema,
+        lng: z.number().min(-180).max(180),
+        lat: z.number().min(-90).max(90),
+        // Keys aus geschlossenen Listen (`GET /categories`, `GET /vocabulary`),
+        // kein Freitext — das Backend prueft dieselben Whitelists.
+        tags: z.array(z.string()),
+        availableLanguages: z.array(z.string()),
+        targetAudience: z.array(z.string()),
+        ...contactFields,
+        // `services` liegt bewusst *nicht* hier: die Angebote tragen `_id` und
+        // hochgeladene Dokumente mit und werden in `ServicesEditor` als eigener
+        // State gefuehrt (siehe die Begruendung dort).
+    })
+    .refine(hasContactForPreferred, preferredContactError);
 
 export type BeratungFormData = z.infer<typeof beratungFormSchema>;
 export type Weekday = keyof BeratungFormData['openingHours'];

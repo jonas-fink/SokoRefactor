@@ -7,6 +7,7 @@ export {
     refreshRateLimiter,
     globalRateLimiter,
     chatRateLimiter,
+    transcribeRateLimiter,
     feedbackRateLimiter,
 } from './rateLimiter.ts';
 export { default as protect } from './protect.ts';
@@ -14,3 +15,4 @@ export { default as optionalAuth } from './optionalAuth.ts';
 export { default as isDocOwner } from './isDocOwner.ts';
 export { default as fileUploadHandler } from './fileUploadHandler.ts';
 export { default as documentUploadHandler } from './documentUploadHandler.ts';
+export { default as audioUploadHandler } from './audioUploadHandler.ts';

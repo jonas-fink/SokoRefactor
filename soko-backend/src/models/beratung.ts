@@ -58,8 +58,12 @@ const beratungSchema = new Schema(
         },
         openingHours: businessHoursSchema,
         phone: { type: String, trim: true },
-        // Postanschrift als Klartext; die Geo-`location` daneben füttert die Karte.
+        email: { type: String, trim: true, lowercase: true },
         address: { type: String, trim: true },
+        preferredContact: {
+            type: String,
+            enum: ['phone', 'email', 'address'],
+        },
         services: [serviceSchema],
         location: {
             type: {
@@ -82,7 +86,6 @@ const beratungSchema = new Schema(
             type: [String],
             default: [],
         },
-        // Leer = keine Angabe = matcht immer (siehe utils/queryFilters.ts).
         availableLanguages: { type: [String], default: [] },
         targetAudience: { type: [String], default: [] },
         // Herkunft aus einem Partner-Import. `sparse`, weil manuell angelegte

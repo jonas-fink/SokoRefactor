@@ -1,5 +1,6 @@
 import type { RequestHandler } from 'express';
-import { answer, toHistory, HANDOFF } from '#services';
+import { unlink } from 'node:fs/promises';
+import { answer, toHistory, HANDOFF, transcribeAudio } from '#services';
 import { Conversation, type StoredTurn } from '#models';
 import type { ChatBody } from '#schemas';
 
@@ -18,8 +19,6 @@ const toClientTurn = (t: StoredTurn) =>
               role: 'bot' as const,
               reply: {
                   text: t.text,
-                  // Turns von vor Phase 16b haben kein `itemType` — die kannten
-                  // nur Beratungsstellen, sonst zeigt der Link ins Leere.
                   matches: (t.matches ?? []).map((m) => ({
                       ...m,
                       itemType: m.itemType ?? 'Beratung',
@@ -38,10 +37,14 @@ export const postChat: RequestHandler<unknown, unknown, ChatBody> = async (
     try {
         const userId = req.userId;
 
-        // Gast: exakt der zustandslose Pfad von vorher.
         if (!userId) {
             res.json({
-                data: await answer(req.body.message, req.body.history),
+                data: await answer(
+                    req.body.message,
+                    req.body.history,
+                    undefined,
+                    req.body.lang,
+                ),
             });
             return;
         }
@@ -53,6 +56,7 @@ export const postChat: RequestHandler<unknown, unknown, ChatBody> = async (
             req.body.message,
             toHistory(stored?.turns ?? []),
             userId,
+            req.body.lang,
         );
 
         await Conversation.updateOne(
@@ -79,6 +83,39 @@ export const postChat: RequestHandler<unknown, unknown, ChatBody> = async (
         res.json({ data: reply });
     } catch (error: unknown) {
         next(error);
+    }
+};
+
+/**
+ * Sprachaufnahme → Transkript. Die Datei wird **nicht** gespeichert: sie liegt
+ * im formidable-Tempdir, geht einmal an das Modell und ist danach weg.
+ *
+ * Schlägt die Transkription fehl, ist das ein 503 und kein 500 — der Chat
+ * selbst funktioniert weiter, nur getippt.
+ */
+export const postTranscribe: RequestHandler = async (req, res, next) => {
+    const upload = req.uploadedAudio;
+    try {
+        if (!upload) {
+            res.status(400).json({ error: 'Keine Aufnahme empfangen' });
+            return;
+        }
+
+        const result = await transcribeAudio(upload.filepath, upload.mimeType);
+        if (!result) {
+            res.status(503).json({
+                message: 'Spracheingabe gerade nicht verfügbar',
+            });
+            return;
+        }
+
+        res.json({ data: result });
+    } catch (error: unknown) {
+        next(error);
+    } finally {
+        // formidable raeumt sein Tempdir nie selbst auf — und hier liegt eine
+        // Sprachaufnahme, die niemand aufbewahren soll.
+        if (upload) await unlink(upload.filepath).catch(() => {});
     }
 };
 

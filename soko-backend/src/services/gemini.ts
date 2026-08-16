@@ -1,5 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
+import { readFile } from 'node:fs/promises';
 import type { ChatTurn } from '#schemas';
+import { LANGUAGE_KEYS } from '#utils';
 
 /**
  * Dünner Wrapper um die Gemini-API. Zwei Regeln, die hier nicht verhandelbar sind:
@@ -38,7 +40,8 @@ Du bist KEINE Beratung: du gibst keine rechtliche, medizinische oder finanzielle
 stellst keine Diagnose und triffst keine Entscheidung für die Person.
 
 Regeln:
-- Antworte auf Deutsch, in einfacher Sprache, maximal drei Sätze, ohne Aufzählung.
+- Antworte in der Sprache, in der die Person schreibt — schreibt sie Deutsch, antworte
+  auf Deutsch. Immer in einfacher Sprache, maximal drei Sätze, ohne Aufzählung.
 - Sprich die Person mit "du" an, ruhig und ohne Bewertung ihrer Lage.
 - Nenne im Text KEINE Telefonnummern, Adressen oder Öffnungszeiten — die stehen daneben.
 - Geht es um eine Belastung (Schulden, Sucht, Gewalt, Behörden, Aufenthalt, Krise),
@@ -98,6 +101,8 @@ export const askGemini = async (
     categories: { key: string; label: string; appliesTo?: string[] }[],
     history: ChatTurn[] = [],
     context?: string,
+    /** ISO-639-1 der gesprochenen Sprache, falls die Nachricht diktiert wurde. */
+    lang?: string,
 ): Promise<GeminiAnswer | null> => {
     if (!geminiEnabled()) return null;
 
@@ -123,6 +128,15 @@ export const askGemini = async (
                       ]
                     : []),
                 `Anliegen: ${message}`,
+                // Das ganze Geruest drumherum ist deutsch (Anliegen, Themen,
+                // Eintraege) — ohne diese ausdrueckliche Zeile antwortet das
+                // Modell auch auf eine arabische Frage auf Deutsch.
+                ...(lang && lang !== 'de' && lang !== 'other'
+                    ? [
+                          '',
+                          `Die Person spricht ${lang}. Antworte ausschliesslich in dieser Sprache.`,
+                      ]
+                    : []),
                 ...(context ? ['', context] : []),
                 '',
                 `Themen: ${categories
@@ -167,6 +181,95 @@ export const askGemini = async (
     } catch (err) {
         console.warn(
             'Gemini nicht verfügbar, nutze Keyword-Fallback:',
+            err instanceof Error ? err.message : err,
+        );
+        return null;
+    }
+};
+
+const TRANSCRIBE_SYSTEM = `Du transkribierst eine kurze Sprachaufnahme.
+
+Regeln:
+- Gib **wortgetreu** wieder, was gesprochen wurde. Nicht übersetzen, nicht
+  zusammenfassen, nicht korrigieren, nichts hinzufügen.
+- Erkenne die gesprochene Sprache und gib sie als ISO-639-1-Code zurück
+  (de, en, ar, tr, uk, ru, fa, pl, ro, fr). Bei einer anderen Sprache: "other".
+- Ist nichts Verständliches zu hören, gib einen leeren Text zurück.`;
+
+const TRANSCRIBE_SCHEMA = {
+    type: 'object',
+    properties: {
+        text: { type: 'string', description: 'Das wortgetreue Transkript' },
+        lang: { type: 'string', description: 'ISO-639-1-Code oder "other"' },
+    },
+    required: ['text', 'lang'],
+};
+
+/**
+ * Was der Browser aufnimmt → was Gemini als `mime_type` akzeptiert.
+ *
+ * `MediaRecorder` liefert in Chrome `audio/webm` und in Safari `audio/mp4` —
+ * **beide lehnt die API mit 400 ab.** Die Bytes selbst sind in Ordnung: Gemini
+ * erkennt den Container am Inhalt, es geht nur um das Etikett. Ohne diese
+ * Tabelle scheitert die Spracheingabe in genau jedem echten Browser, während
+ * sie mit einer WAV-Testdatei einwandfrei aussieht.
+ */
+const GEMINI_AUDIO_MIME: Record<string, string> = {
+    'audio/webm': 'audio/opus',
+    'audio/mp4': 'audio/m4a',
+    'audio/x-wav': 'audio/wav',
+};
+
+/**
+ * Sprachaufnahme → Text in der gesprochenen Sprache.
+ *
+ * **Wortgetreu, nicht übersetzt**: der Nutzer bekommt das Transkript ins
+ * Eingabefeld und soll vor dem Senden prüfen können, ob es stimmt. Eine
+ * deutsche Übersetzung könnte genau die Person nicht kontrollieren, für die
+ * die Spracheingabe da ist.
+ *
+ * Wirft nie — dieselbe Regel wie `askGemini`. Ohne Key, bei Timeout oder
+ * kaputtem JSON kommt `null` zurück und der Chat bleibt tippbar.
+ */
+export const transcribeAudio = async (
+    filepath: string,
+    mimeType: string,
+): Promise<{ text: string; lang: string } | null> => {
+    if (!geminiEnabled()) return null;
+
+    try {
+        client ??= new GoogleGenAI({});
+
+        const audio = await readFile(filepath);
+        const interaction = await client.interactions.create({
+            model: MODEL,
+            system_instruction: TRANSCRIBE_SYSTEM,
+            input: [
+                {
+                    type: 'audio',
+                    data: audio.toString('base64'),
+                    mime_type: GEMINI_AUDIO_MIME[mimeType] ?? mimeType,
+                },
+            ],
+            generation_config: { thinking_level: 'low' },
+            response_format: {
+                type: 'text',
+                mime_type: 'application/json',
+                schema: TRANSCRIBE_SCHEMA,
+            },
+        });
+
+        const parsed = JSON.parse(interaction.output_text ?? '');
+        const text = typeof parsed?.text === 'string' ? parsed.text.trim() : '';
+        if (!text) return null;
+
+        // Unbekannte Codes nicht durchreichen — `lang` landet sonst als
+        // Fremdwert im Chat-Body, den `chatBodySchema` ohnehin ablehnt.
+        const lang = String(parsed?.lang ?? '');
+        return { text, lang: LANGUAGE_KEYS.has(lang) ? lang : 'other' };
+    } catch (err) {
+        console.warn(
+            'Transkription nicht verfügbar:',
             err instanceof Error ? err.message : err,
         );
         return null;

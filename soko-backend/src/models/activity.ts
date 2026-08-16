@@ -30,6 +30,13 @@ const activitySchema = new Schema(
             required: [true, 'Preis wird benötigt'],
             default: 0,
         },
+        email: { type: String, trim: true, lowercase: true },
+        phone: { type: String, trim: true },
+        address: { type: String, trim: true },
+        preferredContact: {
+            type: String,
+            enum: ['phone', 'email', 'address'],
+        },
         location: {
             type: {
                 type: String,
@@ -51,7 +58,6 @@ const activitySchema = new Schema(
             type: [String],
             default: [],
         },
-        // Leer = keine Angabe = matcht immer (siehe utils/queryFilters.ts).
         availableLanguages: { type: [String], default: [] },
         targetAudience: { type: [String], default: [] },
     },

@@ -2,8 +2,11 @@ services:
     mongo:
         image: mongo:8
         restart: unless-stopped
-        ports:
-            - '27017:27017'
+        # Kein `ports`: die Datenbank laeuft ohne Authentifizierung, ein
+        # veroeffentlichter Port waere damit ein offener Lesezugriff auf
+        # Beratungsdaten, Favoriten und Chat-Verlaeufe fuer jeden im Netz.
+        # Backend und (spaeter) Metabase erreichen sie ueber das Compose-Netz
+        # per Servicename; fuer Adminzugriff `docker compose exec mongo mongosh`.
         volumes:
             - mongo-data:/data/db
 
@@ -20,7 +23,7 @@ services:
                 VITE_PUBLIC_MAPBOX_TOKEN: ${VITE_PUBLIC_MAPBOX_TOKEN}
         restart: unless-stopped
         ports:
-            - '8080:80'
+            - '127.0.0.1:8080:80'
         depends_on: [backend]
 
 volumes:

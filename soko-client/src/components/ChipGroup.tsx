@@ -1,6 +1,17 @@
+import type { ReactNode } from 'react';
+
+export interface ChipOption {
+    key: string;
+    label: string;
+    /** Themen-Chips zeigen das Kategorie-Icon aus `categoryMeta.tsx`. */
+    icon?: ReactNode;
+    /** Eigenname der Sprache, z. B. „العربية" — steht hinter dem Label. */
+    endonym?: string;
+}
+
 interface ChipGroupProps {
     legend: string;
-    options: { key: string; label: string }[];
+    options: ChipOption[];
     selected: string[];
     onToggle: (key: string) => void;
     hint?: string;
@@ -27,12 +38,22 @@ const ChipGroup = ({
                     key={o.key}
                     type="button"
                     aria-pressed={selected.includes(o.key)}
-                    className={`cursor-pointer ${
+                    // Die Icons stehen mit `size={24}` in `categoryMeta.tsx` —
+                    // im Chip zu gross, CSS gewinnt gegen das Attribut.
+                    className={`inline-flex cursor-pointer items-center gap-1.5 [&_svg]:size-5 ${
                         selected.includes(o.key) ? 'chip-active' : 'chip'
                     }`}
                     onClick={() => onToggle(o.key)}
                 >
+                    {o.icon}
                     {o.label}
+                    {/* `dir="auto"` isoliert das Fragment: ohne das rutscht der
+                        Trenner bei Arabisch und Farsi auf die falsche Seite. */}
+                    {o.endonym && (
+                        <span dir="auto" className="text-ink-mute">
+                            · {o.endonym}
+                        </span>
+                    )}
                 </button>
             ))}
         </div>

@@ -7,5 +7,6 @@ export { default as ScrapedEvent } from './scrapedEvent.ts';
 export { default as Beratung } from './beratung.ts';
 export { default as Category } from './category.ts';
 export { default as Feedback } from './feedback.ts';
+export { default as Metric } from './metric.ts';
 export { default as Conversation } from './conversation.ts';
 export type { StoredTurn } from './conversation.ts';

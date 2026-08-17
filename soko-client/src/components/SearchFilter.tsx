@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useDebounced } from '../hooks/useDebounced';
 import { useVocabulary } from '../hooks/useVocabulary';
+import ChipGroup from './ChipGroup';
 import type { Filters } from '../hooks/useFilters';
 import type { Category } from '../types';
 import { AiOutlineFilter } from 'react-icons/ai';
@@ -48,27 +49,6 @@ const SearchFilter = ({
     useEffect(() => {
         if (filters.q === '') setText('');
     }, [filters.q]);
-
-    const chips = (
-        key: 'lang' | 'for',
-        options: { key: string; label: string }[],
-    ) => (
-        <div className="flex flex-wrap gap-2">
-            {options.map((o) => (
-                <button
-                    key={o.key}
-                    type="button"
-                    aria-pressed={filters[key].includes(o.key)}
-                    className={`cursor-pointer ${
-                        filters[key].includes(o.key) ? 'chip-active' : 'chip'
-                    }`}
-                    onClick={() => toggle(key, o.key)}
-                >
-                    {o.label}
-                </button>
-            ))}
-        </div>
-    );
 
     return (
         <div className="flex flex-col gap-3 md:flex-row md:items-center">
@@ -170,24 +150,22 @@ const SearchFilter = ({
                     )}
 
                     {languages.length > 0 && (
-                        <div className="flex flex-col gap-2">
-                            <span className="text-sm text-ink-mute">
-                                Sprache
-                            </span>
-                            {chips('lang', languages)}
-                            <p className="text-xs text-ink-mute">
-                                Angebote ohne Sprachangabe bleiben sichtbar.
-                            </p>
-                        </div>
+                        <ChipGroup
+                            legend="Sprache"
+                            options={languages}
+                            selected={filters.lang}
+                            onToggle={(k) => toggle('lang', k)}
+                            hint="Angebote ohne Sprachangabe bleiben sichtbar."
+                        />
                     )}
 
                     {audiences.length > 0 && (
-                        <div className="flex flex-col gap-2">
-                            <span className="text-sm text-ink-mute">
-                                Für wen
-                            </span>
-                            {chips('for', audiences)}
-                        </div>
+                        <ChipGroup
+                            legend="Für wen"
+                            options={audiences}
+                            selected={filters.for}
+                            onToggle={(k) => toggle('for', k)}
+                        />
                     )}
 
                     {showEventFilters && (

@@ -1,6 +1,7 @@
 import { useVocabulary } from '../hooks/useVocabulary';
 import { useCategories } from '../hooks/useCategories';
 import ChipGroup from './ChipGroup';
+import { CATEGORY_META } from '../categoryMeta';
 import type { Preferences } from '../types';
 
 export type PreferenceSection = keyof Preferences;
@@ -65,7 +66,10 @@ const PreferencePicker = ({
             {sections.includes('categories') && categories.length > 0 && (
                 <ChipGroup
                     legend="Themen"
-                    options={categories}
+                    options={categories.map((c) => ({
+                        ...c,
+                        icon: CATEGORY_META[c.key]?.icon,
+                    }))}
                     selected={value.categories}
                     onToggle={(k) => toggle('categories', k)}
                 />

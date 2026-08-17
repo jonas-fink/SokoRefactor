@@ -52,7 +52,9 @@ export interface Category {
     key: string;
     label: string;
     appliesTo: ('activity' | 'beratung')[];
-    colorToken?: string;
+    // `colorToken` liefert das Backend mit, der Client liest es nicht: die
+    // Akzentfarbe steht in `categoryMeta.tsx`, und zwei Quellen fuer dieselbe
+    // Farbe laufen auseinander.
 }
 
 export interface GeoPoint {
@@ -177,7 +179,8 @@ export interface EventsPage {
 
 /** Geschlossene Filterlisten aus `GET /vocabulary` (Backend-Konstanten). */
 export interface FilterVocabulary {
-    languages: { key: string; label: string }[];
+    /** `endonym` fehlt bei Deutsch — dort waere es eine Wiederholung. */
+    languages: { key: string; label: string; endonym?: string }[];
     audiences: { key: string; label: string }[];
 }
 

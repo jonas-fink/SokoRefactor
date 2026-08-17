@@ -60,6 +60,9 @@ services:
         ports:
             - '127.0.0.1:3002:3000'
         environment:
+            # `UMAMI_DB_PASSWORD` muss URL-sicher sein — `openssl rand -hex 24`,
+            # **nicht** `-base64`: ein `/` im Passwort zerlegt diese URL, und
+            # Umami stirbt mit `ERR_INVALID_URL`, bevor es die DB je sieht.
             DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD}@umami-db:5432/umami
             APP_SECRET: ${UMAMI_APP_SECRET}
         depends_on: [umami-db]

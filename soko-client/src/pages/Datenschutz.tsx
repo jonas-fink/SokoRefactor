@@ -112,6 +112,27 @@ const Datenschutz = () => (
                     bzw. Amazon S3. Anträge und Merkblätter rufst du über einen
                     zeitlich begrenzten Link ab.
                 </li>
+                <li>
+                    <strong>Besucherzahlen:</strong> wir zählen mit Umami, wie
+                    oft welche Seite aufgerufen wird — auf unserem eigenen
+                    Server, <strong>ohne Cookies</strong>, ohne dass etwas auf
+                    deinem Gerät gespeichert wird und ohne dass deine IP-Adresse
+                    gespeichert wird (sie wird nur kurz zu einer Prüfsumme
+                    verrechnet). Deshalb fragen wir dich auch nicht um
+                    Erlaubnis: es gibt nichts zu erlauben. Die Zahlen sagen uns,
+                    welche Seite gefunden wird, nicht wer sie aufruft.
+                </li>
+                <li>
+                    <strong>Nutzung des Chats:</strong> wir zählen pro Tag, wie
+                    oft der Chat geantwortet hat und wie oft nichts Passendes im
+                    Bestand stand — nur ein Datum, ein Stichwort und eine Zahl.
+                    <strong>
+                        {' '}
+                        Kein Text deiner Nachricht, keine Konto-Angabe, keine
+                        IP-Adresse.
+                    </strong>{' '}
+                    Wir wollen damit wissen, welche Angebote in Kassel fehlen.
+                </li>
             </ul>
         </section>
 
@@ -162,7 +183,7 @@ const Datenschutz = () => (
                                 7 Tage, danach automatisch weg
                             </td>
                         </tr>
-                        <tr>
+                        <tr className="border-b border-line">
                             <td className="py-2 pr-4">
                                 Rückmeldungen über „Kontakt“: dein Text, die
                                 Seite, von der du geschrieben hast, und deine
@@ -171,6 +192,13 @@ const Datenschutz = () => (
                             <td className="py-2">
                                 bis das Anliegen erledigt ist
                             </td>
+                        </tr>
+                        <tr>
+                            <td className="py-2 pr-4">
+                                Kennzahlen: Datum, Stichwort, Anzahl — nicht dir
+                                zuzuordnen
+                            </td>
+                            <td className="py-2">unbefristet</td>
                         </tr>
                     </tbody>
                 </table>

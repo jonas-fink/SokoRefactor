@@ -7,17 +7,22 @@
  * Collection waere ein Seed-Script und eine Migration fuer nichts.
  */
 
+/**
+ * `endonym` ist der Eigenname der Sprache — wer kein Deutsch liest, erkennt
+ * „العربية" und nicht „Arabisch". Deutsch bleibt ohne: „Deutsch · Deutsch"
+ * waere Unsinn, und leeres Feld heisst weglassen.
+ */
 export const LANGUAGES = [
     { key: 'de', label: 'Deutsch' },
-    { key: 'en', label: 'Englisch' },
-    { key: 'ar', label: 'Arabisch' },
-    { key: 'tr', label: 'Türkisch' },
-    { key: 'uk', label: 'Ukrainisch' },
-    { key: 'ru', label: 'Russisch' },
-    { key: 'fa', label: 'Farsi' },
-    { key: 'pl', label: 'Polnisch' },
-    { key: 'ro', label: 'Rumänisch' },
-    { key: 'fr', label: 'Französisch' },
+    { key: 'en', label: 'Englisch', endonym: 'English' },
+    { key: 'ar', label: 'Arabisch', endonym: 'العربية' },
+    { key: 'tr', label: 'Türkisch', endonym: 'Türkçe' },
+    { key: 'uk', label: 'Ukrainisch', endonym: 'Українська' },
+    { key: 'ru', label: 'Russisch', endonym: 'Русский' },
+    { key: 'fa', label: 'Farsi', endonym: 'فارسی' },
+    { key: 'pl', label: 'Polnisch', endonym: 'Polski' },
+    { key: 'ro', label: 'Rumänisch', endonym: 'Română' },
+    { key: 'fr', label: 'Französisch', endonym: 'Français' },
 ] as const;
 
 export const AUDIENCES = [

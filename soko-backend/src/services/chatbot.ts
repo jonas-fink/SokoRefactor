@@ -3,6 +3,7 @@ import type { UserPreferences } from '#models';
 import { AUDIENCES, CATEGORY_KEYS, LANGUAGES, buildFilter } from '#utils';
 import type { ChatTurn } from '#schemas';
 import { askGemini, type Candidate } from './gemini.ts';
+import { bumpMetric } from './metrics.ts';
 
 export type Hotline = { label: string; number: string; hint: string };
 
@@ -483,7 +484,10 @@ export const answer = async (
     // Vor allem anderen: kein Datenbank-Treffer, kein Modell-Call, keine
     // Latenz. Über das ganze Gespräch, wie die Disclaimer-Logik.
     const urgent = urgentHotlines(conversationText(history, message));
-    if (urgent) return buildReply([], [], URGENT_TEXT, urgent);
+    if (urgent) {
+        bumpMetric('chat.urgent');
+        return buildReply([], [], URGENT_TEXT, urgent);
+    }
 
     const prefs = await loadPreferences(userId);
     const prefFilter = prefFilters(prefs);
@@ -565,6 +569,7 @@ export const answer = async (
             byId,
         ).map((c) => toMatch(c, keys));
 
+        bumpMetric(matches.length ? 'chat.reply' : 'chat.no_match');
         return buildReply(keys, matches, ai.text);
     }
 
@@ -578,5 +583,9 @@ export const answer = async (
         .slice(0, 5)
         .map((c) => toMatch(c, keywordKeys));
 
+    // Zwei Zaehler, kein Entweder-oder: `chat.fallback` sagt, wie oft das Modell
+    // fehlte, `chat.no_match` bleibt die Luecken-Zahl ueber **alle** Antworten.
+    bumpMetric('chat.fallback');
+    bumpMetric(matches.length ? 'chat.reply' : 'chat.no_match');
     return buildReply(keywordKeys, matches);
 };

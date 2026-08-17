@@ -1,7 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { assertAudiences, assertLanguages } from './filterVocabulary.ts';
+import {
+    assertAudiences,
+    assertLanguages,
+    LANGUAGES,
+    LANGUAGE_KEYS,
+} from './filterVocabulary.ts';
 import { preferencesSchema } from '../schemas/auth.ts';
+
+test('jede Sprache hat ein Endonym — ausser Deutsch, bewusst', () => {
+    for (const l of LANGUAGES) {
+        const endonym = 'endonym' in l ? l.endonym : undefined;
+        if (l.key === 'de') assert.equal(endonym, undefined);
+        else assert.ok(endonym, `Endonym fehlt: ${l.key}`);
+    }
+});
+
+test('LANGUAGE_KEYS bleibt deckungsgleich mit LANGUAGES', () => {
+    assert.equal(LANGUAGE_KEYS.size, LANGUAGES.length);
+    for (const l of LANGUAGES) assert.ok(LANGUAGE_KEYS.has(l.key));
+});
 
 test('bekannte Keys passieren', () => {
     assert.doesNotThrow(() => assertLanguages(['de', 'ar']));

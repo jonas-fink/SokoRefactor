@@ -179,8 +179,10 @@ const BeratungsForm = () => {
                 await api.upload(`/beratungen/${id}`, form, 'PUT');
                 navigate(`/beratung/detail/${id}`);
             } else {
-                await api.upload('/beratungen', form);
-                navigate('/beratung');
+                // Wie bei den Activities: die neue Detailseite ist die
+                // Erfolgsmeldung.
+                const created = await api.upload<Beratung>('/beratungen', form);
+                navigate(`/beratung/detail/${created._id}`);
             }
         } catch (e) {
             setError('root', {
@@ -241,6 +243,42 @@ const BeratungsForm = () => {
                 onSubmit={handleSubmit(onSubmit)}
                 className="bg-surface w-full p-8 rounded-card shadow-card flex flex-col gap-4"
             >
+                {/* natives <details>: zugeklappt per Default, kein State, und
+                    der Browser uebernimmt Tastatur und Screenreader. */}
+                <details className="rounded-card border border-line p-4">
+                    <summary className="label cursor-pointer">
+                        Worauf du achten solltest
+                    </summary>
+                    <ul className="text-ink-soft mt-3 flex list-disc flex-col gap-2 pl-5 text-sm">
+                        <li>
+                            <b>Titel:</b> Name der Stelle und Trägerschaft, so
+                            wie sie draußen am Schild steht.
+                        </li>
+                        <li>
+                            <b>Öffnungszeiten:</b> realistisch eintragen – leer
+                            heißt geschlossen. Terminvereinbarung gehört in die
+                            Beschreibung.
+                        </li>
+                        <li>
+                            <b>Angebote:</b> einzeln anlegen statt als
+                            Fließtext, dann sind sie einzeln auffindbar.
+                        </li>
+                        <li>
+                            <b>Dokumente:</b> nur Merkblätter und Formulare ohne
+                            personenbezogene Daten.
+                        </li>
+                        <li>
+                            <b>Adresse:</b> vollständig mit Hausnummer und Ort –
+                            daraus entsteht der Punkt auf der Karte.
+                        </li>
+                        <li>
+                            <b>Sprache und Zielgruppe:</b> nur setzen, was
+                            wirklich zutrifft. Nichts auswählen heißt „für alle
+                            sichtbar", nicht „für niemanden".
+                        </li>
+                    </ul>
+                </details>
+
                 <div className="flex flex-col gap-2">
                     <label htmlFor="title" className="label">
                         TITEL

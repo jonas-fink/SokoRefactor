@@ -167,8 +167,10 @@ const ActivityForm = () => {
                 await api.upload(`/activities/${id}`, form, 'PUT');
                 navigate(`/angebot/Activity/${id}`);
             } else {
-                await api.upload('/activities', form);
-                navigate('/events');
+                // Die Detailseite des frisch angelegten Angebots ist die
+                // Erfolgsmeldung — die Liste zeigte nicht, ob es geklappt hat.
+                const created = await api.upload<Activity>('/activities', form);
+                navigate(`/angebot/Activity/${created._id}`);
             }
         } catch (e) {
             setError('root', {
@@ -228,6 +230,42 @@ const ActivityForm = () => {
                 onSubmit={handleSubmit(onSubmit)}
                 className="bg-surface w-full p-8 rounded-card shadow-card flex flex-col gap-4"
             >
+                {/* natives <details>: zugeklappt per Default, kein State, und
+                    der Browser uebernimmt Tastatur und Screenreader. */}
+                <details className="rounded-card border border-line p-4">
+                    <summary className="label cursor-pointer">
+                        Worauf du achten solltest
+                    </summary>
+                    <ul className="text-ink-soft mt-3 flex list-disc flex-col gap-2 pl-5 text-sm">
+                        <li>
+                            <b>Titel:</b> konkret statt werblich – „Sprachcafé
+                            für Anfänger" sagt mehr als „Tolles Angebot".
+                        </li>
+                        <li>
+                            <b>Beschreibung:</b> beantworte wer eingeladen ist,
+                            was passiert und was mitzubringen ist.
+                        </li>
+                        <li>
+                            <b>Bild:</b> nur Bilder, an denen du die Rechte
+                            hast. Erkennbare Personen brauchen eine
+                            Einwilligung.
+                        </li>
+                        <li>
+                            <b>Adresse:</b> vollständig mit Hausnummer und Ort –
+                            daraus entsteht der Punkt auf der Karte.
+                        </li>
+                        <li>
+                            <b>Sprache und Zielgruppe:</b> nur setzen, was
+                            wirklich zutrifft. Nichts auswählen heißt „für alle
+                            sichtbar", nicht „für niemanden".
+                        </li>
+                        <li>
+                            <b>Kontaktdaten</b> sind öffentlich sichtbar – nimm
+                            eine Adresse, die du dafür nutzen möchtest.
+                        </li>
+                    </ul>
+                </details>
+
                 <div className="flex flex-col gap-2">
                     <label htmlFor="title" className="label">
                         TITEL

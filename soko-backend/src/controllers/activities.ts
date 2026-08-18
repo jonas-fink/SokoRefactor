@@ -53,8 +53,11 @@ export const getActivities: RequestHandler<
             query.tags = { $in: tagList };
         }
 
+        // Naechster Termin zuerst — die Events-Aggregation sortiert seit jeher
+        // so, die Activities kamen bis hierher in Upload-Reihenfolge.
         const activites = await Activity.find(query)
             .populate('userId', 'name email')
+            .sort({ date: 1 })
             .lean();
         res.json({
             data: activites.map((a) => populatedActivitySchema.parse(a)),

@@ -22,6 +22,11 @@ export type Filters = {
     for: string[];
     free: boolean;
     page: number;
+    /** Umkreissuche der Kartenansicht. Nur zusammen sinnvoll: ohne `lng`/`lat`
+     *  gibt es keinen Mittelpunkt und `distance` bleibt wirkungslos. */
+    lng?: number;
+    lat?: number;
+    distance?: number;
 };
 
 const csv = (value: string | null) =>
@@ -29,6 +34,15 @@ const csv = (value: string | null) =>
         .split(',')
         .map((v) => v.trim())
         .filter(Boolean);
+
+/** Zahl oder gar nichts — `''`, `'abc'` und ein fehlender Parameter landen
+ *  gleichermassen bei `undefined` statt bei `NaN` in der URL. */
+const num = (value: string | null) => {
+    const n = Number(value);
+    return value !== null && value !== '' && Number.isFinite(n)
+        ? n
+        : undefined;
+};
 
 /**
  * URL → Filter. Bewusst nachsichtig: eine kaputte `page` wird zu 1, statt die
@@ -44,6 +58,9 @@ export const parseFilters = (params: URLSearchParams): Filters => ({
     for: csv(params.get('for')),
     free: params.get('free') === '1',
     page: Math.max(1, Number(params.get('page')) || 1),
+    lng: num(params.get('lng')),
+    lat: num(params.get('lat')),
+    distance: num(params.get('distance')),
 });
 
 /**
@@ -59,6 +76,14 @@ export const toQuery = (filters: Filters): URLSearchParams => {
     if (filters.for.length) params.set('for', filters.for.join(','));
     if (filters.free) params.set('free', '1');
     if (filters.page > 1) params.set('page', String(filters.page));
+    // Ein Radius ohne Mittelpunkt filtert nichts — dann steht er auch nicht
+    // in der URL.
+    if (filters.lng !== undefined && filters.lat !== undefined) {
+        params.set('lng', String(filters.lng));
+        params.set('lat', String(filters.lat));
+        if (filters.distance !== undefined)
+            params.set('distance', String(filters.distance));
+    }
     return params;
 };
 
@@ -68,6 +93,8 @@ export const countActive = (filters: Filters) =>
     (filters.date ? 1 : 0) +
     (filters.category ? 1 : 0) +
     (filters.free ? 1 : 0) +
+    // Ort und Radius sind ein Filter, nicht zwei — der Radius allein zaehlt gar nicht.
+    (filters.lng !== undefined && filters.lat !== undefined ? 1 : 0) +
     filters.lang.length +
     filters.for.length;
 
@@ -128,6 +155,22 @@ export const useFilters = () => {
         [filters, write],
     );
 
+    /**
+     * Mehrere Achsen in **einem** Schreibvorgang. Zwei `setFilter` hintereinander
+     * lesen denselben `filters`-Stand — die URL aktualisiert sich erst beim
+     * naechsten Render — und nur der letzte Aufruf ueberlebt. Ort und Umkreis
+     * gehoeren aber zusammen.
+     */
+    const setFilters = useCallback(
+        (patch: Partial<Filters>) =>
+            write({
+                ...filters,
+                ...patch,
+                ...('page' in patch ? {} : { page: 1 }),
+            }),
+        [filters, write],
+    );
+
     /** Ein Wert einer Mehrfachauswahl an/aus (Sprach- und Zielgruppen-Chips). */
     const toggle = useCallback(
         (key: 'lang' | 'for', value: string) =>
@@ -148,6 +191,7 @@ export const useFilters = () => {
     return {
         filters,
         setFilter,
+        setFilters,
         toggle,
         reset,
         activeCount: countActive(filters),

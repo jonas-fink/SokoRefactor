@@ -22,6 +22,8 @@ import Datenschutz from './pages/Datenschutz';
 import Impressum from './pages/Impressum';
 import Kontakt from './pages/Kontakt';
 import Willkommen from './pages/Willkommen';
+import MeineAngebote from './pages/MeineAngebote';
+import Karte from './pages/Karte';
 
 const App = () => {
     return (
@@ -51,6 +53,8 @@ const App = () => {
                         <Route path=":key" element={<EventKategorie />} />
                     </Route>
 
+                    <Route path="/karte" element={<Karte />} />
+
                     <Route path="/datenschutz" element={<Datenschutz />} />
                     <Route path="/impressum" element={<Impressum />} />
                     <Route path="/kontakt" element={<Kontakt />} />
@@ -61,6 +65,10 @@ const App = () => {
                         <Route path="/profile" element={<Profile />} />
                     </Route>
                     <Route element={<ProtectedRoute requireCreator />}>
+                        <Route
+                            path="/meine-angebote"
+                            element={<MeineAngebote />}
+                        />
                         <Route path="/erstellen" element={<Erstellen />} />
                         <Route
                             path="/erstellen/aktivitaet/:id"

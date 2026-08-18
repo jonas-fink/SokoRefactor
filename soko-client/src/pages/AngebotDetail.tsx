@@ -63,7 +63,6 @@ const AngebotDetail = () => {
     return (
         <div className="mx-auto flex md:max-w-6xl flex-col gap-6 md:p-8 pb-3">
             <PageHeader
-                title={item.title}
                 action={
                     <div className="flex shrink-0 gap-2">
                         {enabled && (
@@ -103,6 +102,10 @@ const AngebotDetail = () => {
                     className="h-64 w-full rounded-card object-cover"
                 />
             )}
+
+            <h1 className="text-2xl font-bold wrap-break-words">
+                {item.title}
+            </h1>
 
             <div className="flex flex-wrap gap-2">
                 {event?.category && (

@@ -38,7 +38,6 @@ const BeratungDetail = () => {
     return (
         <div className="flex flex-col gap-6 max-w-6xl mx-auto md:p-8 pb-3">
             <PageHeader
-                title={beratung.title}
                 // Beratungen pflegt ausschliesslich `admin` (ARCHITEKTUR.md § 2.6).
                 action={
                     user?.role === 'admin' && (
@@ -56,6 +55,10 @@ const BeratungDetail = () => {
                 alt=""
                 className="h-56 w-full rounded-card object-cover"
             />
+
+            <h1 className="text-2xl font-bold wrap-break-words">
+                {beratung.title}
+            </h1>
 
             <div className="field flex gap-3 bg-ink text-primary-ink items-center p-3">
                 <AiOutlineLock size={24} />

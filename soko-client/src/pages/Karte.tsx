@@ -111,6 +111,18 @@ const Karte = () => {
                 subtitle="Angebote und Beratungsstellen auf der Karte"
             />
 
+            <div className="rounded-card h-[60dvh] overflow-hidden">
+                <MapView center={center} markers={markers} />
+            </div>
+
+            {error && <p className="text-error">{error}</p>}
+            {!error && markers.length === 0 && (
+                <p className="text-ink-mute">
+                    Hier steht gerade nichts an – erweitere den Umkreis oder
+                    setze die Filter zurück.
+                </p>
+            )}
+
             <OrtFilter
                 filters={filters}
                 setFilter={setFilter}
@@ -126,18 +138,6 @@ const Karte = () => {
                 categories={categories}
             />
 
-            <div className="rounded-card h-[60dvh] overflow-hidden">
-                <MapView center={center} markers={markers} />
-            </div>
-
-            {error && <p className="text-error">{error}</p>}
-            {!error && markers.length === 0 && (
-                <p className="text-ink-mute">
-                    Hier steht gerade nichts an – erweitere den Umkreis oder
-                    setze die Filter zurück.
-                </p>
-            )}
-
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {activities.map((a) => (
                     <OfferCard
@@ -152,7 +152,9 @@ const Karte = () => {
                         locationLabel={a.address}
                         isFavorite={isFavorite('Activity', a._id)}
                         onToggleFavorite={
-                            enabled ? () => toggle('Activity', a._id) : undefined
+                            enabled
+                                ? () => toggle('Activity', a._id)
+                                : undefined
                         }
                     />
                 ))}
@@ -169,7 +171,9 @@ const Karte = () => {
                         locationLabel={b.address}
                         isFavorite={isFavorite('Beratung', b._id)}
                         onToggleFavorite={
-                            enabled ? () => toggle('Beratung', b._id) : undefined
+                            enabled
+                                ? () => toggle('Beratung', b._id)
+                                : undefined
                         }
                     />
                 ))}

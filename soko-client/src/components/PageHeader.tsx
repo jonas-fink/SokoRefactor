@@ -3,7 +3,8 @@ import { AiOutlineArrowLeft } from 'react-icons/ai';
 import { useNavigate } from 'react-router';
 
 type Props = {
-    title: ReactNode;
+    /** Optional — Detailseiten zeigen den Titel stattdessen unter dem Bild. */
+    title?: ReactNode;
     subtitle?: ReactNode;
     /** Kategorie-Icon links vom Titel, inkl. eigener Akzentfarbe. */
     icon?: ReactNode;
@@ -27,9 +28,11 @@ const PageHeader = ({ title, subtitle, icon, action }: Props) => {
                 </button>
                 {icon && <span className="shrink-0">{icon}</span>}
                 <div className="min-w-0">
-                    <h1 className="text-2xl font-bold wrap-break-words">
-                        {title}
-                    </h1>
+                    {title && (
+                        <h1 className="text-2xl font-bold wrap-break-words">
+                            {title}
+                        </h1>
+                    )}
                     {subtitle && (
                         <p className="font-sans text-ink-mute">{subtitle}</p>
                     )}

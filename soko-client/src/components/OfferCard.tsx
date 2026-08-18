@@ -13,6 +13,9 @@ interface OfferCardProps {
     locationLabel?: string;
     /** Externe Quelle (Scraped-Events) — als Zusatzlink unter der Karte. */
     href?: string;
+    /** Abweichendes Ziel — Beratungsstellen liegen unter `/beratung/detail/:id`,
+     *  nicht unter `/angebot/:itemType/:id`. */
+    to?: string;
     isFavorite?: boolean;
     /** Nur gesetzt, wenn ein Nutzer eingeloggt ist — sonst kein Herz. */
     onToggleFavorite?: () => void;
@@ -28,6 +31,7 @@ const OfferCard = ({
     dateLabel,
     locationLabel,
     href,
+    to,
     isFavorite,
     onToggleFavorite,
 }: OfferCardProps) => (
@@ -50,7 +54,7 @@ const OfferCard = ({
             </button>
         )}
 
-        <NavLink to={`/angebot/${itemType}/${id}`} className="block p-5">
+        <NavLink to={to ?? `/angebot/${itemType}/${id}`} className="block p-5">
             {image && (
                 <img
                     src={image}

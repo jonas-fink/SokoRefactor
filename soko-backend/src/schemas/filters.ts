@@ -35,7 +35,8 @@ export const filterQuerySchema = z.object({
     free: z.literal('1').optional(),
     page: z.coerce.number().int().min(1).optional(),
 
-    // Nur Activities: Umkreissuche, bestehend und unveraendert.
+    // Umkreissuche — Activities und Beratungen, beide mit 2dsphere-Index.
+    // ScrapedEvents haben nur optionale Koordinaten und bleiben aussen vor.
     lng: z.coerce.number().optional(),
     lat: z.coerce.number().optional(),
     distance: z.coerce.number().positive().optional(),

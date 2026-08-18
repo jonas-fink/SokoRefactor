@@ -35,7 +35,6 @@ const assertAxes = async (body: BeratungPatchBody) => {
     if (body.targetAudience) assertAudiences(body.targetAudience);
 };
 
-// no geo filter — Beratungen are browsed per-topic by tags, not by distance
 export const getBeratung: RequestHandler<
     unknown,
     unknown,
@@ -43,8 +42,22 @@ export const getBeratung: RequestHandler<
     FilterQuery
 > = async (_req, res, next) => {
     try {
-        const { tags } = _req.query;
+        const { lng, lat, distance = 10, tags } = _req.query;
         const query: Record<string, unknown> = { ...buildFilter(_req.query) };
+
+        // Gleiche Umkreissuche wie bei den Activities — die Kartenansicht
+        // filtert beide Quellen ueber dieselben Achsen.
+        if (lng && lat) {
+            query.location = {
+                $near: {
+                    $geometry: {
+                        type: 'Point',
+                        coordinates: [lng, lat],
+                    },
+                    $maxDistance: distance * 1000,
+                },
+            };
+        }
 
         if (tags) {
             const tagList = tags.split(',').map((t) => t.trim());

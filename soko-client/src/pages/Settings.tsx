@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { useAuth, canCreate } from '../context/auth-context';
 import PageHeader from '../components/PageHeader';
 
@@ -70,9 +71,17 @@ const SettingsPage = () => {
                     Creator-Account
                 </h2>
                 {isCreator ? (
-                    <p className="font-sans text-ink-mute">
-                        Du kannst jetzt Events und Aktivitäten hosten.
-                    </p>
+                    <>
+                        <p className="font-sans text-ink-mute">
+                            Du kannst jetzt Events und Aktivitäten hosten.
+                        </p>
+                        <Link
+                            to="/meine-angebote"
+                            className="btn-secondary cursor-pointer md:w-1/2 text-center"
+                        >
+                            Meine Angebote
+                        </Link>
+                    </>
                 ) : (
                     <>
                         <p className="font-sans text-ink-mute">

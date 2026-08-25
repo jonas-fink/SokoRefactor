@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router';
 import Logo from '../Logo';
+import LanguageFilter from '../LanguageFilter';
 import { AiOutlineCompass } from 'react-icons/ai';
 import { MdOutlineMap, MdOutlineBookmark } from 'react-icons/md';
 import { useAuth, canCreate } from '../../context/auth-context';
@@ -32,14 +33,10 @@ const SideBar = () => {
                 <Logo width={140} />
             </div>
             <nav className="flex flex-row justify-around gap-2 w-full md:flex-col md:justify-start">
-                {/* `end`: ohne das matcht "/" jede Route und Entdecken waere
-                    immer aktiv. */}
                 <NavLink to="/" end className={navClass}>
                     <AiOutlineCompass size={24} />
                     <span className="hidden md:inline">Entdecken</span>
                 </NavLink>
-                {/* Beratung und Events stehen weiter auf der Startseite und in
-                    den Kategorien — nur der Nav-Eintrag ist raus. */}
                 <NavLink to="/karte" className={navClass}>
                     <MdOutlineMap size={24} />
                     <span className="hidden md:inline">In deiner Nähe</span>
@@ -61,7 +58,9 @@ const SideBar = () => {
                     </NavLink>
                 )}
             </nav>
-            {/* Auf Mobile trägt die untere Leiste nur die Hauptnavigation. */}
+            <div className="hidden md:block">
+                <LanguageFilter />
+            </div>
             <NavLink
                 to="/datenschutz"
                 className="mt-auto hidden text-sm text-ink-mute hover:text-ink md:inline"

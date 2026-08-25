@@ -7,6 +7,7 @@ import ContactBlock from '../components/ContactBlock';
 import OwnerActions from '../components/OwnerActions';
 import { useAuth } from '../context/auth-context';
 import MapView from '../components/map/MapView';
+import RouteLink from '../components/RouteLink';
 import { WEEKDAYS, fromMinutes } from '../schemas/beratungSchema';
 import { useCategories } from '../hooks/useCategories';
 import { useVocabulary } from '../hooks/useVocabulary';
@@ -38,7 +39,6 @@ const BeratungDetail = () => {
     return (
         <div className="flex flex-col gap-6 max-w-6xl mx-auto md:p-8 pb-3">
             <PageHeader
-                // Beratungen pflegt ausschliesslich `admin` (ARCHITEKTUR.md § 2.6).
                 action={
                     user?.role === 'admin' && (
                         <OwnerActions
@@ -154,9 +154,15 @@ const BeratungDetail = () => {
             )}
 
             {beratung.location?.coordinates && (
-                <div className="h-72 overflow-hidden rounded-card">
-                    <MapView center={beratung.location.coordinates} />
-                </div>
+                <>
+                    <div className="h-72 overflow-hidden rounded-card">
+                        <MapView center={beratung.location.coordinates} />
+                    </div>
+                    <RouteLink
+                        coordinates={beratung.location.coordinates}
+                        title={beratung.title}
+                    />
+                </>
             )}
         </div>
     );

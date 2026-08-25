@@ -199,13 +199,6 @@
 @layer base {
     html {
         scroll-behavior: smooth;
-        /* Native Controls (Datumsfeld, Picker, Scrollbars) folgen damit dem
-           OS-Theme — derselben Quelle, aus der AppLayout die .dark-Klasse
-           setzt. Ohne das rendert <input type="date"> im Dark Mode schwarz
-           auf dunkel: Text und Kalender-Icon unsichtbar.
-           ponytail: kein eigenes ::-webkit-calendar-picker-indicator-Masking
-           wie bei .field::-webkit-search-cancel-button — das Icon invertiert
-           der Browser hier selbst. */
         color-scheme: light dark;
     }
     body {
@@ -257,10 +250,6 @@
     .label {
         @apply text-ink-soft cursor-pointer hover:text-ink;
     }
-    /* Glas-Basis. Vorher steckten hier white/20, white/5 usw. als Literale —
-       im Light Mode auf #f7f4ef praktisch unsichtbar, weil sie für Dark
-       getunt waren. Jetzt kommen Fläche, Kante und Glanz aus Tokens, die
-       .dark überschreibt. Farbe pro Karte liefert der Verlauf darunter. */
     .events,
     .beratung,
     .stat-card,
@@ -322,4 +311,27 @@
             color-mix(in oklab, var(--color-error) 10%, transparent)
         );
     }
+}
+
+.mapboxgl-popup .mapboxgl-popup-content {
+    @apply bg-surface text-ink rounded-card border border-line;
+}
+.mapboxgl-popup.mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
+.mapboxgl-popup.mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,
+.mapboxgl-popup.mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip {
+    border-bottom-color: var(--color-surface);
+}
+.mapboxgl-popup.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
+.mapboxgl-popup.mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,
+.mapboxgl-popup.mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip {
+    border-top-color: var(--color-surface);
+}
+.mapboxgl-popup.mapboxgl-popup-anchor-left .mapboxgl-popup-tip {
+    border-right-color: var(--color-surface);
+}
+.mapboxgl-popup.mapboxgl-popup-anchor-right .mapboxgl-popup-tip {
+    border-left-color: var(--color-surface);
+}
+.mapboxgl-popup .mapboxgl-popup-close-button {
+    @apply text-ink-mute hover:text-ink;
 }

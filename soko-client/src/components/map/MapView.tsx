@@ -1,6 +1,13 @@
 import { useEffect, useRef } from 'react';
-import { Map, Marker, Popup } from 'mapbox-gl';
+import {
+    GeolocateControl,
+    Map,
+    Marker,
+    NavigationControl,
+    Popup,
+} from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { directionsUrl } from '../../utils/directions';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_PUBLIC_MAPBOX_TOKEN;
 
@@ -12,25 +19,42 @@ export type MapMarker = {
     lng: number;
     lat: number;
     title: string;
-    /** Ziel des Popup-Links — die Detailseite des Angebots. */
     href: string;
 };
 
 interface MapViewProps {
-    /** Ohne Angabe: Übersicht über Kassel, ohne einzelnen Marker. */
     center?: [number, number];
     zoom?: number;
-    /** Übersichtskarte: ein Marker pro Angebot, mit Popup. */
     markers?: MapMarker[];
+    onGeolocate?: (lng: number, lat: number) => void;
+    onLocateReady?: (trigger: () => void) => void;
 }
 
-const MapView = ({ center, zoom, markers }: MapViewProps) => {
+const LOCALE = {
+    'GeolocateControl.FindMyLocation': 'Meinen Standort zeigen',
+    'GeolocateControl.LocationNotAvailable': 'Standort nicht verfügbar',
+    'NavigationControl.ZoomIn': 'Vergrößern',
+    'NavigationControl.ZoomOut': 'Verkleinern',
+    'NavigationControl.ResetBearing': 'Norden ausrichten',
+};
+
+const MapView = ({
+    center,
+    zoom,
+    markers,
+    onGeolocate,
+    onLocateReady,
+}: MapViewProps) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<Map | null>(null);
     const markerRefs = useRef<Marker[]>([]);
+    const onGeolocateRef = useRef(onGeolocate);
+    const onLocateReadyRef = useRef(onLocateReady);
+    useEffect(() => {
+        onGeolocateRef.current = onGeolocate;
+        onLocateReadyRef.current = onLocateReady;
+    });
 
-    // Die Karte wird genau einmal gebaut; alles Weitere laeuft ueber die
-    // Effects darunter.
     useEffect(() => {
         if (!containerRef.current || mapRef.current) return;
 
@@ -40,20 +64,33 @@ const MapView = ({ center, zoom, markers }: MapViewProps) => {
             style: 'mapbox://styles/mapbox/streets-v12',
             center: center ?? INITIAL_CENTER,
             zoom: zoom ?? (center ? 14 : INITIAL_ZOOM),
+            language: 'de',
+            locale: LOCALE,
         });
         mapRef.current = map;
-        map.once('load', () => map.resize()); // ponytail: nudge size after grid settles on SPA nav
+        map.once('load', () => map.resize());
+
+        map.addControl(new NavigationControl({ showCompass: false }));
+
+        const geolocate = new GeolocateControl({
+            trackUserLocation: true,
+            showUserHeading: true,
+            positionOptions: { enableHighAccuracy: true },
+        });
+        map.addControl(geolocate);
+        geolocate.on('geolocate', (e) =>
+            onGeolocateRef.current?.(e.coords.longitude, e.coords.latitude),
+        );
+
+        onLocateReadyRef.current?.(() => geolocate.trigger());
 
         return () => {
             map.remove();
             mapRef.current = null;
             markerRefs.current = [];
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Ein Wechsel des Mittelpunkts bewegt jetzt auch die Karte — bisher lief
-    // `center` ins Leere, weil der Init-Effect nur einmal feuerte.
     const lng = center?.[0];
     const lat = center?.[1];
     useEffect(() => {
@@ -62,8 +99,6 @@ const MapView = ({ center, zoom, markers }: MapViewProps) => {
         map.flyTo({ center: [lng, lat], zoom: zoom ?? 14 });
     }, [lng, lat, zoom]);
 
-    // Detailseiten uebergeben nur `center` und wollen genau einen Marker;
-    // die Uebersichtskarte setzt ihre Marker unten selbst.
     useEffect(() => {
         const map = mapRef.current;
         if (!map || markers || lng === undefined || lat === undefined) return;
@@ -73,8 +108,6 @@ const MapView = ({ center, zoom, markers }: MapViewProps) => {
         };
     }, [lng, lat, markers]);
 
-    // ponytail: bei jeder Aenderung alle Marker neu setzen statt zu diffen —
-    // bei Kassel-Groessenordnung nicht messbar. Clustering erst, wenn es ruckelt.
     useEffect(() => {
         const map = mapRef.current;
         if (!map || !markers) return;
@@ -84,11 +117,15 @@ const MapView = ({ center, zoom, markers }: MapViewProps) => {
                 .setLngLat([m.lng, m.lat])
                 .setPopup(
                     new Popup({ offset: 24 }).setHTML(
-                        // Kein React-Portal: Mapbox-Popups leben ausserhalb des
-                        // React-Baums. Escaping deshalb von Hand.
                         `<a href="${m.href}" class="text-sm underline">${escapeHtml(
                             m.title,
-                        )}</a>`,
+                        )}</a>
+                         <a href="${directionsUrl(m.lat, m.lng)}"
+                            target="_blank" rel="noreferrer"
+                            class="mt-1 block text-sm underline"
+                            aria-label="Route nach ${escapeHtml(
+                                m.title,
+                            )} — öffnet die Karten-App">Route</a>`,
                     ),
                 )
                 .addTo(map),
@@ -98,7 +135,6 @@ const MapView = ({ center, zoom, markers }: MapViewProps) => {
     return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />;
 };
 
-/** Titel kommen aus Nutzereingaben und landen als HTML im Popup. */
 const escapeHtml = (s: string) =>
     s.replace(
         /[&<>"']/g,

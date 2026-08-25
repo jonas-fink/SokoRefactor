@@ -3,9 +3,7 @@ import type { ReactNode } from 'react';
 export interface ChipOption {
     key: string;
     label: string;
-    /** Themen-Chips zeigen das Kategorie-Icon aus `categoryMeta.tsx`. */
     icon?: ReactNode;
-    /** Eigenname der Sprache, z. B. „العربية" — steht hinter dem Label. */
     endonym?: string;
 }
 
@@ -17,12 +15,6 @@ interface ChipGroupProps {
     hint?: string;
 }
 
-/**
- * Mehrfachauswahl aus einer geschlossenen Liste (Kategorien, Sprachen,
- * Zielgruppen). Freitext gibt es hier bewusst nicht: die Werte sind
- * Datenbank-Keys, die das Backend gegen eine Whitelist prueft — ein Tippfehler
- * waere sonst ein 400 nach dem Absenden statt gar keiner Eingabe.
- */
 const ChipGroup = ({
     legend,
     options,
@@ -38,8 +30,6 @@ const ChipGroup = ({
                     key={o.key}
                     type="button"
                     aria-pressed={selected.includes(o.key)}
-                    // Die Icons stehen mit `size={24}` in `categoryMeta.tsx` —
-                    // im Chip zu gross, CSS gewinnt gegen das Attribut.
                     className={`inline-flex cursor-pointer items-center gap-1.5 [&_svg]:size-5 ${
                         selected.includes(o.key) ? 'chip-active' : 'chip'
                     }`}
@@ -47,10 +37,8 @@ const ChipGroup = ({
                 >
                     {o.icon}
                     {o.label}
-                    {/* `dir="auto"` isoliert das Fragment: ohne das rutscht der
-                        Trenner bei Arabisch und Farsi auf die falsche Seite. */}
                     {o.endonym && (
-                        <span dir="auto" className="text-ink-mute">
+                        <span lang={o.key} dir="auto" className="text-ink-mute">
                             · {o.endonym}
                         </span>
                     )}

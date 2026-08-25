@@ -6,21 +6,18 @@ import type { Filters } from '../hooks/useFilters';
 interface OrtFilterProps {
     filters: Filters;
     setFilter: <K extends keyof Filters>(key: K, value: Filters[K]) => void;
-    /** Ort und Umkreis muessen zusammen geschrieben werden — zwei `setFilter`
-     *  hintereinander wuerden sich gegenseitig ueberschreiben. */
     setFilters: (patch: Partial<Filters>) => void;
+    onLocate?: () => void;
 }
 
 const DEFAULT_RADIUS = 5;
 
-/**
- * Ort und Umkreis stehen offen auf der Seite statt im Filter-Dialog: auf der
- * Karte sind sie die Hauptachse, nicht eine Verfeinerung unter vielen.
- *
- * Ohne gesetzten Ort filtert nichts — die Karte zeigt dann alles rund um
- * Kassel. Ein Modal beim Seitenaufruf gibt es bewusst nicht.
- */
-const OrtFilter = ({ filters, setFilter, setFilters }: OrtFilterProps) => {
+const OrtFilter = ({
+    filters,
+    setFilter,
+    setFilters,
+    onLocate,
+}: OrtFilterProps) => {
     const [text, setText] = useState('');
     const [status, setStatus] = useState<
         'idle' | 'loading' | 'notfound' | 'error' | 'denied'
@@ -31,8 +28,6 @@ const OrtFilter = ({ filters, setFilter, setFilters }: OrtFilterProps) => {
     const radius = filters.distance ?? DEFAULT_RADIUS;
 
     const setOrt = (lng: number, lat: number, name: string) => {
-        // Ohne expliziten Radius stuende der Ort ohne Umkreis in der URL und
-        // das Backend faende still seinen eigenen Default.
         setFilters({ lng, lat, distance: filters.distance ?? DEFAULT_RADIUS });
         setLabel(name);
         setStatus('idle');
@@ -52,7 +47,8 @@ const OrtFilter = ({ filters, setFilter, setFilters }: OrtFilterProps) => {
         }
     };
 
-    const onLocate = () => {
+    const locate = () => {
+        onLocate?.();
         if (!navigator.geolocation) return setStatus('denied');
         setStatus('loading');
         navigator.geolocation.getCurrentPosition(
@@ -62,8 +58,6 @@ const OrtFilter = ({ filters, setFilter, setFilters }: OrtFilterProps) => {
                     pos.coords.latitude,
                     'Dein Standort',
                 ),
-            // Ablehnung ist kein Fehlerfall, nur ein anderer Weg zum Ziel:
-            // das Textfeld daneben bleibt bedienbar.
             () => setStatus('denied'),
         );
     };
@@ -90,7 +84,7 @@ const OrtFilter = ({ filters, setFilter, setFilters }: OrtFilterProps) => {
                 </button>
                 <button
                     type="button"
-                    onClick={onLocate}
+                    onClick={locate}
                     className="btn-secondary cursor-pointer"
                     aria-label="Meinen Standort verwenden"
                     title="Mein Standort"

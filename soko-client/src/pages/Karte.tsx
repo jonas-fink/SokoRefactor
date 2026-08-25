@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../utils/api';
 import PageHeader from '../components/PageHeader';
 import OfferCard from '../components/OfferCard';
@@ -11,15 +11,6 @@ import { useCategories } from '../hooks/useCategories';
 import { useFavorites } from '../hooks/useFavorites';
 import type { Activity, Beratung } from '../types';
 
-/**
- * „In deiner Nähe" — Angebote und Beratungsstellen auf einer Karte, eingegrenzt
- * über Ort und Umkreis. Beides hat Pflichtkoordinaten, also hat jeder Eintrag
- * garantiert einen Marker; die Events von kassel.de sind nur teilweise
- * geokodiert und bleiben deshalb draußen.
- *
- * Die Liste unter der Karte ist kein Beiwerk: eine Karte allein ist per
- * Tastatur und Screenreader nicht bedienbar.
- */
 const Karte = () => {
     const {
         filters,
@@ -30,15 +21,13 @@ const Karte = () => {
         activeCount,
         query,
     } = useFilters();
-    // Ohne `appliesTo` kommt die ganze Taxonomie — die Seite zeigt beide Arten.
     const { categories, labelOf } = useCategories();
     const { isFavorite, toggle, enabled } = useFavorites();
     const [activities, setActivities] = useState<Activity[]>([]);
     const [beratungen, setBeratungen] = useState<Beratung[]>([]);
     const [error, setError] = useState('');
+    const locate = useRef<(() => void) | null>(null);
 
-    // Beide Listen kennen `tags` statt `category` und sind unpaginiert.
-    // `date` und `free` gelten nur fuer Activities.
     const baseQuery = useMemo(() => {
         const params = new URLSearchParams(query);
         const category = params.get('category');
@@ -95,7 +84,6 @@ const Karte = () => {
         [activities, beratungen],
     );
 
-    // Ohne gewaehlten Ort bleibt der Kassel-Default der Karte stehen.
     const center = useMemo(
         (): [number, number] | undefined =>
             filters.lng !== undefined && filters.lat !== undefined
@@ -112,7 +100,20 @@ const Karte = () => {
             />
 
             <div className="rounded-card h-[60dvh] overflow-hidden">
-                <MapView center={center} markers={markers} />
+                <MapView
+                    center={center}
+                    markers={markers}
+                    onGeolocate={(lng, lat) =>
+                        setFilters({
+                            lng,
+                            lat,
+                            distance: filters.distance ?? 5,
+                        })
+                    }
+                    onLocateReady={(trigger) => {
+                        locate.current = trigger;
+                    }}
+                />
             </div>
 
             {error && <p className="text-error">{error}</p>}
@@ -127,6 +128,7 @@ const Karte = () => {
                 filters={filters}
                 setFilter={setFilter}
                 setFilters={setFilters}
+                onLocate={() => locate.current?.()}
             />
 
             <SearchFilter

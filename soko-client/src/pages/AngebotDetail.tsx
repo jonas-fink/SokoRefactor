@@ -3,6 +3,7 @@ import { useParams } from 'react-router';
 import { api } from '../utils/api';
 import PageHeader from '../components/PageHeader';
 import MapView from '../components/map/MapView';
+import RouteLink from '../components/RouteLink';
 import ContactBlock from '../components/ContactBlock';
 import OwnerActions from '../components/OwnerActions';
 import { useFavorites } from '../hooks/useFavorites';
@@ -43,18 +44,13 @@ const AngebotDetail = () => {
     const isActivity = itemType === 'Activity';
     const activity = isActivity ? (item as Activity) : null;
     const event = isActivity ? null : (item as ScrapedEvent);
-    // Events bekommen ihre Koordinaten nachtraeglich vom Geocoder — wer keine
-    // hat, zeigt eben nur den Ortsnamen.
     const coordinates =
         activity?.location?.coordinates ?? event?.location?.coordinates;
     const favorite = isFavorite(itemType, id);
-    // Nur eigene Activities — ScrapedEvents gehoeren dem Scraper, nicht uns.
-    // Dieselbe Regel wie `isDocOwner` im Backend: Owner **oder** Admin.
     const canManage =
         !!activity &&
         !!user &&
         (user.role === 'admin' || activity.userId?._id === user.id);
-    // Ohne Vokabular faellt die Zeile weg — ein roher Key waere schlechter.
     const axis = (keys: string[] = []) =>
         keys.map(axisLabelOf).filter(Boolean).join(', ');
     const spoken = axis(item.availableLanguages);
@@ -160,9 +156,12 @@ const AngebotDetail = () => {
             {activity && <ContactBlock contact={activity} />}
 
             {coordinates && (
-                <div className="h-72 overflow-hidden rounded-card">
-                    <MapView center={coordinates} />
-                </div>
+                <>
+                    <div className="h-72 overflow-hidden rounded-card">
+                        <MapView center={coordinates} />
+                    </div>
+                    <RouteLink coordinates={coordinates} title={item.title} />
+                </>
             )}
 
             {event?.sourceUrl && (

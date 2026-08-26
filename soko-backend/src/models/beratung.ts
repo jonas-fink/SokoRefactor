@@ -36,6 +36,17 @@ const serviceSchema = new Schema({
     documents: [documentSchema],
 });
 
+// Haeufige Fragen. `_id: false`, weil es — anders als bei den Dokumenten einer
+// Beratung — keine Route auf den einzelnen Eintrag gibt: die Liste wird beim
+// Speichern immer komplett ersetzt.
+const faqSchema = new Schema(
+    {
+        question: { type: String, required: true, trim: true },
+        answer: { type: String, required: true, trim: true },
+    },
+    { _id: false },
+);
+
 const beratungSchema = new Schema(
     {
         title: {
@@ -51,12 +62,18 @@ const beratungSchema = new Schema(
             type: String,
             required: [true, 'Bild wird benötigt'],
         },
+        // Nur gesetzt, wenn wir die Datei selbst nach S3 geladen haben. Externe
+        // Adressen (Partner-CSV, Platzhalter, Seeds) stehen weiter allein in
+        // `image` und haben nichts, was aufgeraeumt werden muesste.
+        imageKey: { type: String },
         description: {
             type: String,
             required: [true, 'Beschreibung wird benötigt'],
             trim: true,
         },
         openingHours: businessHoursSchema,
+        url: { type: String, trim: true },
+        faq: { type: [faqSchema], default: [] },
         phone: { type: String, trim: true },
         email: { type: String, trim: true, lowercase: true },
         address: { type: String, trim: true },

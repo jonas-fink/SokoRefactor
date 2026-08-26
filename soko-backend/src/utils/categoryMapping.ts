@@ -34,6 +34,12 @@ export const CATEGORIES = [
         colorToken: 'cat-finanzen',
     },
     {
+        key: 'wohnen',
+        label: 'Wohnen & Miete',
+        appliesTo: ['beratung'],
+        colorToken: 'cat-wohnen',
+    },
+    {
         key: 'sport',
         label: 'Sport & Bewegung',
         appliesTo: ['activity'],

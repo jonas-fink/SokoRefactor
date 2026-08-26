@@ -1,13 +1,8 @@
 import type { RequestHandler } from 'express';
 import { unlink } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
 import formidable from 'formidable';
-import { v2 as cloudinary } from 'cloudinary';
-
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_NAME,
-    api_key: process.env.CLOUDINARY_KEY,
-    api_secret: process.env.CLOUDINARY_SECRET,
-});
+import { deleteFiles, publicUrl, uploadFile } from '#services';
 
 const fileUploadHandler: RequestHandler = (req, res, next) => {
     // `express.json()` hat den Body bei nicht-multipart-Requests bereits gelesen —
@@ -57,28 +52,51 @@ const fileUploadHandler: RequestHandler = (req, res, next) => {
                 }),
             );
 
+        const body = parseJsonFields(flatFields);
+        // `imageKey` gehoert dem Server. Wuerde ein Client ihn mitschicken
+        // duerfen, koennte er einen fremden Key eintragen — und `deleteFiles`
+        // in `replacedImageKey` raeumt anschliessend dessen Bild ab.
+        delete body.imageKey;
+
         const file = files.image;
         const upFile = Array.isArray(file) ? file[0] : file;
 
         if (upFile) {
+            // UUID statt des frueheren `activity_${id}`: der deterministische
+            // Name liess einen Upload aus der Entwicklung das Produktionsbild
+            // desselben Eintrags ueberschreiben (KONVENTIONEN.md). Ersetzt wird
+            // jetzt ueber einen echten Delete, nicht ueber gleiche Namen.
+            const key = `images/${randomUUID()}`;
             try {
-                const result = await cloudinary.uploader.upload(
+                await uploadFile(
                     upFile.filepath,
-                    {
-                        folder: 'activity_img',
-                        public_id: `activity_${req.params.id ?? Date.now()}`,
-                    },
+                    key,
+                    upFile.mimetype ?? 'application/octet-stream',
                 );
-                req.body = {
-                    ...parseJsonFields(flatFields),
-                    image: result.secure_url,
-                };
+                req.body = { ...body, image: publicUrl(key), imageKey: key };
+                // Der Upload laeuft vor `validateBody`. Kippt der Request
+                // danach noch (400 aus der Validierung, 404 oder 500 im
+                // Controller), schreibt niemand den Key in die Datenbank und
+                // das Objekt bliebe fuer immer liegen. Eine Stelle statt sechs
+                // Controller.
+                res.on('finish', () => {
+                    if (res.statusCode >= 400) {
+                        void deleteFiles([key]).catch((err: unknown) => {
+                            console.error(
+                                'Verwaistes Bild nicht geloescht:',
+                                key,
+                                err,
+                            );
+                        });
+                    }
+                });
                 next();
             } catch (uploadError) {
-                // Ohne Log ist ein 401 von Cloudinary (falsche/veraltete Keys)
-                // vom Client aus nicht von einem echten Serverfehler zu unterscheiden.
-                console.error('Cloudinary upload failed:', uploadError);
-                res.status(500).json({ error: 'Cloudinary Upload failed' });
+                // Ohne Log ist ein 403 von S3 (fehlende IAM-Rechte, falscher
+                // Bucket) vom Client aus nicht von einem echten Serverfehler
+                // zu unterscheiden.
+                console.error('S3 upload failed:', uploadError);
+                res.status(500).json({ error: 'Bild-Upload fehlgeschlagen' });
             } finally {
                 // formidable raeumt sein Tempdir nie selbst auf — ohne das
                 // bleibt nach jedem Upload eine Datei liegen. Ein Fehler beim
@@ -86,7 +104,7 @@ const fileUploadHandler: RequestHandler = (req, res, next) => {
                 await unlink(upFile.filepath).catch(() => {});
             }
         } else {
-            req.body = { ...parseJsonFields(flatFields) };
+            req.body = body;
             next();
         }
     });

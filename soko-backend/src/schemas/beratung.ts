@@ -1,9 +1,12 @@
 import { z } from 'zod';
 import {
+    faqSchema,
     hasContactForPreferred,
     objectIdSchema,
     optionalEmail,
     optionalText,
+    optionalUrl,
+    patchBodySchema,
     preferredContactError,
     preferredContactSchema,
 } from './shared.ts';
@@ -54,11 +57,19 @@ export const beratungZodSchema = z.object({
 
     image: z.string().min(1, 'Bild wird benötigt'),
 
+    // Gegenstueck zu `image`: der S3-Key, falls das Bild uns gehoert. Fehlt der
+    // Schluessel im Body, laesst zod ihn auch aus dem Ergebnis — nur deshalb
+    // ueberlebt ein PUT ohne neue Datei den bestehenden Key (siehe Test).
+    imageKey: z.string().optional(),
+
     description: z.string().trim().min(1, 'Beschreibung wird benötigt'),
 
     // optional wie im Modell — eine Beratung ohne hinterlegte Zeiten ist gueltig
     // und darf beim Lesen nicht in einen 500 laufen (trifft spaeter den Import).
     openingHours: businessHoursUserSchema.optional(),
+
+    url: optionalUrl,
+    faq: faqSchema,
 
     phone: optionalText(50),
     email: optionalEmail,
@@ -110,9 +121,9 @@ export const beratungCreateBodySchema = beratungZodSchema
     .extend({ image: z.string().optional() })
     .refine(hasContactForPreferred, preferredContactError);
 // Kein Kontakt-Refine hier — Begruendung an `hasContactForPreferred`.
-export const beratungPatchBodySchema = beratungZodSchema
-    .partial()
-    .omit({ userId: true });
+export const beratungPatchBodySchema = patchBodySchema(
+    beratungZodSchema.omit({ userId: true }),
+);
 
 // Der Body traegt nur den Titel — `s3Key`/`mimeType` entstehen erst, wenn der
 // Controller die Datei nach der Validierung hochlaedt.

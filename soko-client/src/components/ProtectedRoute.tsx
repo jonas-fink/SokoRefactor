@@ -1,8 +1,9 @@
-import { Navigate, Outlet } from 'react-router';
+import { Navigate, Outlet, useLocation } from 'react-router';
 import { useAuth, canCreate } from '../context/auth-context';
 
 const ProtectedRoute = ({ requireCreator = false, requireAdmin = false }) => {
     const { user, loading } = useAuth();
+    const location = useLocation();
 
     if (loading) {
         return (
@@ -12,7 +13,14 @@ const ProtectedRoute = ({ requireCreator = false, requireAdmin = false }) => {
         );
     }
     if (!user) {
-        return <Navigate to="/login" replace />;
+        // Ziel merken, damit der Login dorthin zurueckspringt statt auf `/`.
+        return (
+            <Navigate
+                to="/login"
+                replace
+                state={{ from: location.pathname + location.search }}
+            />
+        );
     }
     if (requireCreator && !canCreate(user)) {
         return <Navigate to="/settings" replace />;

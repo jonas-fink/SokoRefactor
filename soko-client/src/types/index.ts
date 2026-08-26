@@ -66,6 +66,12 @@ export interface GeoPoint {
  *  im Kontaktblock der Detailseite. */
 export type PreferredContact = 'phone' | 'email' | 'address';
 
+/** Eine haeufige Frage samt Antwort; optional, Reihenfolge wie eingegeben. */
+export interface FaqEntry {
+    question: string;
+    answer: string;
+}
+
 export interface Contactable {
     phone?: string;
     email?: string;
@@ -80,6 +86,10 @@ export interface Activity extends Contactable {
     image: string;
     date: string;
     price: number;
+    /** Website des Anbieters. Bewusst nicht in `Contactable`: der Kontaktblock
+     *  soll sie nicht rendern, sie steht als eigener Button auf der Detailseite. */
+    url?: string;
+    faq?: FaqEntry[];
     tags: string[];
     availableLanguages: string[];
     targetAudience: string[];
@@ -120,6 +130,9 @@ export interface Beratung extends Contactable {
     image: string;
     /** Wochentag → Zeitfenster in Minuten seit Mitternacht; leer = geschlossen. */
     openingHours?: Record<string, TimeSlot[]>;
+    /** Website des Traegers, siehe `Activity.url`. */
+    url?: string;
+    faq?: FaqEntry[];
     services?: BeratungService[];
     location: GeoPoint;
     tags: string[];

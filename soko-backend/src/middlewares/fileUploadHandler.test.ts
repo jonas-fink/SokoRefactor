@@ -55,3 +55,22 @@ test('Multipart-Request wird weiterhin von formidable geparst', async (t) => {
         data: { title: 'Mit Formular', tags: ['sport'] },
     });
 });
+
+test('vom Client mitgeschicktes imageKey wird verworfen', async (t) => {
+    const port = await listen(t);
+
+    const form = new FormData();
+    form.append('title', 'Fremder Key');
+    // Duerfte der Client den Key setzen, koennte er auf ein fremdes Objekt
+    // zeigen — `replacedImageKey` wuerde es beim naechsten Speichern loeschen.
+    form.append('imageKey', 'images/gehoert-jemand-anderem');
+
+    const res = await fetch(`http://localhost:${port}/echo`, {
+        method: 'POST',
+        body: form,
+        signal: AbortSignal.timeout(2000),
+    });
+
+    assert.equal(res.status, 200);
+    assert.deepEqual(await res.json(), { data: { title: 'Fremder Key' } });
+});

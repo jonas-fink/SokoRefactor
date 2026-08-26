@@ -203,11 +203,13 @@ export const toBeratung = (
         title: row.name,
         description: row.beschreibung,
         image: row.bild || 'https://placehold.net/600x600.png',
+        url: row.url || undefined,
         phone: row.telefon || undefined,
         address: row.adresse || undefined,
         openingHours: parseOpeningHours(row.oeffnungszeiten ?? ''),
-        // Dokumente kommen nicht über die CSV — die Dateien laedt der Admin
-        // danach über die Upload-Route zum jeweiligen Service hoch.
+        // Dokumente und FAQ kommen nicht über die CSV: die Dateien laedt der
+        // Admin über die Upload-Route zum jeweiligen Service hoch, die haeufigen
+        // Fragen pflegt er im Formular nach (siehe docs/PARTNER-IMPORT.md).
         services: (row.angebote ?? '')
             .split('|')
             .map((s) => s.trim())

@@ -153,6 +153,22 @@ const BeratungDetail = () => {
                 </div>
             )}
 
+            {beratung.faq && beratung.faq.length > 0 && (
+                <div className="card flex flex-col gap-2 p-4">
+                    <h3 className="text-xl">Häufige Fragen</h3>
+                    {/* natives <details>: kein State, und Tastatur plus
+                        Screenreader uebernimmt der Browser. */}
+                    {beratung.faq.map((f, i) => (
+                        <details key={i} className="border-line border-t pt-2">
+                            <summary className="cursor-pointer font-bold">
+                                {f.question}
+                            </summary>
+                            <p className="text-ink-soft mt-2">{f.answer}</p>
+                        </details>
+                    ))}
+                </div>
+            )}
+
             {beratung.location?.coordinates && (
                 <>
                     <div className="h-72 overflow-hidden rounded-card">
@@ -163,6 +179,17 @@ const BeratungDetail = () => {
                         title={beratung.title}
                     />
                 </>
+            )}
+
+            {beratung.url && (
+                <a
+                    href={beratung.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn-secondary self-start"
+                >
+                    Zur Website
+                </a>
             )}
         </div>
     );

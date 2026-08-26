@@ -1,9 +1,12 @@
 import { z } from 'zod';
 import {
+    faqSchema,
     hasContactForPreferred,
     objectIdSchema,
     optionalEmail,
     optionalText,
+    optionalUrl,
+    patchBodySchema,
     preferredContactError,
     preferredContactSchema,
 } from './shared.ts';
@@ -18,9 +21,17 @@ const activitySchema = z.object({
             .url({ protocol: /^https?$/, hostname: z.regexes.domain })
             .default('https://placehold.net/600x600.png'),
     ),
+    // Gegenstueck zu `image`: der S3-Key, falls das Bild uns gehoert. Fehlt der
+    // Schluessel im Body, laesst zod ihn auch aus dem Ergebnis — nur deshalb
+    // ueberlebt ein PUT ohne neue Datei den bestehenden Key (siehe Test).
+    imageKey: z.string().optional(),
+
     description: z.string().trim().min(1, 'Description is required'),
     date: z.coerce.date(),
     price: z.coerce.number().min(0).default(0),
+
+    url: optionalUrl,
+    faq: faqSchema,
 
     email: optionalEmail,
     phone: optionalText(50),
@@ -74,10 +85,9 @@ export const activityCreateBodySchema = activitySchema
     .extend(bodyLimits)
     .refine(hasContactForPreferred, preferredContactError);
 // Kein Kontakt-Refine hier — Begruendung an `hasContactForPreferred`.
-export const activityPatchBodySchema = activitySchema
-    .omit({ userId: true })
-    .extend(bodyLimits)
-    .partial();
+export const activityPatchBodySchema = patchBodySchema(
+    activitySchema.omit({ userId: true }).extend(bodyLimits),
+);
 
 export type ActivityInput = z.infer<typeof activitySchema>;
 export type ActivityOutput = z.infer<typeof activityOutputSchema>;

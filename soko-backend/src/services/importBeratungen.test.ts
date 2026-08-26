@@ -27,11 +27,15 @@ test('CSV: Anfuehrungszeichen, Kommas im Feld und Leerzeilen', () => {
 
 test('CSV: deutsches Excel-Semikolon wird erkannt', () => {
     const rows = parseCsv('externalId;name;lat\nCAR-9;Stelle;51.3');
-    assert.deepEqual(rows, [{ externalId: 'CAR-9', name: 'Stelle', lat: '51.3' }]);
+    assert.deepEqual(rows, [
+        { externalId: 'CAR-9', name: 'Stelle', lat: '51.3' },
+    ]);
 });
 
 test('Oeffnungszeiten werden zu Minuten seit Mitternacht', () => {
-    const hours = parseOpeningHours('mo 09:00-12:00,13:00-17:00; di 09:00-17:00');
+    const hours = parseOpeningHours(
+        'mo 09:00-12:00,13:00-17:00; di 09:00-17:00',
+    );
     assert.deepEqual(hours.monday, [
         { open: 540, close: 720 },
         { open: 780, close: 1020 },
@@ -55,6 +59,28 @@ test('Zeile → Beratung: Koordinaten als [lng, lat], Angebote gesplittet', () =
     assert.equal(b.source, 'caritas');
 });
 
+test('url: leere Spalte bleibt leer, Unsinn fliegt raus', () => {
+    const [row] = parseCsv(CSV);
+    // Spalte gar nicht geliefert (wie im CSV oben) → kein Feld im Dokument.
+    assert.equal(toBeratung(row, USER, 'x').url, undefined);
+    assert.equal(toBeratung({ ...row, url: '' }, USER, 'x').url, undefined);
+    assert.equal(
+        toBeratung(
+            { ...row, url: 'https://caritas-kassel.de/schulden' },
+            USER,
+            'x',
+        ).url,
+        'https://caritas-kassel.de/schulden',
+    );
+    // Ohne Schema ist es keine Adresse, die im href etwas zu suchen hat.
+    assert.throws(() =>
+        toBeratung({ ...row, url: 'caritas-kassel.de' }, USER, 'x'),
+    );
+    assert.throws(() =>
+        toBeratung({ ...row, url: 'javascript:alert(1)' }, USER, 'x'),
+    );
+});
+
 test('ungueltige Zeilen werfen mit Klartextgrund', () => {
     const [row] = parseCsv(CSV);
     assert.throws(
@@ -62,10 +88,7 @@ test('ungueltige Zeilen werfen mit Klartextgrund', () => {
         /Unbekannte Kategorie/,
     );
     // Ohne Koordinaten *und* ohne Geocoding-Treffer bleibt nichts zu verorten.
-    assert.throws(
-        () => toBeratung({ ...row, lat: '' }, USER, 'x'),
-        /lat\/lng/,
-    );
+    assert.throws(() => toBeratung({ ...row, lat: '' }, USER, 'x'), /lat\/lng/);
 });
 
 test('leere Koordinatenspalte wird nicht zu 0/0', () => {

@@ -45,8 +45,7 @@ flowchart TB
     end
 
     subgraph External["External Services"]
-        Cloudinary[("Cloudinary\nimages")]
-        S3[("AWS S3\ndocuments, presigned URLs")]
+        S3[("AWS S3\nimages (public prefix)\ndocuments (presigned URLs)")]
         Gemini[["Google Gemini\nchat completions + speech-to-text"]]
         Mapbox[["Mapbox GL\nmap tiles"]]
         Nominatim[["Nominatim / OSM\ngeocoding"]]
@@ -68,8 +67,7 @@ flowchart TB
     Ctrl --> Mongo
     Svc --> Mongo
 
-    Ctrl -- "image upload" --> Cloudinary
-    Svc -- "PDF upload / presigned GET" --> S3
+    Svc -- "image + PDF upload, presigned GET" --> S3
     Svc -- "chat completion" --> Gemini
 
     Scraper -- "cheerio HTML scrape" --> Kassel
@@ -80,7 +78,7 @@ flowchart TB
     Import --> Mongo
 ```
 
-The client never talks to MongoDB, Cloudinary, S3, or Gemini directly — everything routes through the Express API, which is the single place authorization, validation, and rate limiting are enforced. The scraper, geocoder, and CSV importer are standalone Node scripts (`npm run scrape`, `npm run geocode:events`, `npm run import:beratungen`) rather than in-process schedulers, so they can fail, retry, or be re-run independently of the API's uptime.
+The client never talks to MongoDB, S3, or Gemini directly — everything routes through the Express API, which is the single place authorization, validation, and rate limiting are enforced. The scraper, geocoder, and CSV importer are standalone Node scripts (`npm run scrape`, `npm run geocode:events`, `npm run import:beratungen`) rather than in-process schedulers, so they can fail, retry, or be re-run independently of the API's uptime.
 
 ### Data model
 
@@ -308,7 +306,7 @@ Deployment is a push to `main`: a GitHub Actions job on a self-hosted runner che
 | Backend        | Node.js, Express 5, TypeScript, Zod 4                                                           |
 | Database       | MongoDB, Mongoose 9 (`2dsphere` geo indexes)                                                    |
 | Auth           | JWT (access + rotating refresh), bcryptjs                                                       |
-| Storage        | Cloudinary (images), AWS S3 (documents, via presigned URLs)                                     |
+| Storage        | AWS S3 — images under a public `images/` prefix, documents private via presigned URLs           |
 | AI             | Google Gemini (`@google/genai`) — chat + speech-to-text, with deterministic fallback            |
 | Data ingestion | Cheerio (scraping), Nominatim/OSM (geocoding)                                                   |
 | Testing        | Node's built-in test runner (no external framework) — 68 backend + 12 client tests              |

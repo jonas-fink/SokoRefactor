@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { AiOutlineCreditCard, AiOutlineHeart } from 'react-icons/ai';
 import {
     PiHouseLine,
+    PiKey,
     PiGlobeSimple,
     PiTree,
     PiPalette,
@@ -47,6 +48,11 @@ export const CATEGORY_META: Record<
         icon: <AiOutlineCreditCard size={24} />,
         description: 'Budget, Schuldnerberatung',
         accent: 'text-cat-finanzen',
+    },
+    wohnen: {
+        icon: <PiKey size={24} />,
+        description: 'Miete, Wohnungssuche, Kündigung',
+        accent: 'text-cat-wohnen',
     },
     sport: {
         icon: <MdOutlineSportsSoccer size={24} />,

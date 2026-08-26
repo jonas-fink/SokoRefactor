@@ -19,6 +19,10 @@ jedem Sprach- und Zielgruppenfilter sichtbar bleiben („leer = keine Angabe =
 matcht immer"). Ohne so einen Fall im Bestand fällt genau dieser Fehler beim
 Testen nicht auf.
 
+Aus demselben Grund sind `url` und `faq` nur bei einzelnen Angeboten gesetzt (Website beim
+Sprachcafé und der Chorprobe, FAQ nur beim Reparatur-Café) — die übrigen sind die
+Gegenprobe, dass die Detailseite auch ohne beides sauber rendert.
+
 ## Veranstaltungen (ScrapedEvents)
 
 ```bash
@@ -36,9 +40,10 @@ upserted auf seine eigenen `externalId`s).
 
 ## Beratungsstellen
 
-`demo-beratungen.csv` — 15 **erfundene** Beratungsstellen, drei je Beratungs-Kategorie
-(`behoerden`, `asyl`, `familie`, `gesundheit`, `finanzen`), mit den Spalten
-`sprachen`/`zielgruppe` (drei Zeilen lassen `zielgruppe` bewusst leer), für
+`demo-beratungen.csv` — 18 **erfundene** Beratungsstellen, drei je Beratungs-Kategorie
+(`behoerden`, `asyl`, `familie`, `gesundheit`, `finanzen`, `wohnen`), mit den Spalten
+`sprachen`/`zielgruppe` (drei Zeilen lassen `zielgruppe` bewusst leer) und `url`
+(drei Zeilen bewusst ohne Link, damit der Fall „keine Website" im Bestand vorkommt), für
 Präsentationen und zum Durchtesten der Oberfläche. Namen, Telefonnummern und Angebote sind frei
 erfunden; die Adressen sind echte Kasseler Straßen, damit Karte und Geocoding
 funktionieren. **Keine echten Träger, keine echten Nummern.**

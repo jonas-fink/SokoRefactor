@@ -164,6 +164,33 @@ const AngebotDetail = () => {
                 </>
             )}
 
+            {activity?.faq && activity.faq.length > 0 && (
+                <div className="card flex flex-col gap-2 p-4">
+                    <h3 className="text-xl">Häufige Fragen</h3>
+                    {/* natives <details>: kein State, und Tastatur plus
+                        Screenreader uebernimmt der Browser. */}
+                    {activity.faq.map((f, i) => (
+                        <details key={i} className="border-line border-t pt-2">
+                            <summary className="cursor-pointer font-bold">
+                                {f.question}
+                            </summary>
+                            <p className="text-ink-soft mt-2">{f.answer}</p>
+                        </details>
+                    ))}
+                </div>
+            )}
+
+            {activity?.url && (
+                <a
+                    href={activity.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn-secondary self-start"
+                >
+                    Zur Website
+                </a>
+            )}
+
             {event?.sourceUrl && (
                 <a
                     href={event.sourceUrl}

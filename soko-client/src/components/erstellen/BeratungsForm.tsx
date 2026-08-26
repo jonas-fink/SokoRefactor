@@ -18,6 +18,7 @@ import { useVocabulary } from '../../hooks/useVocabulary';
 import ChipGroup from '../ChipGroup';
 import ContactFields from './ContactFields';
 import ServicesEditor from './ServicesEditor';
+import FaqEditor from './FaqEditor';
 import { servicesPayload, type ServiceDraft } from '../../utils/services';
 import type { Beratung } from '../../types';
 
@@ -35,6 +36,8 @@ const BeratungsForm = () => {
     const methods = useForm<BeratungFormData>({
         resolver: zodResolver(beratungFormSchema),
         defaultValues: {
+            url: '',
+            faq: [],
             lng: 9.4797,
             lat: 51.3127,
             openingHours: emptyOpeningHours,
@@ -85,6 +88,8 @@ const BeratungsForm = () => {
                             ];
                         }),
                     ) as Record<Weekday, { open: string; close: string }>,
+                    url: b.url ?? '',
+                    faq: b.faq ?? [],
                     lng: b.location.coordinates[0],
                     lat: b.location.coordinates[1],
                     tags: b.tags,
@@ -156,6 +161,14 @@ const BeratungsForm = () => {
                 type: 'Point',
                 coordinates: [data.lng, data.lat],
             }),
+        );
+        if (data.url) form.append('url', data.url);
+        // Halbe Zeilen fliegen raus — das Backend verlangt beides.
+        form.append(
+            'faq',
+            JSON.stringify(
+                data.faq.filter((f) => f.question.trim() && f.answer.trim()),
+            ),
         );
         form.append('tags', JSON.stringify(data.tags));
         form.append(
@@ -352,7 +365,27 @@ const BeratungsForm = () => {
                     )}
                 </fieldset>
 
+                <div className="flex flex-col gap-2">
+                    <label htmlFor="url" className="label">
+                        WEBSITE (optional)
+                    </label>
+                    <input
+                        type="url"
+                        id="url"
+                        placeholder="https://…"
+                        {...register('url')}
+                        className="field"
+                    />
+                    {errors.url && (
+                        <p className="text-error text-xs">
+                            {errors.url.message}
+                        </p>
+                    )}
+                </div>
+
                 <ContactFields addressSlot={addressBlock} />
+
+                <FaqEditor />
 
                 <ServicesEditor
                     services={services}

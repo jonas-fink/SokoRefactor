@@ -10,9 +10,10 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 const client = new S3Client({ region: process.env.S3_REGION });
 const Bucket = process.env.S3_BUCKET ?? '';
 
-//  Auf `createReadStream` umstellen, sobald grössere Dateien erlaubt werden.
-export const uploadDocument = async (
-    filepath: string,
+// Buffer-Variante: das Migrationsskript laedt von einer URL und hat nie eine
+// Datei auf der Platte.
+export const putObject = async (
+    body: Buffer,
     key: string,
     mimeType: string,
 ) => {
@@ -20,17 +21,34 @@ export const uploadDocument = async (
         new PutObjectCommand({
             Bucket,
             Key: key,
-            Body: await readFile(filepath),
+            Body: body,
             ContentType: mimeType,
         }),
     );
     return key;
 };
 
-// Räumt Dateien weg, sobald das Subdokument sie nicht mehr referenziert.
+//  Auf `createReadStream` umstellen, sobald grössere Dateien erlaubt werden.
+export const uploadFile = async (
+    filepath: string,
+    key: string,
+    mimeType: string,
+) => putObject(await readFile(filepath), key, mimeType);
+
+/**
+ * Bilder liegen unter `images/` — dem einzigen oeffentlich lesbaren Prefix des
+ * Buckets (Bucket-Policy `PublicReadImages`). Sie stehen in Listen mit 20
+ * Karten; eine presigned URL pro Bild waere ein Backend-Request pro Kachel und
+ * nicht cachebar. Dokumente unter `beratung/` bleiben privat und laufen
+ * weiterhin ueber `getSignedDocumentUrl`.
+ */
+export const publicUrl = (key: string) =>
+    `https://${Bucket}.s3.${process.env.S3_REGION}.amazonaws.com/${key}`;
+
+// Räumt Dateien weg, sobald das Dokument sie nicht mehr referenziert.
 // DeleteObjects nimmt bis zu 1000 Keys pro Aufruf — eine Beratungsstelle kommt
 // da nicht hin, also kein Batching.
-export const deleteDocuments = async (keys: string[]) => {
+export const deleteFiles = async (keys: string[]) => {
     if (keys.length === 0) return;
     await client.send(
         new DeleteObjectsCommand({

@@ -1,5 +1,16 @@
 import { Schema, model } from 'mongoose';
 
+// Haeufige Fragen. `_id: false`, weil es — anders als bei den Dokumenten einer
+// Beratung — keine Route auf den einzelnen Eintrag gibt: die Liste wird beim
+// Speichern immer komplett ersetzt.
+const faqSchema = new Schema(
+    {
+        question: { type: String, required: true, trim: true },
+        answer: { type: String, required: true, trim: true },
+    },
+    { _id: false },
+);
+
 const activitySchema = new Schema(
     {
         title: {
@@ -15,6 +26,10 @@ const activitySchema = new Schema(
             type: String,
             required: [true, 'Bild wird benötigt'],
         },
+        // Nur gesetzt, wenn wir die Datei selbst nach S3 geladen haben. Externe
+        // Adressen (Partner-CSV, Platzhalter, Seeds) stehen weiter allein in
+        // `image` und haben nichts, was aufgeraeumt werden muesste.
+        imageKey: { type: String },
         description: {
             type: String,
             required: [true, 'Beschreibung benötigt'],
@@ -30,6 +45,8 @@ const activitySchema = new Schema(
             required: [true, 'Preis wird benötigt'],
             default: 0,
         },
+        url: { type: String, trim: true },
+        faq: { type: [faqSchema], default: [] },
         email: { type: String, trim: true, lowercase: true },
         phone: { type: String, trim: true },
         address: { type: String, trim: true },

@@ -27,6 +27,31 @@ test('FormData-Body (Strings) wird korrekt gecoerct', () => {
     assert.equal(parsed.image, 'https://placehold.net/600x600.png');
 });
 
+/**
+ * Der Fall „Bild behalten": das Formular schickt ohne neue Datei nur die alte
+ * `image`-URL als Textfeld, `fileUploadHandler` setzt kein `imageKey`. Landet
+ * der Schluessel trotzdem als `undefined` im geparsten Body, raeumt
+ * `activity.set(req.body)` den gespeicherten Key ab — und der naechste Upload
+ * findet kein Bild mehr zum Ersetzen.
+ */
+test('Body ohne imageKey traegt den Schluessel auch nicht im Ergebnis', () => {
+    const parsed = activityCreateBodySchema.parse({
+        ...formDataBody,
+        image: 'https://sokobucket.s3.eu-central-1.amazonaws.com/images/alt',
+    });
+
+    assert.equal('imageKey' in parsed, false);
+});
+
+test('imageKey wird durchgereicht, wenn die Middleware ihn gesetzt hat', () => {
+    const parsed = activityCreateBodySchema.parse({
+        ...formDataBody,
+        imageKey: 'images/abc',
+    });
+
+    assert.equal(parsed.imageKey, 'images/abc');
+});
+
 test('Ueberlanger Titel wird abgelehnt', () => {
     const result = activityCreateBodySchema.safeParse({
         ...formDataBody,

@@ -15,12 +15,10 @@ import {
     buildFilter,
     s3Keys,
     orphanedKeys,
+    imageKeys,
+    replacedImageKey,
 } from '#utils';
-import {
-    getSignedDocumentUrl,
-    uploadDocument,
-    deleteDocuments,
-} from '#services';
+import { getSignedDocumentUrl, uploadFile, deleteFiles } from '#services';
 import { randomUUID } from 'node:crypto';
 
 type IdParams = { id: string };
@@ -137,10 +135,15 @@ export const updateBeratung: RequestHandler<
         }
 
         // PUT ersetzt `services` komplett — was rausfaellt, muss aus S3 mit raus.
-        const before = { services: beratung.toObject().services };
+        // Dasselbe gilt fuers Bild: neuer Key heisst, das alte Objekt ist tot.
+        const before = beratung.toObject();
         beratung.set(req.body satisfies BeratungCreateBody);
         await beratung.save();
-        await deleteDocuments(orphanedKeys(before, beratung.toObject()));
+        const after = beratung.toObject();
+        await deleteFiles([
+            ...orphanedKeys(before, after),
+            ...replacedImageKey(before, after),
+        ]);
 
         const populatedBeratung = await beratung.populate('userId', 'name');
         res.json({
@@ -162,10 +165,11 @@ export const patchBeratung: RequestHandler<
         delete (updates as Record<string, unknown>)['_id'];
         await assertAxes(updates);
 
-        // nur laden, wenn dieser PATCH `services` ueberhaupt anfasst
-        const before = updates.services
-            ? await Beratung.findById(id).lean()
-            : null;
+        // nur laden, wenn dieser PATCH `services` oder das Bild anfasst
+        const before =
+            updates.services || updates.imageKey
+                ? await Beratung.findById(id).lean()
+                : null;
 
         const beratung = await Beratung.findByIdAndUpdate(
             id,
@@ -178,7 +182,11 @@ export const patchBeratung: RequestHandler<
             return;
         }
         if (before) {
-            await deleteDocuments(orphanedKeys(before, beratung.toObject()));
+            const after = beratung.toObject();
+            await deleteFiles([
+                ...orphanedKeys(before, after),
+                ...replacedImageKey(before, after),
+            ]);
         }
         res.json({
             data: populatedBeratungSchema.parse(beratung.toObject()),
@@ -216,7 +224,7 @@ export const addServiceDocument: RequestHandler<
         }
 
         const s3Key = `beratung/${req.params.id}/${randomUUID()}`;
-        await uploadDocument(upload.filepath, s3Key, upload.mimeType);
+        await uploadFile(upload.filepath, s3Key, upload.mimeType);
 
         service.documents.push({
             title: req.body.title,
@@ -229,7 +237,7 @@ export const addServiceDocument: RequestHandler<
         } catch (saveError: unknown) {
             // Datei liegt schon in S3, das Subdokument nicht in der DB —
             // zuruecknehmen, sonst ist genau das ein verwaistes Objekt.
-            await deleteDocuments([s3Key]);
+            await deleteFiles([s3Key]);
             throw saveError;
         }
 
@@ -283,7 +291,8 @@ export const deleteBeratung: RequestHandler = async (req, res, next) => {
             res.status(404).json({ error: 'Beratung not found' });
             return;
         }
-        await deleteDocuments(s3Keys(beratung.toObject()));
+        const geloescht = beratung.toObject();
+        await deleteFiles([...s3Keys(geloescht), ...imageKeys(geloescht)]);
         res.json({ message: 'Beratung deleted' });
     } catch (error: unknown) {
         next(error);

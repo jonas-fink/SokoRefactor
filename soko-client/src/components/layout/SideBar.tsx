@@ -5,7 +5,7 @@ import { AiOutlineCompass } from 'react-icons/ai';
 import { MdOutlineMap, MdOutlineBookmark } from 'react-icons/md';
 import { useAuth, canCreate } from '../../context/auth-context';
 import { RxAvatar } from 'react-icons/rx';
-import { AiOutlinePlusCircle } from 'react-icons/ai';
+import { AiOutlinePlusCircle, AiOutlineLogin } from 'react-icons/ai';
 
 const SideBar = () => {
     const { user } = useAuth();
@@ -45,6 +45,15 @@ const SideBar = () => {
                     <MdOutlineBookmark size={24} />
                     <span className="hidden md:inline">Sammlung</span>
                 </NavLink>
+                {/* Ohne diesen Eintrag fuehrt der einzige Weg zum Login ueber
+                    den Redirect einer geschuetzten Route — sichtbar ist er
+                    dann nirgends. */}
+                {!user && (
+                    <NavLink to="/login" className={navClass}>
+                        <AiOutlineLogin size={24} />
+                        <span className="hidden md:inline">Anmelden</span>
+                    </NavLink>
+                )}
                 {canCreate(user) && (
                     <NavLink to="/erstellen" className={navClass}>
                         <AiOutlinePlusCircle size={24} />

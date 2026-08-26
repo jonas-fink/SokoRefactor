@@ -12,6 +12,7 @@ import { useCategories } from '../../hooks/useCategories';
 import { useVocabulary } from '../../hooks/useVocabulary';
 import ChipGroup from '../ChipGroup';
 import ContactFields from './ContactFields';
+import FaqEditor from './FaqEditor';
 import type { Activity } from '../../types';
 
 /**
@@ -38,6 +39,8 @@ const ActivityForm = () => {
         resolver: zodResolver(activityFormSchema),
         defaultValues: {
             price: 0,
+            url: '',
+            faq: [],
             lng: 9.4797,
             lat: 51.3127,
             tags: [],
@@ -72,6 +75,8 @@ const ActivityForm = () => {
                     description: a.description,
                     date: toLocalInput(a.date),
                     price: a.price,
+                    url: a.url ?? '',
+                    faq: a.faq ?? [],
                     lng: a.location.coordinates[0],
                     lat: a.location.coordinates[1],
                     tags: a.tags,
@@ -135,6 +140,14 @@ const ActivityForm = () => {
         form.append('description', data.description);
         form.append('date', new Date(data.date).toISOString());
         form.append('price', String(data.price));
+        if (data.url) form.append('url', data.url);
+        // Halbe Zeilen fliegen raus — das Backend verlangt beides.
+        form.append(
+            'faq',
+            JSON.stringify(
+                data.faq.filter((f) => f.question.trim() && f.answer.trim()),
+            ),
+        );
         form.append(
             'location',
             JSON.stringify({
@@ -335,7 +348,27 @@ const ActivityForm = () => {
                     )}
                 </div>
 
+                <div className="flex flex-col gap-2">
+                    <label htmlFor="url" className="label">
+                        WEBSITE (optional)
+                    </label>
+                    <input
+                        type="url"
+                        id="url"
+                        placeholder="https://…"
+                        {...register('url')}
+                        className="field"
+                    />
+                    {errors.url && (
+                        <p className="text-error text-xs">
+                            {errors.url.message}
+                        </p>
+                    )}
+                </div>
+
                 <ContactFields addressSlot={addressBlock} />
+
+                <FaqEditor />
 
                 <ChipGroup
                     legend="THEMEN"

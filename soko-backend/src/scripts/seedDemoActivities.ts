@@ -52,6 +52,20 @@ const DEMO = [
         tags: ['bildung'],
         availableLanguages: ['de', 'en'],
         targetAudience: [],
+        // Website und FAQ sind optional und deshalb absichtlich nur bei
+        // einzelnen Eintraegen gesetzt — der Rest ist die Gegenprobe, dass die
+        // Detailseite ohne beides genauso funktioniert.
+        url: 'https://example.org/reparatur-cafe-wesertor',
+        faq: [
+            {
+                question: 'Muss ich mich anmelden?',
+                answer: 'Nein, komm einfach vorbei. Bei viel Andrang gibt es eine Warteliste vor Ort.',
+            },
+            {
+                question: 'Was kostet die Reparatur?',
+                answer: 'Nichts. Ersatzteile zahlst du selbst, eine Spende für die Werkstatt ist freiwillig.',
+            },
+        ],
         price: 0,
         inTage: 6,
         stunde: 15,
@@ -88,6 +102,7 @@ const DEMO = [
         tags: ['bildung'],
         availableLanguages: ['de', 'ar'],
         targetAudience: ['gefluechtete'],
+        url: 'https://example.org/sprachcafe',
         price: 0,
         inTage: 15,
         stunde: 17,
@@ -124,6 +139,7 @@ const DEMO = [
         tags: ['kunst'],
         availableLanguages: ['de'],
         targetAudience: ['senioren'],
+        url: 'https://example.org/chor-kassel',
         price: 0,
         inTage: 25,
         stunde: 19,
@@ -163,24 +179,25 @@ const run = async () => {
     const admin = await User.findOne({ role: 'admin' }).select('_id').lean();
     if (!admin) throw new Error('Kein Admin-Account in der Datenbank');
 
-    const result = await Activity.bulkWrite(
-        DEMO.map(({ inTage, stunde, coordinates, ...a }, i) => ({
-            updateOne: {
-                filter: { title: a.title },
-                update: {
-                    $set: {
-                        ...a,
-                        date: dateIn(inTage, stunde),
-                        location: { type: 'Point', coordinates },
-                        image: `https://picsum.photos/seed/soko-act-${i + 1}/800/500`,
-                    },
-                    $setOnInsert: { userId: admin._id },
+    const ops = DEMO.map(({ inTage, stunde, coordinates, ...a }, i) => ({
+        updateOne: {
+            filter: { title: a.title },
+            update: {
+                $set: {
+                    ...a,
+                    date: dateIn(inTage, stunde),
+                    location: { type: 'Point', coordinates },
+                    image: `https://picsum.photos/seed/soko-act-${i + 1}/800/500`,
                 },
-                upsert: true,
+                $setOnInsert: { userId: admin._id },
             },
-        })),
-        { ordered: false },
-    );
+            upsert: true,
+        },
+    }));
+
+    // Cast wie in `services/importBeratungen.ts`: Mongooses Bulk-Typen erwarten
+    // fuer `faq` ein DocumentArray, die Tabelle oben liefert schlichte Objekte.
+    const result = await Activity.bulkWrite(ops as never, { ordered: false });
 
     return {
         neu: result.upsertedCount,

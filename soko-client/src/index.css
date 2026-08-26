@@ -34,6 +34,8 @@
     --color-cat-gesundheit-soft: #f6e7ef;
     --color-cat-finanzen: #5b4bb0; /* Finanzen & Schulden */
     --color-cat-finanzen-soft: #eae7f7;
+    --color-cat-wohnen: #5f6f1a; /* Wohnen & Miete */
+    --color-cat-wohnen-soft: #eff1de;
     --color-cat-asyl: #0e7490; /* Asyl & Migration */
     --color-cat-asyl-soft: #e0f1f5;
     --color-cat-sport: #b23a09; /* Sport & Bewegung */
@@ -104,6 +106,8 @@
     --color-cat-gesundheit-soft: #2e1f28;
     --color-cat-finanzen: #a99bec;
     --color-cat-finanzen-soft: #23203a;
+    --color-cat-wohnen: #bcc95f;
+    --color-cat-wohnen-soft: #262a14;
     --color-cat-asyl: #5ebacf;
     --color-cat-asyl-soft: #14282e;
     --color-cat-sport: #f0946a;
@@ -165,6 +169,8 @@
     --color-cat-gesundheit-soft: var(--color-cat-gesundheit-soft);
     --color-cat-finanzen: var(--color-cat-finanzen);
     --color-cat-finanzen-soft: var(--color-cat-finanzen-soft);
+    --color-cat-wohnen: var(--color-cat-wohnen);
+    --color-cat-wohnen-soft: var(--color-cat-wohnen-soft);
     --color-cat-asyl: var(--color-cat-asyl);
     --color-cat-asyl-soft: var(--color-cat-asyl-soft);
     --color-cat-sport: var(--color-cat-sport);

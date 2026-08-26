@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link, useNavigate } from 'react-router';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { loginSchema, type LoginFormData } from '../schemas/authSchemas';
 import { useAuth } from '../context/auth-context';
 import Logo from '../components/Logo';
@@ -9,6 +9,8 @@ import PasswordField from '../components/PasswordField';
 const Login = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
+    // Von `ProtectedRoute` mitgegeben: die Seite, die den Redirect ausgeloest hat.
+    const { state } = useLocation() as { state?: { from?: string } };
 
     const {
         register,
@@ -20,7 +22,7 @@ const Login = () => {
     const onSubmit = async (data: LoginFormData) => {
         try {
             await login(data);
-            navigate('/');
+            navigate(state?.from ?? '/', { replace: true });
         } catch {
             setError('root', { message: 'E-Mail oder Passwort ungültig' });
         }

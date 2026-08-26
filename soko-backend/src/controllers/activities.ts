@@ -11,7 +11,10 @@ import {
     assertAudiences,
     assertLanguages,
     buildFilter,
+    imageKeys,
+    replacedImageKey,
 } from '#utils';
+import { deleteFiles } from '#services';
 
 type IdParams = { id: string };
 
@@ -132,8 +135,13 @@ export const updateActivity: RequestHandler<
             return;
         }
 
+        // Ein PUT mit neuem Bild ersetzt den Key — das alte Objekt muss mit raus.
+        // Ohne neue Datei traegt der Body gar kein `imageKey`, dann bleibt der
+        // gespeicherte stehen und `replacedImageKey` gibt `[]` zurueck.
+        const before = { imageKey: activity.imageKey };
         activity.set(req.body satisfies ActivityCreateBody);
         await activity.save();
+        await deleteFiles(replacedImageKey(before, activity.toObject()));
 
         const populatedActivity = await activity.populate(
             'userId',
@@ -158,6 +166,11 @@ export const patchActivity: RequestHandler<
         delete (updates as Record<string, unknown>)['_id'];
         await assertAxes(updates);
 
+        // nur laden, wenn dieser PATCH das Bild ueberhaupt austauscht
+        const before = updates.imageKey
+            ? await Activity.findById(id).lean()
+            : null;
+
         const activity = await Activity.findByIdAndUpdate(
             id,
             { $set: updates },
@@ -167,6 +180,9 @@ export const patchActivity: RequestHandler<
         if (!activity) {
             res.status(404).json({ error: 'Activity not found' });
             return;
+        }
+        if (before) {
+            await deleteFiles(replacedImageKey(before, activity.toObject()));
         }
         res.json({ data: populatedActivitySchema.parse(activity.toObject()) });
     } catch (error: unknown) {
@@ -184,6 +200,7 @@ export const deleteActivity: RequestHandler = async (req, res, next) => {
             res.status(404).json({ error: 'Activity not found' });
             return;
         }
+        await deleteFiles(imageKeys(activity.toObject()));
         res.json({ message: 'Activity deleted' });
     } catch (error: unknown) {
         next(error);
